@@ -1,0 +1,42 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+**BEFORE DOING ANYTHING ELSE - INCLUDING THINKING OR RESPONDING:**
+read `CLAUDE.md` file using the Read tool.
+
+This project uses Ruby on Rails, PostgreSQL, Hotwire (Turbo and Stimulus), and
+our own design system called anchor_view_components (on top of Tailwind CSS).
+
+If there are alternative solutions that differ substantially, ask me about them
+before proposing concrete implementations, helping me understand what to do and
+how to think about it.
+
+Code Style and Structure
+
+- Try keep solutions succinct
+- Follow Rails conventions and best practices.
+- Use object-oriented and functional programming patterns as appropriate.
+- Don't add code comments repeating what the implementation does. Only add them
+  to explain the why, or some corner case that might be difficult to understand
+  for senior engineers
+- Follow our company's guides
+
+Ruby and Rails Usage
+
+- Use Ruby 3.x features when appropriate (e.g., pattern matching, endless methods).
+- Leverage Rails' built-in helpers and methods.
+- Use ActiveRecord for database operations.
+
+Error Handling and Validation
+
+- Use ActiveModel validations in models.
+- Handle errors gracefully in controllers and display appropriate messages.
+
+Follow the company's and official guides:
+
+- @rails https://github.com/BuoySoftware/guides/tree/main/rails
+- @ruby https://github.com/BuoySoftware/guides/tree/main/ruby
+- @RubyOnRails https://guides.rubyonrails.org/
