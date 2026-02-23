@@ -1,0 +1,36 @@
+// macos ~/Library/Application\ Support/Cursor/User/settings.json
+// linux ~/.config/Cursor/User/settings.json
+{
+  "crashReporting.enabled": "off",
+  "editor.codeLens": false,
+  "editor.defaultFormatter": "Shopify.ruby-lsp",
+  "editor.fontFamily": "'JetBrainsMono Nerd Font',Menlo, Monaco, 'Courier New', monospace",
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "on",
+  "explorer.confirmDragAndDrop": false,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "git.openRepositoryInParentFolders": "always",
+  "githubPullRequests.pullBranch": "never",
+  "githubPullRequests.terminalLinksHandler": "github",
+  "ruby.specSaveFile": true,
+  "ruby.useLanguageServer": true,
+  "search.mode": "reuseEditor",
+  "typescript.inlayHints.enumMemberValues.enabled": true,
+  "update.releaseTrack": "prerelease",
+  "vim.easymotion": true,
+  "vim.useSystemClipboard": true,
+  "window.autoDetectColorScheme": true,
+  "window.commandCenter": true,
+  "window.confirmSaveUntitledWorkspace": false,
+  "workbench.colorTheme": "Catppuccin Latte",
+  "workbench.preferredLightColorTheme": "Quiet Light",
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "editor.formatOnPaste": true,
+  "cursor.composer.usageSummaryDisplay": "always"
+}
