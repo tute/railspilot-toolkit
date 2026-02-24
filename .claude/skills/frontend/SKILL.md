@@ -1,3 +1,8 @@
+---
+name: frontend
+description: Apply creative, distinctive frontend design principles. Use when building or improving UI — typography, color, motion, and layout choices.
+---
+
 You tend to converge toward generic, "on distribution" outputs. In frontend
 design,this creates what users call the "AI slop" aesthetic. Avoid this: make
 creative,distinctive frontends that surprise and delight.

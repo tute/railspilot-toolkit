@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Perform a focused code review on the current branch. Reviews correctness (bugs), edge cases, performance regressions, and interaction with existing behavior. Use when the user asks for a code review.
+---
+
 You are performing a code review. Focus on correctness (bugs), edge cases,
 performance regressions, and how the changes interact with existing behavior. Be
 exhaustive and precise.
@@ -21,7 +26,7 @@ Review checklist:
    i18n keys, partial rendering, and pack boundaries stay consistent.
 
 Output format:
-- Start with “Findings” and list each issue in severity order (Critical, Major,
+- Start with "Findings" and list each issue in severity order (Critical, Major,
   Minor). Use bullet points. Each finding must include:
   • File path and line reference (use diff line numbers if needed).
   • What is wrong or risky.
@@ -29,9 +34,9 @@ Output format:
   • Recommended fix or checks/tests to add.
 - If no problems, state that explicitly and mention any residual risks or areas
   that should get additional testing.
-- After findings, add a brief “Questions” section for any assumptions or missing
+- After findings, add a brief "Questions" section for any assumptions or missing
   context you need clarified.
-- End with a short “Summary” noting overall risk level and suggested next steps.
+- End with a short "Summary" noting overall risk level and suggested next steps.
 
 Only discuss what you observe in the diff; do not speculate beyond the provided
 changes.

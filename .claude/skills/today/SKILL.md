@@ -1,3 +1,9 @@
+---
+name: today
+description: Generate a daily task summary from Google Calendar, Gmail, and Jira, intelligently prioritized and saved to a daily notes file. Use when the user asks for today's tasks, daily summary, or runs the today command.
+disable-model-invocation: true
+---
+
 # Today Command
 
 Generate a daily task summary from Google Calendar, Gmail, and Jira, intelligently prioritized.
