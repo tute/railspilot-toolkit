@@ -11,12 +11,12 @@ Symlink to these Claude Code and Cursor configurations:
 
 ```bash
 cd ~/.cursor
-ln -s ~/Code/ai/railspilot/cursor/.cursor/rules
+ln -s ~/Code/ai/railspilot/.cursor/rules
 ln -s ~/Code/opensource/dotfiles/cursor/settings.json
-ln -s ~/Code/ai/railspilot/cursor/.cursor/worktrees.json
+ln -s ~/Code/ai/railspilot/.cursor/worktrees.json
 
 cd ~/.claude
-ln -s ~/Code/ai/railspilot/CLAUDE.md
+ln -s ~/Code/ai/railspilot/.claude/CLAUDE.md
 ln -s ~/Code/ai/railspilot/.claude/agents
 ln -s ~/Code/ai/railspilot/.claude/commands
 ln -s ~/Code/ai/railspilot/.claude/settings.json
