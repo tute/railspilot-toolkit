@@ -1,6 +1,6 @@
 ---
 name: update-CLAUDE
-description: Analyze recent commits to extract coding patterns unique to the user and add them to CLAUDE.md or relevant skills. Use when the user asks to update CLAUDE.md or extract patterns from recent commits.
+description: Analyzes recent commits to surface unique coding patterns and adds them to CLAUDE.md or skills. Use when asked to update CLAUDE.md or extract patterns from commits.
 ---
 
 Analize my 10 last commits, extract relevant patterns that make them stand out

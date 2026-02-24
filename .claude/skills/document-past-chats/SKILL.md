@@ -1,6 +1,6 @@
 ---
 name: document-past-chats
-description: Analyze the past two months of chat history to surface repeating patterns and notable learnings. Use when the user explicitly asks to review or learn from past conversations.
+description: Analyzes past conversations to surface repeating patterns and learnings worth capturing. Use when asked to review or learn from past chats.
 ---
 
 What can we learn from the past two months worth lf chats? What was a repeating

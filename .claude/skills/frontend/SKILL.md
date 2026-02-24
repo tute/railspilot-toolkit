@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: Apply creative, distinctive frontend design principles. Use when building or improving UI — typography, color, motion, and layout choices.
+description: Applies distinctive frontend design principles (typography, color, motion, layout) to avoid generic AI aesthetics. Use when building or improving UI.
 ---
 
 You tend to converge toward generic, "on distribution" outputs. In frontend

@@ -1,6 +1,6 @@
 ---
 name: rails-pilot-review
-description: Review code changes through the lens of a staff engineer. Analyzes a specific commit against learned patterns from a staff engineer code reviews.
+description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review.
 ---
 
 Goal is to catch issues a staff engineer would flag before they see your code.

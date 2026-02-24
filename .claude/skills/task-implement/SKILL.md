@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: This skill should be used when implementing features from Linear or Jira issues with full TDD workflow, automated planning, parallel code reviews (security and Rails best practices), systematic feedback implementation, and automated PR creation with task manager integration. The skill auto-detects which task manager (Linear or Jira) is used by examining recent commits on master. Use when the user provides an issue ID (e.g., "TRA-9", "DEV-123", "PROJ-456") and wants a complete implementation workflow from issue to PR.
+description: Implements a Linear or Jira issue end-to-end: branch, TDD, parallel code reviews, PR. Auto-detects task manager from recent commits. Use when given an issue ID (e.g., TRA-9, PROJ-456) and asked to implement it.
 disable-model-invocation: true
 ---
 

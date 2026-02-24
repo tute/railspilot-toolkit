@@ -1,6 +1,6 @@
 ---
 name: full-code-review
-description: Perform a comprehensive code review using parallel specialized subagents for security analysis and Rails best practices. Incorporates previous review decisions to avoid redundant suggestions. Use when the user asks for a full or comprehensive code review.
+description: Runs parallel subagent reviews for security (OWASP, multi-tenant, auth) and Rails best practices (POODR, N+1, service objects), consolidating findings. Use when asked for a full or comprehensive code review.
 ---
 
 # Full Code Review
