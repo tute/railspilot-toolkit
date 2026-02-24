@@ -18,7 +18,6 @@ ln -s ~/Code/ai/railspilot/.cursor/worktrees.json
 cd ~/.claude
 ln -s ~/Code/ai/railspilot/.claude/CLAUDE.md
 ln -s ~/Code/ai/railspilot/.claude/agents
-ln -s ~/Code/ai/railspilot/.claude/commands
 ln -s ~/Code/ai/railspilot/.claude/settings.json
 ln -s ~/Code/ai/railspilot/.claude/skills
 ```
@@ -34,26 +33,29 @@ ln -s ~/Code/ai/railspilot/.claude/skills
 - `railspilot-progress-reporter`: Monthly client progress reports
 - `calendar-fetcher` / `gmail-fetcher` / `jira-fetcher`: Lightweight data fetchers for `/today`
 
-### Commands
-
-- `/today`: Daily task summary from Calendar, Gmail, and Jira
-- `/task-implement`: TDD workflow for Linear/Jira issue implementation
-- `/full-code-review`: Parallel security + Rails best practices review
-- `/code-review`: Focused code review for correctness, edge cases, and performance
-- `/git-commit`: Commit with a well-structured message explaining the why
-- `/pr-title-and-description`: Generate PR title and description from branch changes (useful when it needs to contain many commits)
-- `/fix-merge-conflicts`: Non-interactive merge conflict resolution
-- `/visualize`: Mermaid diagram for data lineage visualization
-- `/update-CLAUDE`: Extract patterns from recent work into CLAUDE.md/skills
-- `/document-past-chats`: Analyze chat history for recurring patterns and insights
-
 ### Skills
 
-- `tdd-skill`: Red-Green-Refactor methodology
+**Development Workflow**
+- `task-implement`: Full issue-to-PR workflow from a Linear/Jira issue (TDD, code reviews, PR creation)
+- `tdd-skill`: Red-Green-Refactor TDD methodology
+- `fix-merge-conflicts`: Non-interactive merge conflict resolution
+
+**Code Quality**
+- `code-review`: Focused diff review for bugs, edge cases, and performance
+- `full-code-review`: Parallel security + Rails best practices review
+- `railspilot-staff-review`: Code review through a staff engineer's lens
 - `rspec-testing`: RSpec best practices (Better Specs, thoughtbot)
 - `frontend`: Anti-"AI slop" design principles
-- `task-implement`: Issue-to-PR implementation workflow
-- `railspilot-staff-review`: Staff engineer code review lens
+
+**Git & PR**
+- `git-commit`: Commit with a well-structured message explaining the why
+- `pr-title-and-description`: PR title and description from branch diff
+
+**Utilities**
+- `today`: Daily task summary from Calendar, Gmail, and Jira
+- `visualize`: Mermaid diagram for data lineage and architecture
+- `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
+- `document-past-chats`: Analyze chat history for recurring patterns and insights
 
 ## Docs
 

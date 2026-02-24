@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Perform a focused code review on the current branch. Reviews correctness (bugs), edge cases, performance regressions, and interaction with existing behavior. Use when the user asks for a code review.
+description: Reviews the current branch diff for bugs, edge cases, performance regressions, and behavior interactions. Use when asked for a code review.
 ---
 
 You are performing a code review. Focus on correctness (bugs), edge cases,

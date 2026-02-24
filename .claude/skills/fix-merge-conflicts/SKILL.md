@@ -1,6 +1,6 @@
 ---
 name: fix-merge-conflicts
-description: Fix all merge conflicts on the current Git branch non-interactively and make the repo buildable and tested. Use when the user asks to resolve merge conflicts.
+description: Resolves all Git merge conflicts non-interactively and ensures the repo builds and tests pass. Use when asked to fix or resolve merge conflicts.
 disable-model-invocation: true
 ---
 

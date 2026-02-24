@@ -1,6 +1,6 @@
 ---
 name: rspec-testing
-description: This skill should be used when writing, reviewing, or improving RSpec tests. The skill provides comprehensive RSpec best practices from Better Specs and thoughtbot guides.
+description: Provides RSpec best practices — test structure, factories, system specs, mocking, anti-patterns. Use when writing, reviewing, or improving RSpec tests.
 ---
 
 # RSpec Testing for Rails
