@@ -1,3 +1,8 @@
+---
+name: git-commit
+description: Commit the current work with a well-crafted message that explains the why and higher-level architecture. Use when the user asks to commit or create a git commit.
+---
+
 Commit the current work with a good commit message, explaining the why and higher level architecture, and a little of the user flow if applies.
 
 Example of a Good Commit Message:

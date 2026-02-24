@@ -1,3 +1,9 @@
+---
+name: fix-merge-conflicts
+description: Fix all merge conflicts on the current Git branch non-interactively and make the repo buildable and tested. Use when the user asks to resolve merge conflicts.
+disable-model-invocation: true
+---
+
 Fix all merge conflicts on the current Git branch non-interactively and make the repo buildable and tested.
 
 Requirements and constraints:
@@ -32,7 +38,7 @@ High-level plan:
    - Output a concise summary of files touched and notable resolution choices.
 
 Operational guidance:
-- Assume the user isn’t available; make best-effort decisions. If a resolution is ambiguous and blocks build/tests, prefer the variant that compiles and green-tests.
+- Assume the user isn't available; make best-effort decisions. If a resolution is ambiguous and blocks build/tests, prefer the variant that compiles and green-tests.
 - If a file still contains conflict markers after your first pass, revisit and resolve them before proceeding.
 - For large refactors causing conflicts, prefer keeping consistent imports, types, and module boundaries. Use exhaustive switch guards in TypeScript and explicit type annotations where needed.
 - Keep edits minimal and readable; avoid reformatting unrelated code.

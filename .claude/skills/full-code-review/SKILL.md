@@ -1,3 +1,8 @@
+---
+name: full-code-review
+description: Perform a comprehensive code review using parallel specialized subagents for security analysis and Rails best practices. Incorporates previous review decisions to avoid redundant suggestions. Use when the user asks for a full or comprehensive code review.
+---
+
 # Full Code Review
 
 Perform a comprehensive code review using parallel specialized subagents for security analysis and Rails best practices review. Incorporates previous review decisions to avoid redundant suggestions.
@@ -83,7 +88,7 @@ You will launch TWO specialized subagents in parallel using the Task tool for co
 
 ## Decision Tracking
 
-This command maintains a log of review decisions to prevent redundant suggestions:
+This skill maintains a log of review decisions to prevent redundant suggestions:
 
 - **Memory System**: Stores decisions as `code_review_decision` entities
 - **Decision Log**: `code_review_decisions.md` provides human-readable audit trail
@@ -104,4 +109,4 @@ If no branch specified, reviews changes from main to HEAD.
 /full-code-review feature-branch
 ```
 
-This command uses a subagent to perform thorough analysis while maintaining context of previous decisions to avoid review fatigue and focus on genuinely new concerns.
+This skill uses subagents to perform thorough analysis while maintaining context of previous decisions to avoid review fatigue and focus on genuinely new concerns.
