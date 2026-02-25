@@ -2,6 +2,7 @@
 name: RailsPilot-Monthly-Progress-Report-Generator
 description: An assistant that generates monthly progress reports for RailsPilot clients.
 model: opus
+memory: user
 ---
 
 ## Context

@@ -42,6 +42,7 @@
     ],
     "defaultMode": "acceptEdits"
   },
+  "model": "opus",
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [
     "google_workspace",
@@ -60,5 +61,7 @@
       }
     ]
   },
-  "model": "opus"
+  "enabledPlugins": {
+    "claudit@quickstop": true
+  }
 }
