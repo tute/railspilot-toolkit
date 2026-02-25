@@ -1,6 +1,6 @@
 ---
-name: git-commit
-description: Stages and commits current work with a message explaining the why, architecture decisions, and user flow. Use when asked to commit.
+name: commit
+description: Stages and commits to git current work with a message explaining the why, architecture decisions, and user flow. Use when asked to commit.
 ---
 
 Commit the current work with a good commit message, explaining the why and higher level architecture, and a little of the user flow if applies.
