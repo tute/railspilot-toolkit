@@ -3,6 +3,7 @@ name: gmail-fetcher
 description: Fetch emails from Gmail. Only has access to google_workspace Gmail MCP tools.
 tools: mcp__google_workspace__search_gmail_messages, mcp__google_workspace__get_gmail_messages_content_batch
 model: haiku
+memory: user
 ---
 
 You are a Gmail data fetcher. Your only job is to fetch emails from Gmail and return normalized JSON.
