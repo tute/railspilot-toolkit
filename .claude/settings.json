@@ -1,20 +1,12 @@
 {
-  "env": {
-    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "0"
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  },
+  "attribution": {},
   "permissions": {
     "allow": [
       "Bash(bin/rails:*)",
       "Bash(bundle exec:*)",
       "Bash(bundle install:*)",
-      "Bash(cat:*)",
       "Bash(claude mcp:*)",
       "Bash(command -v:*)",
-      "Bash(find:*)",
       "Bash(git add:*)",
       "Bash(git branch:*)",
       "Bash(git checkout:*)",
@@ -22,14 +14,10 @@
       "Bash(git log:*)",
       "Bash(git show:*)",
       "Bash(git worktree:*)",
-      "Bash(grep:*)",
-      "Bash(ls:*)",
       "Bash(lsof:*)",
       "Bash(mise exec:*)",
       "Bash(ruby -rjson -e:*)",
-      "Bash(sort:*)",
       "Bash(test:*)",
-      "Bash(wc:*)",
       "Bash(xargs dirname:*)",
       "Bash(yarn test:*)",
       "WebFetch(domain:github.com)",
@@ -55,7 +43,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ \"$(uname)\" = \"Darwin\" ]; then afplay /System/Library/Sounds/Glass.aiff; else paplay /usr/share/sounds/freedesktop/stereo/complete.oga; fi"
+            "command": "if [ \"$(uname)\" = \"Darwin\" ]; then afplay /System/Library/Sounds/Glass.aiff; else paplay /usr/share/sounds/freedesktop/stereo/complete.oga; fi",
+            "timeout": 5000
           }
         ]
       }
