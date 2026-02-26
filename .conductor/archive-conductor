@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+require "shellwords"
+
+APP_ROOT = File.expand_path("..", __dir__)
+WORKTREE_ROOT = APP_ROOT
+
+def run(cmd)
+  puts "  $ #{cmd}"
+  system(cmd)
+end
+
+Dir.chdir(WORKTREE_ROOT) do
+  suffix = File.basename(WORKTREE_ROOT).gsub(/[^[:alnum:]]/, "_")
+  dev_db = "medu_development_#{suffix}"
+  test_db = "medu_test_#{suffix}"
+
+  puts "== Archiving Conductor workspace =="
+  puts "   worktree : #{WORKTREE_ROOT}"
+  puts "   dropping : #{dev_db}, #{test_db}"
+
+  run "mise exec -- dropdb --if-exists #{Shellwords.escape(dev_db)}"
+  run "mise exec -- dropdb --if-exists #{Shellwords.escape(test_db)}"
+
+  puts "\n== Archive cleanup finished =="
+end

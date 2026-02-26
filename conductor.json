@@ -1,5 +1,9 @@
 {
   "scripts": {
-    "setup": "bin/setup"
-  }
+    "setup": "bin/setup-conductor",
+    "run": "PORT=${CONDUCTOR_PORT:-3000} bin/rails server",
+    "archive": "bin/archive-conductor"
+  },
+  "runScriptMode": "nonconcurrent",
+  "enterpriseDataPrivacy": true
 }

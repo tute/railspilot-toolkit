@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+require "fileutils"
+
+ENV["MISE_YES"] ||= "1"
+ENV["MISE_TRUSTED_CONFIG_PATHS"] ||= "#{Dir.pwd}/mise.toml"
+
+APP_ROOT     = File.expand_path("..", __dir__)
+
+def detect_main_root(app_root)
+  conductor_root = ENV["CONDUCTOR_ROOT_PATH"]
+  return conductor_root unless conductor_root.nil? || conductor_root.empty?
+
+  git_common = `git rev-parse --git-common-dir 2>/dev/null`.strip
+  return File.expand_path("..", git_common) unless git_common.empty?
+
+  app_root
+end
+
+MAIN_ROOT = detect_main_root(APP_ROOT)
+WORKTREE_ROOT = ENV["CONDUCTOR_WORKSPACE_PATH"].to_s.empty? ? APP_ROOT : ENV["CONDUCTOR_WORKSPACE_PATH"]
+
+def system!(*args)
+  system(*args) || abort("\n== Command #{args} failed ==")
+end
+
+puts "== Setting up Conductor workspace =="
+puts "   worktree : #{WORKTREE_ROOT}"
+puts "   main     : #{MAIN_ROOT}"
+
+FileUtils.chdir WORKTREE_ROOT do
+  puts "\n== Trusting mise configuration =="
+  system! "mise trust -y ."
+
+  puts "\n== Copying config files =="
+  source_application_yml = File.join(MAIN_ROOT, "config/application.yml")
+  source_master_key = File.join(MAIN_ROOT, "config/master.key")
+
+  abort("\n== Missing file: #{source_application_yml} ==") unless File.exist?(source_application_yml)
+  abort("\n== Missing file: #{source_master_key} ==") unless File.exist?(source_master_key)
+
+  if File.exist?("config/application.yml")
+    puts "  config/application.yml — already present"
+  else
+    FileUtils.cp source_application_yml, "config/application.yml"
+    puts "  config/application.yml — copied"
+  end
+
+  unless File.symlink?("config/master.key") || File.exist?("config/master.key")
+    FileUtils.ln_s source_master_key, "config/master.key"
+    puts "  config/master.key — symlinked"
+  else
+    puts "  config/master.key — already present"
+  end
+
+  puts "\n== Configuring worktree databases =="
+  suffix = File.basename(WORKTREE_ROOT).gsub(/[^[:alnum:]]/, "_")
+  app_yml = "config/application.yml"
+  content = File.read(app_yml)
+  {
+    "DEVELOPMENT_DATABASE" => "medu_development_#{suffix}",
+    "TEST_DATABASE"        => "medu_test_#{suffix}"
+  }.each do |key, value|
+    if content.match?(/^#{key}:/m)
+      puts "  #{key} — already set"
+    else
+      File.open(app_yml, "a") { |f| f.puts "#{key}: #{value}" }
+      puts "  #{key}: #{value}"
+    end
+  end
+
+  puts "\n== Installing dependencies =="
+  system("mise exec -- bundle check") || system!("mise exec -- bundle install")
+
+  puts "\n== Installing JavaScript dependencies =="
+  system! "mise exec -- bin/yarn"
+
+  puts "\n== Preparing databases =="
+  system! "mise exec -- bin/rails db:prepare"
+  system! "mise exec -- bin/rails db:prepare RAILS_ENV=test"
+
+  puts "\n== Workspace ready =="
+end
