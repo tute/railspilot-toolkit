@@ -33,6 +33,7 @@ Code Quality
 UI/UX
 
 * Progressive enhancement: Works without JavaScript, may be augmented by it
+* Prefer Stimulus.js conventions for direct JavaScript manipulation when available
 * Accessibility: Semantic HTML, proper labels, keyboard navigation-enabled
 
 Project Management
