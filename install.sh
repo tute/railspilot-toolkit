@@ -2,17 +2,17 @@
 set -eu
 
 cd ~/.cursor
-ln -s ~/Code/ai/railspilot/.cursor/rules
-ln -s ~/Code/opensource/dotfiles/cursor/settings.json
-ln -s ~/Code/ai/railspilot/.cursor/worktrees.json
+ln -sfn ~/Code/ai/railspilot/.cursor/rules rules
+ln -sfn ~/Code/opensource/dotfiles/cursor/settings.json settings.json
+ln -sfn ~/Code/ai/railspilot/.cursor/worktrees.json worktrees.json
 
 cd ~/.claude
-ln -s ~/Code/ai/railspilot/.claude/CLAUDE.md
-ln -s ~/Code/ai/railspilot/.claude/agents
-ln -s ~/Code/ai/railspilot/.claude/settings.json
-ln -s ~/Code/ai/railspilot/.claude/skills
+ln -sfn ~/Code/ai/railspilot/.claude/CLAUDE.md CLAUDE.md
+ln -sfn ~/Code/ai/railspilot/.claude/agents agents
+ln -sfn ~/Code/ai/railspilot/.claude/settings.json settings.json
+ln -sfn ~/Code/ai/railspilot/.claude/skills skills
 
 if [ -n "${1:-}" ]; then
   cd "$1"
-  ln -s ~/Code/ai/railspilot/conductor.json conductor.json
+  ln -sfn ~/Code/ai/railspilot/conductor.json conductor.json
 fi
