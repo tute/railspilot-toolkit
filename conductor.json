@@ -1,8 +1,8 @@
 {
   "scripts": {
     "setup": "bin/setup",
-    "run": "bin/run",
-    "archive": "bin/drop_databases"
+    "run": "bin/dev",
+    "archive": "RAILS_ENV=development bin/rails db:drop"
   },
   "runScriptMode": "nonconcurrent",
   "enterpriseDataPrivacy": true

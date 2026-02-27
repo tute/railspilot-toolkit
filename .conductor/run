@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-set -eu
-# Customize this script as needed
-export PORT="${CONDUCTOR_PORT:-${PORT:-3000}}"
-exec bin/rails server
