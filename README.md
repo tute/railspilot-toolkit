@@ -1,4 +1,4 @@
-# [RailsPilot.ai](https://www.railspilot.ai/)
+# [RailsPilot.ai](https://www.railspilot.ai/) Toolkit
 
 A collection of specialized agents skills, configurations, and rules for
 RailsPilot work. Includes agents for code review, security auditing,
@@ -10,10 +10,10 @@ principles.
 Run the installer:
 
 ```bash
-./install.sh [path/to/rails-app]
+bin/install [path/to/rails-app]
 ```
 
-Note that conductor workspaces will require `bin/dev` and `bin/setup` scripts to launch server and 
+Note that conductor workspaces will require `bin/dev` and `bin/setup` scripts to launch server and
 setup workspaces respectively. `bin/dev` needs to pick `$CONDUCTOR_PORT` for the web server when
 available (in Rails, it would take precedense before `$PORT`).
 
