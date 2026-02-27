@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+set -eu
+
+cd ~/.cursor
+ln -sfn ~/Code/railspilot/toolkit/.cursor/rules rules
+ln -sfn ~/Code/opensource/dotfiles/cursor/settings.json settings.json
+ln -sfn ~/Code/railspilot/toolkit/.cursor/worktrees.json worktrees.json
+
+cd ~/.claude
+ln -sfn ~/Code/railspilot/toolkit/.claude/CLAUDE.md CLAUDE.md
+ln -sfn ~/Code/railspilot/toolkit/.claude/agents agents
+ln -sfn ~/Code/railspilot/toolkit/.claude/settings.json settings.json
+ln -sfn ~/Code/railspilot/toolkit/.claude/skills skills
+
+if [ -n "${1:-}" ]; then
+  cd "$1"
+  ln -sfn ~/Code/railspilot/toolkit/conductor.json conductor.json
+fi
