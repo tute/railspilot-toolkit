@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+set -e
+# Customize this script as needed
+cd "$(dirname "$0")/.."
+bundle check || bundle install
+[ -f package.json ] && command -v yarn >/dev/null 2>&1 && yarn install --check-files
+[ -f config/database.yml ] && bin/rails db:prepare
+bin/rails log:clear tmp:clear

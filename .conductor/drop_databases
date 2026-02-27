@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+set -eu
+# Customize this script as needed
+[ "${RAILS_ENV:-development}" = "development" ] || exit 1
+[ "${RACK_ENV:-development}" = "development" ] || exit 1
+DISABLE_DATABASE_ENVIRONMENT_CHECK=1 RAILS_ENV=development bin/rails db:drop || true
+DISABLE_DATABASE_ENVIRONMENT_CHECK=1 RAILS_ENV=test bin/rails db:drop || true

@@ -1,5 +1,9 @@
 {
   "scripts": {
-    "setup": "bin/setup"
-  }
+    "setup": "bin/setup",
+    "run": "bin/run",
+    "archive": "bin/drop_databases"
+  },
+  "runScriptMode": "nonconcurrent",
+  "enterpriseDataPrivacy": true
 }
