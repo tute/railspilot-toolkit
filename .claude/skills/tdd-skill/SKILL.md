@@ -1,5 +1,5 @@
 ---
-name: tdd-workflow
+name: tdd-skill
 description: Guides TDD implementation via strict Red-Green-Refactor cycles, one piece at a time. Use when implementing features or fixes with TDD.
 ---
 
