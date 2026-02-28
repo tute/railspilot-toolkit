@@ -333,9 +333,9 @@ git checkout -b refactor/descriptive-name
 
 ## Technology Context
 
-This Rails application uses:
-- Rails 8.1.1, Ruby 3.3.10
-- RSpec for testing
+Detect the project's technology stack by inspecting `Gemfile.lock` (`rails` and
+`ruby` versions) and available tooling. Common stack:
+- Ruby on Rails with RSpec for testing
 - FactoryBot for test data
 - RuboCop for code quality
 
