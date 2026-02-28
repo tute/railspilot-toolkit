@@ -1,5 +1,5 @@
 ---
-name: rails-pilot-review
+name: railspilot-staff-review
 description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review.
 ---
 
