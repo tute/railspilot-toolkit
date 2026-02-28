@@ -37,9 +37,9 @@ The skill follows a 15-step process:
 6. **Analyze & Plan** - Break down requirements and create implementation plan
 7. **Save to Memory** - Store plan in memory graph for tracking
 8. **Review Plan** - Present plan for user confirmation
-9. **TDD Implementation** - Invoke `tdd-workflow` skill for test-driven development
-10. **Parallel Code Reviews** - Invoke `parallel-code-review` skill for comprehensive analysis
-11. **Address Feedback** - Invoke `code-review-implementer` skill to systematically fix issues
+9. **TDD Implementation** - Invoke `tdd-skill` skill for test-driven development
+10. **Parallel Code Reviews** - Invoke `full-code-review` skill for comprehensive analysis
+11. **Address Feedback** - Systematically fix issues from code reviews
 12. **Validation** - Ensure all tests and linters pass
 13. **Logical Commits** - Create meaningful commit history
 14. **Create PR** - Generate comprehensive pull request with task manager linking
@@ -333,7 +333,7 @@ Present the complete plan for confirmation:
 Upon approval, invoke the TDD workflow skill:
 
 ```
-Invoke the Skill tool with: tdd-workflow
+Invoke the Skill tool with: tdd-skill
 ```
 
 The TDD workflow skill enforces:
@@ -353,7 +353,7 @@ The TDD workflow skill enforces:
 After implementation, invoke the parallel code review skill:
 
 ```
-Invoke the Skill tool with: parallel-code-review
+Invoke the Skill tool with: full-code-review
 ```
 
 This launches specialized review subagents in parallel:
@@ -386,13 +386,7 @@ This launches specialized review subagents in parallel:
 
 ### Step 11: Address Review Feedback
 
-Invoke the code review implementer skill:
-
-```
-Invoke the Skill tool with: code-review-implementer
-```
-
-This skill systematically addresses feedback:
+Systematically address feedback from the code reviews:
 
 **Process:**
 1. Parse and prioritize feedback by impact and effort
@@ -629,20 +623,15 @@ Present checklist to user:
 
 This skill orchestrates multiple specialized skills:
 
-**tdd-workflow:**
+**tdd-skill:**
 - Enforces Red-Green-Refactor cycles
 - Ensures test-first development
 - Guides test pyramid strategy
 
-**parallel-code-review:**
+**full-code-review:**
 - Runs security and Rails reviews concurrently
 - Consolidates findings to avoid redundancy
 - Provides prioritized feedback
-
-**code-review-implementer:**
-- Systematically addresses all feedback
-- Applies common refactoring patterns
-- Validates fixes with tests
 
 ## Project-Specific Conventions
 
@@ -700,9 +689,8 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - Repository configured for PR creation
 
 **Skills:**
-- `tdd-workflow` skill available
-- `parallel-code-review` skill available
-- `code-review-implementer` skill available
+- `tdd-skill` skill available
+- `full-code-review` skill available
 
 ## Error Handling
 
@@ -764,10 +752,10 @@ Implement TRA-142
 7. Saves plan to memory graph
 8. Presents plan: "This will create a new service object for user notifications using the Result pattern..."
 9. **Waits for user approval**
-10. Upon approval, invokes `tdd-workflow` skill
-11. After implementation, invokes `parallel-code-review` skill
+10. Upon approval, invokes `tdd-skill` skill
+11. After implementation, invokes `full-code-review` skill
 12. Reviews identify: "Extract notification logic to service object, apply Result pattern"
-13. Invokes `code-review-implementer` skill to address feedback
+13. Addresses feedback from code reviews
 14. Runs validation: `bundle exec rspec`, `bin/lint`
 15. Creates logical commits with proper messages
 16. Creates PR with comprehensive description and Linear linking
