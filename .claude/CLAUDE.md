@@ -13,7 +13,7 @@
 - Prefer namespaced service objects with short class and method names. Avoid the
   `Service` suffix. Example: `Namespace::ClassName#call`
 - Self-improvement loop: After ANY correction, update `tasks/lessons.md` with the
-  pattern. Review lessons at session start.
+  pattern (create the file if it doesn't exist). Review lessons at session start.
 
 Architecture & Design
 

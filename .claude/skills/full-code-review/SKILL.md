@@ -13,11 +13,11 @@ You will launch TWO specialized subagents in parallel using the Task tool for co
 
 1. **Check Previous Decisions**:
 
-   First, search memory for previous code review decisions and read the decision log:
+   First, search memory for previous code review decisions and read the decision log (if it exists):
 
    ```
    mcp__memory__search_nodes query:"code_review_decision"
-   Read file: code_review_decisions.md
+   Read file: code_review_decisions.md (create if missing)
    ```
 
 2. **Launch Parallel Subagents**:
@@ -84,14 +84,14 @@ You will launch TWO specialized subagents in parallel using the Task tool for co
    - Update code_review_decisions.md file
    - Include rationale and context
 
-6. **After user approval**: Write complete consolidated review to `code_review_feedback.md`, replacing existing contents
+6. **After user approval**: Write complete consolidated review to `code_review_feedback.md` (create if missing), replacing existing contents
 
 ## Decision Tracking
 
 This skill maintains a log of review decisions to prevent redundant suggestions:
 
 - **Memory System**: Stores decisions as `code_review_decision` entities
-- **Decision Log**: `code_review_decisions.md` provides human-readable audit trail
+- **Decision Log**: `code_review_decisions.md` provides human-readable audit trail (created on first review)
 - **Context Awareness**: Future reviews exclude previously decided items
 
 ## Usage
