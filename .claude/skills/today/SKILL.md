@@ -238,7 +238,7 @@ Task(
 TODAY'S DATE: {YYYY-MM-DD}
 
 STEP 1: Fetch assigned issues using:
-mcp_atlassian_jira_jira_get(
+mcp__jira__jira_get(
   path: '/rest/api/3/search/jql',
   queryParams: {
     'jql': 'project = {JIRA_PROJECT} AND assignee = currentUser() AND resolution = Unresolved ORDER BY priority DESC, duedate ASC',
@@ -404,4 +404,4 @@ By using Task subagents with specialized agent types:
 - Each agent only has access to the MCP tools it needs:
   - `calendar-fetcher`: only `mcp__google_workspace__get_events`
   - `gmail-fetcher`: only `mcp__google_workspace__search_gmail_messages` and `mcp__google_workspace__get_gmail_messages_content_batch`
-  - `jira-fetcher`: only `mcp__atlassian_jira__jira_get`
+  - `jira-fetcher`: only `mcp__jira__jira_get`
