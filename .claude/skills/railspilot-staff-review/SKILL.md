@@ -15,7 +15,7 @@ Determine the scope:
 
 **Step 2: Load the patterns**
 
-Read the patterns file at `.claude/skills/staff-review/patterns.md`. Each
+Read the patterns file at `.claude/skills/railspilot-staff-review/patterns.md`. Each
 pattern has an ID, a category, a description, and detection hints.
 
 **Step 3: Analyze each changed file**
@@ -77,5 +77,5 @@ Output a review organized by severity:
 ## Extending
 
 To add new patterns learned from future reviews, edit
-`.claude/skills/staff-review/patterns.md` and add entries following the existing
+`.claude/skills/railspilot-staff-review/patterns.md` and add entries following the existing
 format. Each review by a senior engineer is an opportunity to add patterns.
