@@ -7,8 +7,7 @@ You are performing a code review. Focus on correctness (bugs), edge cases,
 performance regressions, and how the changes interact with existing behavior. Be
 exhaustive and precise.
 
-Scope: Review the changes in the current branch compared to main in the Wharf
-repo (Rails/Packwerk codebase).
+Scope: Review the changes in the current branch compared to main.
 
 Review checklist:
 1. Bugs & logic errors: Find incorrect assumptions, missing validations, bad
