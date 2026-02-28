@@ -13,13 +13,20 @@ Generate a daily task summary from Google Calendar, Gmail, and Jira, intelligent
 1. Spawns 3 parallel Task subagents to fetch and normalize data from each source
 2. Each subagent processes data in its own context window, returning compact summaries
 3. Main agent merges summaries and generates plain text output
-4. Saves to: `/Users/tute/Code/ai/railspilot/daily_notes/YYYY-MM-DD.txt`
+4. Saves to: `daily_notes/YYYY-MM-DD.txt` (relative to project root)
+
+## Configuration
+
+Resolve these values before running:
+
+- **USER_EMAIL**: Run `git config user.email` to get the current user's email
+- **JIRA_SITE**: Resolve from MCP server configuration or `$ATLASSIAN_SITE_NAME`
+- **JIRA_PROJECT**: Resolve from the Jira project key in recent commits, or ask the user
 
 ## Requirements
 
 - Google Workspace MCP server configured
 - Atlassian Jira MCP server configured
-- User email: tutecosta@gmail.com
 - Permissions for Calendar, Gmail, and Jira access
 
 ## Normalized Task Schema
@@ -57,7 +64,7 @@ Follow these steps to generate today's task summary:
 
 Before proceeding, check if the required MCP servers are enabled:
 
-1. Read the file: `./.claude/settings.local.json`
+1. Read the file: `.claude/settings.local.json` (if it exists)
 2. Check the `disabledMcpjsonServers` array
 3. **If it contains "google_workspace" OR "atlassian_jira":**
    - STOP immediately
@@ -67,7 +74,7 @@ Before proceeding, check if the required MCP servers are enabled:
    ⚠️  MCP Servers Required but Disabled
 
    To enable them:
-   1. Edit: /Users/tute/Code/ai/railspilot/.claude/settings.local.json
+   1. Edit: .claude/settings.local.json
    2. Remove "google_workspace" and "atlassian_jira" from the "disabledMcpjsonServers" array
    3. Restart Claude Code
 
@@ -118,7 +125,7 @@ TODAY'S INFO:
 
 STEP 1: Fetch calendar events using:
 mcp__google_workspace__get_events(
-  user_google_email: 'tutecosta@gmail.com',
+  user_google_email: '{USER_EMAIL}',
   calendar_id: 'primary',
   time_min: '{today_start}',
   time_max: '{today_end}',
@@ -174,14 +181,14 @@ Task(
 
 STEP 1: Search inbox using:
 mcp__google_workspace__search_gmail_messages(
-  user_google_email: 'tutecosta@gmail.com',
+  user_google_email: '{USER_EMAIL}',
   query: 'in:inbox',
   page_size: 50
 )
 
 STEP 2: Batch fetch full content (max 25 per batch):
 mcp__google_workspace__get_gmail_messages_content_batch(
-  user_google_email: 'tutecosta@gmail.com',
+  user_google_email: '{USER_EMAIL}',
   message_ids: [list of IDs],
   format: 'full'
 )
@@ -234,7 +241,7 @@ STEP 1: Fetch assigned issues using:
 mcp_atlassian_jira_jira_get(
   path: '/rest/api/3/search/jql',
   queryParams: {
-    'jql': 'project = POD-3 AND assignee = currentUser() AND resolution = Unresolved ORDER BY priority DESC, duedate ASC',
+    'jql': 'project = {JIRA_PROJECT} AND assignee = currentUser() AND resolution = Unresolved ORDER BY priority DESC, duedate ASC',
     'maxResults': '50',
     'fields': 'key,summary,status,priority,duedate,updated,assignee,comment'
   }
@@ -244,7 +251,7 @@ STEP 2: For each issue, apply priority logic:
 
 1. QA Comments Check (CRITICAL - do first):
    - If status is 'IN QA' or 'In QA':
-     - Check comments for any NOT authored by tutecosta@gmail.com
+     - Check comments for any NOT authored by {USER_EMAIL}
      - If found: priority = 'high', has_qa_comments = true, action = 'Respond to QA comments and address feedback'.
        Specify what comments specifically need my attention.
        If you can't find specific comments, priority drops to low.
@@ -272,7 +279,7 @@ STEP 3: Return ONLY a JSON array (no explanation) with this structure for each i
   'source_type': 'issue',
   'priority': 'high' | 'medium' | 'low',
   'due_date': duedate or null (ISO 8601),
-  'url': 'https://aquiferhq.atlassian.net/browse/{KEY}',
+  'url': 'https://{JIRA_SITE}.atlassian.net/browse/{KEY}',
   'action': specific actionable step,
   'low_priority_reason': reason string (only if low priority),
   'metadata': {
@@ -360,7 +367,7 @@ Generated at [YYYY-MM-DD HH:MM:SS]
 
 ### 6. Write File to Daily Notes Directory
 
-1. Calculate output path: `/Users/tute/Code/ai/railspilot/daily_notes/{YYYY-MM-DD}.txt`
+1. Calculate output path: `daily_notes/{YYYY-MM-DD}.txt` (relative to project root; create directory if missing)
 2. Use the Write tool with the absolute path
 3. This will overwrite any existing file (fresh data on each run)
 4. Confirm success by displaying the path to the generated file
@@ -383,7 +390,7 @@ Always create the markdown file even if some Tasks fail, so the user has a recor
 /today
 ```
 
-This will generate a file at `/Users/tute/Code/ai/railspilot/daily_notes/YYYY-MM-DD.txt` with all of today's tasks from Calendar, Gmail, and Jira.
+This will generate a file at `daily_notes/YYYY-MM-DD.txt` with all of today's tasks from Calendar, Gmail, and Jira.
 
 Each run overwrites the existing file for today with fresh data from Google Calendar, Gmail, and Jira.
 
