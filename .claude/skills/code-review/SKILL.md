@@ -13,12 +13,12 @@ Review checklist:
 1. Bugs & logic errors: Find incorrect assumptions, missing validations, bad
    conditionals, or breaks to existing behavior.
 2. Edge cases: Think about nils, empty collections, unusual user data, race
-   conditions, multi-step workflows, cross-pack dependencies, and authorization.
+   conditions, multi-step workflows, and authorization.
 3. Performance: Check for N+1 queries, unbounded loops, heavy object
    allocations, repeated database hits, or anything that scales poorly with
    larger data.
 4. Tests: Flag missing coverage for new code paths, validations, failure states,
-   and boundary conditions. Highlight brittle or misleading tests. Every pubic
+   and boundary conditions. Highlight brittle or misleading tests. Every public
    method should have unit tests. Every controller action should have request
    specs.
 5. Rails/Packwerk context: Ensure routing, strong params, callbacks, scopes,
