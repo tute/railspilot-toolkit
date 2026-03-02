@@ -593,7 +593,7 @@ EOF
 
 ### Step 18: Create Pull Request
 
-Generate comprehensive PR with task manager integration.
+Invoke the `pr-title-and-description` skill to generate the PR title and description, then create the PR with task manager integration.
 
 #### If Linear:
 **PR Creation Command:**
@@ -790,6 +790,7 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - `full-code-review` skill available
 - `railspilot-staff-review` skill available
 - `simplify` skill available
+- `pr-title-and-description` skill available
 
 ## Error Handling
 
