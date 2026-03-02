@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: Implements a Linear or Jira issue end-to-end: branch, TDD, parallel code reviews, PR. Auto-detects task manager from recent commits. Use when given an issue ID (e.g., TRA-9, PROJ-456) and asked to implement it.
+description: Implements a Linear or Jira issue end-to-end: branch, TDD, code reviews. Auto-detects task manager from recent commits. Use when given an issue ID (e.g., TRA-9, PROJ-456) and asked to implement it.
 disable-model-invocation: true
 ---
 
@@ -8,26 +8,13 @@ disable-model-invocation: true
 
 ## Overview
 
-This skill provides a comprehensive workflow for implementing issues from **Linear** or **Jira** with professional software engineering practices. It automates the entire development lifecycle from issue analysis through PR creation, ensuring quality through test-driven development, parallel code reviews, and systematic validation.
+This skill provides a comprehensive workflow for implementing issues from **Linear** or **Jira** with professional software engineering practices. It automates the entire development lifecycle from issue analysis through PR title and description delivery, ensuring quality through test-driven development, parallel code reviews, and systematic validation.
 
 **The skill automatically detects which task manager to use** by examining recent commit messages on the master branch for Linear or Jira URLs.
 
-## When to Use This Skill
-
-Use this skill when:
-- User provides an issue ID (format: `TRA-9`, `DEV-123`, `PROJ-456`, etc.)
-- User requests implementation of a Linear or Jira issue
-- User wants a structured TDD approach with code review
-- User needs automated workflow from issue to PR
-
-Examples:
-- "Implement TRA-142"
-- "Help me build the feature in DEV-89"
-- "Work on issue PROJ-456"
-
 ## Core Workflow
 
-The skill follows a 15-step process:
+The skill follows a 17-step process:
 
 1. **Detect Task Manager** - Examine recent commits on master to identify Linear or Jira
 2. **Fetch Issue** - Retrieve complete issue details via appropriate MCP/API
@@ -38,12 +25,14 @@ The skill follows a 15-step process:
 7. **Save to Memory** - Store plan in memory graph for tracking
 8. **Review Plan** - Present plan for user confirmation
 9. **TDD Implementation** - Invoke `tdd-skill` skill for test-driven development
-10. **Parallel Code Reviews** - Invoke `full-code-review` skill for comprehensive analysis
-11. **Address Feedback** - Systematically fix issues from code reviews
-12. **Validation** - Ensure all tests and linters pass
-13. **Logical Commits** - Create meaningful commit history
-14. **Create PR** - Generate comprehensive pull request with task manager linking
-15. **Final Verification** - Confirm CI/CD pipeline and task manager integration
+10. **Code Simplification** - Invoke `simplify` skill to review for reuse, quality, and efficiency
+11. **Full Code Review** - Invoke `full-code-review` skill (security + Rails best practices)
+12. **Address Code Review Feedback** - Fix high priority issues from simplify and full code review. Ask for confirmation for lower priority ones
+13. **Staff Engineer Review** - Invoke `railspilot-staff-review` skill (final validation on clean code)
+14. **Address Staff Review Feedback** - Fix high priority issues from staff engineer review. Ask for confirmation for lower priority ones
+15. **Validation & Linting** - Ensure all tests and linters pass on the new changes
+16. **Create PR title and description** - Invoke `pr-title-and-description` skill
+17. **Completion Summary** - Present PR title and description wich a checklist of all completed steps
 
 ## Workflow Implementation Details
 
@@ -82,38 +71,20 @@ After detection, store the task manager type for use throughout the workflow:
 
 Retrieve the complete issue using the detected task manager's API.
 
-#### If Linear:
-```
-mcp__linear__get_issue(id: <issue-id>)
-```
+| | Linear | Jira |
+|---|---|---|
+| **API call** | `mcp__linear__get_issue(id: <issue-id>)` | `mcp__jira__jira_get(path: "/rest/api/3/issue/<issue-key>")` |
+| **Title** | `title` | `fields.summary` |
+| **Branch hint** | `branchName` field | Derive: `<initials>/<issue-key>-<slugified-summary>` |
 
 Extract key information:
-- Title and description
+- Title/summary and description
 - Current status and priority
-- Suggested git branch name (`branchName` field)
-- Team and project context
-- Attachments or related work
-- Labels and assigned team members
-
-#### If Jira:
-```
-mcp__jira__get_issue(issue_key: <issue-key>)
-```
-
-Or via REST API:
-```bash
-curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  "https://$JIRA_DOMAIN/rest/api/3/issue/<issue-key>"
-```
-
-Extract key information:
-- Summary and description
-- Current status and priority
-- Issue type (Story, Bug, Task, etc.)
-- Sprint and project context
-- Attachments or linked issues
-- Labels, components, and assignee
+- Branch naming hint (see table above)
+- Team/sprint and project context
+- Issue type (Jira: Story, Bug, Task, etc.)
+- Attachments, linked issues, or related work
+- Labels, components, and assigned team members
 
 ### Step 3: Gather Additional Context
 
@@ -191,80 +162,31 @@ After gathering context, summarize:
 
 ### Step 4: Move Issue to In Progress
 
-Update the issue status to reflect active development.
+Update the issue status to reflect active development. This provides visibility to team members that work has begun.
 
-#### If Linear:
-1. Identify the team ID from the issue
-2. Retrieve "In Progress" state using `mcp__linear__list_issue_statuses(team: <team-id>)`
-3. Update issue using `mcp__linear__update_issue(id: <issue-id>, state: <in-progress-state-id>)`
+**Linear:**
+1. Get team ID from issue → `mcp__linear__list_issue_statuses(team: <team-id>)` → `mcp__linear__update_issue(id: <issue-id>, state: <in-progress-state-id>)`
 
-#### If Jira:
-1. List available transitions: `mcp__jira__get_transitions(issue_key: <issue-key>)`
-2. Find the "In Progress" transition ID
-3. Transition issue: `mcp__jira__transition_issue(issue_key: <issue-key>, transition_id: <id>)`
-
-Or via REST API:
-```bash
-# Get available transitions
-curl -s -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  "https://$JIRA_DOMAIN/rest/api/3/issue/<issue-key>/transitions"
-
-# Execute transition
-curl -s -X POST -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"transition":{"id":"<transition-id>"}}' \
-  "https://$JIRA_DOMAIN/rest/api/3/issue/<issue-key>/transitions"
-```
-
-This provides visibility to team members that work has begun.
+**Jira:**
+1. `mcp__jira__jira_get(path: "/rest/api/3/issue/<issue-key>/transitions")` → find "In Progress" transition → `mcp__jira__jira_post(path: "/rest/api/3/issue/<issue-key>/transitions", body: {"transition":{"id":"<id>"}})`
 
 ### Step 5: Create Feature Branch
 
 Create a git branch using the task manager's naming convention.
 
-#### If Linear:
-Use Linear's suggested branch name from the `branchName` field:
+**Branch name source:**
+- **Linear**: Use `branchName` field from the issue (e.g., `dg/tra-142-user-notification-service`)
+- **Jira**: Derive as `<initials>/<issue-key>-<slugified-summary>` (e.g., `jd/PROJ-142-user-notification-service`)
+
 ```bash
-# Ensure on main and up-to-date
 git checkout main
 git pull origin main
-
-# Get branch name from Linear's branchName field
-BRANCH_NAME="<from Linear branchName field>"
-
-# Create branch if new, or checkout if exists (idempotent)
+BRANCH_NAME="<branch name from above>"
 git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
-
-# Verify correct branch
 git branch --show-current
 ```
 
-#### If Jira:
-Create branch with Jira naming convention:
-```bash
-# Ensure on main and up-to-date
-git checkout main
-git pull origin main
-
-# Create branch with Jira naming: <initials>/<issue-key>-<slugified-summary>
-BRANCH_NAME="<initials>/<issue-key>-<slugified-summary>"
-
-# Create branch if new, or checkout if exists (idempotent)
-git checkout -b "$BRANCH_NAME" 2>/dev/null || git checkout "$BRANCH_NAME"
-
-# Verify correct branch
-git branch --show-current
-```
-
-**Branch Naming Examples:**
-- Linear: `dg/tra-142-user-notification-service`
-- Jira: `jd/PROJ-142-user-notification-service`
-
-This pattern ensures:
-- Reuse of existing branches
-- Consistent task manager-linked naming
-- Idempotent operations (safe to re-run)
-- Always working from latest main
+This pattern ensures idempotent operations (reuses existing branches) and always starts from latest main.
 
 ### Step 6: Analyze and Plan Solution
 
@@ -328,72 +250,21 @@ Present the complete plan for confirmation:
 - Add requirements or constraints
 - Ask clarifying questions
 
-### Step 9: Test-Driven Development Implementation
+### Step 9: TDD Implementation
 
-Upon approval, invoke the TDD workflow skill:
+### Step 10: Code Simplification
 
-```
-Invoke the Skill tool with: tdd-skill
-```
+### Step 11: Full Code Review
 
-The TDD workflow skill enforces:
-- Red-Green-Refactor cycles
-- Test pyramid strategy (unit → integration → system)
-- Writing tests before implementation
-- Comprehensive test coverage including system specs
+### Step 12: Address Code Review Feedback
 
-**Expected Outcomes:**
-- Complete test coverage for new functionality
-- Implementation following project POODR principles
-- Result pattern for operations that can fail
-- Clean, maintainable code structure
-
-### Step 10: Parallel Subagent Code Reviews
-
-After implementation, invoke the parallel code review skill:
-
-```
-Invoke the Skill tool with: full-code-review
-```
-
-This launches specialized review subagents in parallel:
-
-**Security Review:**
-- OWASP Top 10 vulnerabilities
-- Multi-tenant security (ActsAsTenant verification)
-- XSS, CSRF, SQL injection prevention
-- Authentication and authorization checks
-- Sensitive data handling
-
-**Rails Best Practices Review:**
-- POODR principles (SRP, dependency management, Tell Don't Ask)
-- Rails 7+ conventions
-- N+1 query prevention
-- ActiveRecord optimization
-- Service object patterns
-- Result pattern usage
-
-**Frontend Review (if applicable):**
-- ViewComponent best practices
-- Tailwind CSS conventions
-- StimulusJS patterns
-- Accessibility (ARIA attributes)
-
-**Output:**
-- Consolidated review report
-- Decision tracking to prevent redundancy
-- Prioritized feedback by severity and impact
-
-### Step 11: Address Review Feedback
-
-Systematically address feedback from the code reviews:
+Before the staff engineer review, address all findings from simplify and full code review so the staff review sees clean code:
 
 **Process:**
-1. Parse and prioritize feedback by impact and effort
-2. Identify common refactoring patterns
+1. Review any feedback from simplify that couldn't be auto-fixed
+2. Parse and prioritize feedback from full-code-review
 3. Implement fixes incrementally with test validation
 4. Ensure backward compatibility
-5. Update documentation as needed
 
 **Architectural Feedback is MANDATORY:**
 - Extract service objects if controllers/models have too many responsibilities
@@ -401,9 +272,23 @@ Systematically address feedback from the code reviews:
 - Refactor to improve testability and maintainability
 - Add comprehensive specs for new service objects
 
-**Note:** Do NOT create PR until all architectural feedback is implemented.
+**Note:** Do NOT proceed to staff review until all code review feedback is addressed.
 
-### Step 12: Validation and Quality Assurance
+### Step 13: Staff Engineer Review
+
+### Step 14: Address Staff Review Feedback
+
+Address findings from the staff engineer review:
+
+**Process:**
+1. Parse and prioritize staff review findings by severity
+2. Implement fixes incrementally with test validation
+3. Ensure backward compatibility
+4. Update documentation as needed
+
+**Note:** Do NOT create PR until all staff review feedback is addressed.
+
+### Step 15: Validation and Quality Assurance
 
 Before creating commits, ensure everything passes:
 
@@ -432,206 +317,49 @@ bin/lint
 - Warnings about `MigratedSchemaVersion` and `ContextCreatingMethods` are harmless
 - **Actual offenses must be addressed** (look for file paths and line numbers)
 
-### Step 13: Create Logical Commits
-
-Create meaningful commits that tell the implementation story:
-
-**Commit Strategy:**
-1. **Test commits**: Add failing tests for new functionality
-2. **Implementation commits**: Add code to make tests pass
-3. **Refactor commits**: Improve code structure
-4. **Security fixes**: Address security review feedback
-5. **Pattern improvements**: Implement OOP/Rails pattern suggestions
-6. **Documentation commits**: Update docs if needed
-
 **Commit Message Format:**
 
-#### If Linear:
 ```
-Present-tense summary under 50 characters
+[Jira only: <ISSUE-KEY> ]Present-tense summary under 50 characters
 
 - Detailed explanation if needed (under 72 chars per line)
 - Reference which review feedback was addressed
 - Note any breaking changes or migration requirements
 
-Linear issue: <Linear issue URL>
+Linear issue: <Linear issue URL>  OR  Jira issue: <Jira issue URL>
 Implemented with Claude Code
 ```
 
-#### If Jira:
-```
-<ISSUE-KEY> Present-tense summary under 50 characters
+**Differences:** Jira prefixes the subject with the issue key (e.g., `PROJ-142 Add user notification service`). Linear does not prefix.
 
-- Detailed explanation if needed (under 72 chars per line)
-- Reference which review feedback was addressed
-- Note any breaking changes or migration requirements
+### Step 16: Create PR title and description
 
-Jira issue: <Jira issue URL>
-Implemented with Claude Code
-```
+Invoke the `pr-title-and-description` skill.
 
-**Use heredoc for proper formatting:**
+### Step 17: Completion Summary
 
-#### Linear Example:
-```bash
-git commit -m "$(cat <<'EOF'
-Add user notification service
-
-- Extract notification logic from controller
-- Apply Result pattern for error handling
-- Add comprehensive RSpec tests with edge cases
-
-Linear issue: https://linear.app/company/issue/TRA-142
-Implemented with Claude Code
-EOF
-)"
-```
-
-#### Jira Example (Smart Commits):
-```bash
-git commit -m "$(cat <<'EOF'
-PROJ-142 Add user notification service
-
-- Extract notification logic from controller
-- Apply Result pattern for error handling
-- Add comprehensive RSpec tests with edge cases
-
-Jira issue: https://company.atlassian.net/browse/PROJ-142
-Implemented with Claude Code
-EOF
-)"
-```
-
-### Step 14: Create Pull Request
-
-Generate comprehensive PR with task manager integration.
-
-#### If Linear:
-**PR Creation Command:**
-```bash
-gh pr create --title "<concise-title>" --body "$(cat <<'EOF'
-## Summary
-- Concise bullet points of what was implemented
-- Key technical decisions made
-
-## Implementation Details
-- Architecture approach and patterns used
-- Services/models/controllers added or modified
-- Database changes (if applicable)
-
-## Testing Strategy
-- Test coverage added (unit, integration, system)
-- Edge cases covered
-- Manual testing performed
-
-## Code Review Process
-- Security review findings and resolutions
-- Rails best practices review findings and resolutions
-- Performance considerations addressed
-
-## Breaking Changes
-[None or list any breaking changes]
-
-## Linear Issue
-Closes <Linear issue URL>
-
----
-Implemented with Claude Code following TDD methodology with parallel code reviews.
-EOF
-)"
-```
-
-**Linear Integration:**
-- Include `Closes <Linear-issue-URL>` in PR body
-- Linear automatically links and updates issue status when PR merges
-
-#### If Jira:
-**PR Creation Command:**
-```bash
-gh pr create --title "<ISSUE-KEY>: <concise-title>" --body "$(cat <<'EOF'
-## Summary
-- Concise bullet points of what was implemented
-- Key technical decisions made
-
-## Implementation Details
-- Architecture approach and patterns used
-- Services/models/controllers added or modified
-- Database changes (if applicable)
-
-## Testing Strategy
-- Test coverage added (unit, integration, system)
-- Edge cases covered
-- Manual testing performed
-
-## Code Review Process
-- Security review findings and resolutions
-- Rails best practices review findings and resolutions
-- Performance considerations addressed
-
-## Breaking Changes
-[None or list any breaking changes]
-
-## Jira Issue
-Closes [<ISSUE-KEY>](<Jira issue URL>)
-
----
-Implemented with Claude Code following TDD methodology with parallel code reviews.
-EOF
-)"
-```
-
-**Jira Integration:**
-- Include issue key in PR title (e.g., `PROJ-142: Add user notification service`)
-- Include issue link in PR body
-- Jira automatically links PR when issue key is mentioned
-- Issue may auto-transition when PR merges (depends on Jira configuration)
-
-**PR Description Includes:**
-- Summary of implementation
-- Technical approach and key decisions
-- Testing strategy and coverage
-- Code review findings and resolutions
-- Security considerations addressed
-- Breaking changes or migration notes
-- Screenshots/demos if applicable
-
-### Step 15: Final Verification
-
-Verify PR setup and completion:
-
-**Final Checks:**
-- CI/CD pipeline triggered successfully
-- Task manager issue linked and updated
-- All tests passing in CI environment
-- Code review assignees notified
-- Branch protection rules satisfied
-- Security and pattern reviews documented
-
-**Completion Summary:**
 Present checklist to user:
 - Issue analyzed and planned
 - Solution implemented with TDD
 - Comprehensive system specs added
-- Security review completed
-- Rails/OOP patterns review completed
-- All review feedback addressed
+- Code simplification completed (simplify)
+- Security and Rails review completed (full-code-review)
+- Code review feedback addressed
+- Staff engineer review completed (railspilot-staff-review) — final validation
+- Staff review feedback addressed
 - All tests and linting pass
 - Logical commit history created
 - PR created with task manager integration
 
 ## Integration with Other Skills
 
-This skill orchestrates multiple specialized skills:
+This skill orchestrates multiple specialized skills in a specific sequence:
 
-**tdd-skill:**
-- Enforces Red-Green-Refactor cycles
-- Ensures test-first development
-- Guides test pyramid strategy
-
-**full-code-review:**
-- Runs security and Rails reviews concurrently
-- Consolidates findings to avoid redundancy
-- Provides prioritized feedback
+1. **tdd-skill** (Step 9)
+2. **commit** (Steps 9 through 14)
+3. **simplify** (Step 10) + **full-code-review** (Step 11) → Address findings (Step 12)
+4. **railspilot-staff-review** (Step 13) → Address findings (Step 14)
+5. **pr-title-and-description** (Step 16)
 
 ## Project-Specific Conventions
 
@@ -686,11 +414,13 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 
 **GitHub CLI:**
 - `gh` CLI tool installed and authenticated
-- Repository configured for PR creation
 
 **Skills:**
 - `tdd-skill` skill available
 - `full-code-review` skill available
+- `railspilot-staff-review` skill available
+- `simplify` skill available
+- `pr-title-and-description` skill available
 
 ## Error Handling
 
@@ -701,17 +431,12 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - If no URLs found, the skill will ask which task manager to use
 - You can also specify explicitly: "Implement TRA-142 (Linear)" or "Implement PROJ-123 (Jira)"
 
-**Linear Issue Not Found:**
-- Verify issue ID format (e.g., `TRA-9`, not `tra-9`)
-- Confirm Linear MCP integration is working
-- Check user has access to the team/issue
+**Issue Not Found:**
+- Verify issue ID format is uppercase (e.g., `TRA-9` not `tra-9`, `PROJ-123` not `proj-123`)
+- Confirm MCP integration is working (Linear MCP or Jira MCP)
+- Check user has access to the team/project/issue
 
-**Jira Issue Not Found:**
-- Verify issue key format (e.g., `PROJ-123`, not `proj-123`)
-- Confirm Jira MCP or REST API credentials are configured
-- Check user has access to the project/issue
-
-**Jira Transition Not Available:**
+**Status Transition Not Available (Jira):**
 - List available transitions for current issue status
 - Some transitions require specific conditions (e.g., all subtasks complete)
 - Contact Jira admin if workflow is blocking
@@ -730,64 +455,34 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - MUST address architectural feedback before PR
 - Extract service objects as recommended
 - Apply Result pattern where suggested
-- Only create PR after all feedback implemented
 
 ## Example Workflow
 
-**User Request:**
-```
-Implement TRA-142
-```
+**User Request:** `Implement TRA-142` (Linear) or `Implement PROJ-456` (Jira)
 
 **Skill Response:**
-1. Detects task manager from recent commits on master (finds `linear.app` URLs)
-2. Fetches TRA-142 from Linear
-3. Gathers additional context:
-   - Searches Obsidian vault for "TRA-142" and related keywords
-   - Fetches Sentry issue details (if referenced)
-   - Retrieves GitHub PR discussions (if referenced)
-4. Updates issue to "In Progress"
-5. Creates branch `dg/tra-142-user-notification-service` (Linear's suggested name)
-6. Analyzes requirements and creates plan (informed by gathered context)
-7. Saves plan to memory graph
-8. Presents plan: "This will create a new service object for user notifications using the Result pattern..."
-9. **Waits for user approval**
-10. Upon approval, invokes `tdd-skill` skill
-11. After implementation, invokes `full-code-review` skill
-12. Reviews identify: "Extract notification logic to service object, apply Result pattern"
-13. Addresses feedback from code reviews
-14. Runs validation: `bundle exec rspec`, `bin/lint`
-15. Creates logical commits with proper messages
-16. Creates PR with comprehensive description and Linear linking
-17. Presents completion checklist
-
-**Jira Example:**
-```
-Implement PROJ-456
-```
-
-**Skill Response:**
-1. Detects task manager from recent commits on master (finds `atlassian.net` URLs)
-2. Fetches PROJ-456 from Jira
-3. Gathers additional context (Obsidian, Sentry, GitHub)
-4. Transitions issue to "In Progress"
-5. Creates branch `jd/PROJ-456-user-notification-service`
-6. Analyzes requirements and creates plan
-7. Saves plan to memory graph
-8. Presents plan for approval
-9. **Waits for user approval**
-10. Implements with TDD, runs code reviews, addresses feedback
-11. Runs validation
-12. Creates logical commits with Jira smart commit format
-13. Creates PR with `PROJ-456:` in title and Jira link in body
-14. Presents completion checklist
+1. **Detect Task Manager** — finds `linear.app` or `atlassian.net` URLs in recent commits on master
+2. **Fetch Issue** — retrieves issue details using detected task manager's API
+3. **Gather Additional Context** — searches Obsidian vault, Sentry (if referenced), GitHub PRs (if referenced)
+4. **Move to In Progress** — transitions issue status
+5. **Create Feature Branch** — e.g., Linear: `dg/tra-142-...` from `branchName` / Jira: `jd/PROJ-456-...` derived
+6. **Analyze & Plan** — breaks down requirements, creates implementation plan informed by gathered context
+7. **Save to Memory** — stores plan in memory graph
+8. **Review Plan** — presents plan for approval. **Waits for user confirmation.**
+9. **TDD Implementation** — invokes `tdd-skill` skill
+10. **Code Simplification** — invokes `simplify` skill, applies fixes
+11. **Full Code Review** — invokes `full-code-review` skill (security + Rails best practices)
+12. **Address Code Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
+13. **Staff Engineer Review** — invokes `railspilot-staff-review` skill (final validation on clean code)
+14. **Address Staff Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
+15. **Validation & Linting** — runs `bundle exec rspec`, `bin/lint`, fixes any failures
+16. **Create PR title and description** — invokes `pr-title-and-description` skill
+17. **Completion Summary** — presents PR title and description with a checklist of all completed steps
 
 **Final Output:**
 - Working feature branch with complete implementation
 - All tests passing
 - All linting passing
-- Comprehensive PR with task manager integration
-- Issue automatically updated when PR merges
 
 ## Best Practices
 
@@ -808,15 +503,3 @@ Implement PROJ-456
 - Don't skip recommended refactoring
 - Validate fixes with tests
 - Consider performance implications
-
-**PR Creation:**
-- Write comprehensive descriptions
-- Document review findings and resolutions
-- Include manual testing notes
-- Ensure task manager linking is correct (Linear URL or Jira issue key)
-
-**Quality Gates:**
-- Never create PR with failing tests
-- Never create PR with linting errors
-- Never create PR without addressing architectural feedback
-- Never skip validation steps
