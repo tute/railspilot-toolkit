@@ -6,11 +6,12 @@ A Claude Code skill for implementing Linear or Jira issues with a complete TDD w
 
 ## Quick Start
 
-This skill automates the entire development lifecycle from issue to merged PR. Simply ask Claude to implement an issue:
+This skill automates the entire development lifecycle from issue to merged PR. Invoke the skill:
 
 ```
 Implement TRA-142
 Implement PROJ-456
+/implement https://medu-dev.atlassian.net/browse/P3-613
 ```
 
 Claude will auto-detect whether the project uses Linear or Jira, fetch the issue, gather context from Obsidian/Sentry/GitHub, create a branch, plan the implementation, write tests first, implement the feature, run parallel code reviews, address feedback, and create a comprehensive PR.
