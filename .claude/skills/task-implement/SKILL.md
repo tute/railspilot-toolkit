@@ -27,7 +27,7 @@ Examples:
 
 ## Core Workflow
 
-The skill follows a 19-step process:
+The skill follows a 20-step process:
 
 1. **Detect Task Manager** - Examine recent commits on master to identify Linear or Jira
 2. **Fetch Issue** - Retrieve complete issue details via appropriate MCP/API
@@ -41,13 +41,14 @@ The skill follows a 19-step process:
 10. **Address Feedback from TDD** - Fix any issues identified during test-driven development
 11. **Code Simplification** - Invoke `simplify` skill to review for reuse, quality, and efficiency
 12. **Full Code Review** - Invoke `full-code-review` skill (security + Rails best practices)
-13. **Staff Engineer Review** - Invoke `railspilot-staff-review` skill (final validation using pattern library)
-14. **Address Review Feedback** - Systematically fix issues from all code reviews
-15. **Validation & Linting** - Ensure all tests and linters pass
-16. **Create Logical Commits** - Create meaningful commit history
-17. **Create PR** - Generate comprehensive pull request with task manager linking
-18. **Final Verification** - Confirm CI/CD pipeline and task manager integration
-19. **Completion Summary** - Present checklist of all completed steps
+13. **Address Code Review Feedback** - Fix issues from simplify and full code review
+14. **Staff Engineer Review** - Invoke `railspilot-staff-review` skill (final validation on clean code)
+15. **Address Staff Review Feedback** - Fix issues from staff engineer review
+16. **Validation & Linting** - Ensure all tests and linters pass
+17. **Create Logical Commits** - Create meaningful commit history
+18. **Create PR** - Generate comprehensive pull request with task manager linking
+19. **Final Verification** - Confirm CI/CD pipeline and task manager integration
+20. **Completion Summary** - Present checklist of all completed steps
 
 ## Workflow Implementation Details
 
@@ -434,9 +435,27 @@ Invoke the Skill tool with: full-code-review
 - Decision tracking to prevent redundancy
 - Prioritized feedback by severity and impact
 
-### Step 13: Staff Engineer Review
+### Step 13: Address Code Review Feedback
 
-After full code review, invoke the staff engineer review skill:
+Before the staff engineer review, address all findings from simplify and full code review so the staff review sees clean code:
+
+**Process:**
+1. Review any feedback from simplify that couldn't be auto-fixed
+2. Parse and prioritize feedback from full-code-review
+3. Implement fixes incrementally with test validation
+4. Ensure backward compatibility
+
+**Architectural Feedback is MANDATORY:**
+- Extract service objects if controllers/models have too many responsibilities
+- Apply Result pattern for operations that can fail
+- Refactor to improve testability and maintainability
+- Add comprehensive specs for new service objects
+
+**Note:** Do NOT proceed to staff review until all code review feedback is addressed.
+
+### Step 14: Staff Engineer Review
+
+After all code review findings are resolved, invoke the staff engineer review skill on clean code:
 
 ```
 Invoke the Skill tool with: railspilot-staff-review
@@ -459,27 +478,21 @@ The agent loads all patterns from `.claude/skills/railspilot-staff-review/patter
 - Pattern IDs for reference and learning
 - Concrete code suggestions with examples
 
-**Note:** Staff review runs LAST as the final validation of code quality, ensuring that optimized code follows all staff-engineer patterns.
+**Note:** Staff review runs LAST as the final validation gate. It reviews code that has already been simplified and had all senior-level findings resolved, so it can focus on architecture, patterns, and strategic concerns.
 
-After all code reviews are complete, address any remaining feedback:
+### Step 15: Address Staff Review Feedback
+
+Address findings from the staff engineer review:
 
 **Process:**
-1. Review any feedback from simplify that couldn't be auto-fixed
-2. Parse and prioritize feedback from full-code-review and railspilot-staff-review
-3. Identify common refactoring patterns
-4. Implement fixes incrementally with test validation
-5. Ensure backward compatibility
-6. Update documentation as needed
+1. Parse and prioritize staff review findings by severity
+2. Implement fixes incrementally with test validation
+3. Ensure backward compatibility
+4. Update documentation as needed
 
-**Architectural Feedback is MANDATORY:**
-- Extract service objects if controllers/models have too many responsibilities
-- Apply Result pattern for operations that can fail
-- Refactor to improve testability and maintainability
-- Add comprehensive specs for new service objects
+**Note:** Do NOT create PR until all staff review feedback is addressed.
 
-**Note:** Do NOT create PR until all review feedback is addressed.
-
-### Step 15: Validation and Quality Assurance
+### Step 16: Validation and Quality Assurance
 
 Before creating commits, ensure everything passes:
 
@@ -508,7 +521,7 @@ bin/lint
 - Warnings about `MigratedSchemaVersion` and `ContextCreatingMethods` are harmless
 - **Actual offenses must be addressed** (look for file paths and line numbers)
 
-### Step 16: Create Logical Commits
+### Step 17: Create Logical Commits
 
 Create meaningful commits that tell the implementation story:
 
@@ -578,7 +591,7 @@ EOF
 )"
 ```
 
-### Step 17: Create Pull Request
+### Step 18: Create Pull Request
 
 Generate comprehensive PR with task manager integration.
 
@@ -671,7 +684,7 @@ EOF
 - Breaking changes or migration notes
 - Screenshots/demos if applicable
 
-### Step 18: Final Verification
+### Step 19: Final Verification
 
 Verify PR setup and completion:
 
@@ -683,16 +696,17 @@ Verify PR setup and completion:
 - Branch protection rules satisfied
 - Security and pattern reviews documented
 
-### Step 19: Completion Summary
+### Step 20: Completion Summary
 
 Present checklist to user:
 - Issue analyzed and planned
 - Solution implemented with TDD
 - Comprehensive system specs added
 - Code simplification completed (simplify)
-- Security review completed (full-code-review)
+- Security and Rails review completed (full-code-review)
+- Code review feedback addressed
 - Staff engineer review completed (railspilot-staff-review) — final validation
-- All review feedback addressed
+- Staff review feedback addressed
 - All tests and linting pass
 - Logical commit history created
 - PR created with task manager integration
@@ -706,21 +720,15 @@ This skill orchestrates multiple specialized skills in a specific sequence:
 - Ensures test-first development
 - Guides test pyramid strategy
 
-**simplify (Step 11):**
-- Reviews recently changed files for code reuse, quality, and efficiency
-- Spawns three parallel review agents (code reuse, code quality, efficiency)
-- Aggregates findings and directly applies fixes to your code
-- May request manual fixes for complex architectural changes
+**simplify (Step 11) + full-code-review (Step 12) → Address findings (Step 13):**
+- Simplify auto-fixes code reuse, quality, and efficiency issues
+- Full code review runs security and Rails reviews concurrently
+- All findings from both are addressed before staff review sees the code
 
-**full-code-review (Step 12):**
-- Runs security and Rails reviews concurrently
-- Consolidates findings to avoid redundancy
-- Provides prioritized feedback
-
-**railspilot-staff-review (Step 13):**
-- Launches staff-engineer-reviewer agent
-- Analyzes code against RailsPilot pattern library
-- Runs as final validation of code quality
+**railspilot-staff-review (Step 14) → Address findings (Step 15):**
+- Launches staff-engineer-reviewer agent on already-clean code
+- Focuses on architecture, patterns, and strategic concerns
+- Runs as the final validation gate
 
 ## Project-Specific Conventions
 
@@ -847,9 +855,9 @@ Implement TRA-142
 11. Addresses any feedback from TDD
 12. Invokes `simplify` skill to review code for reuse, quality, and efficiency, then applies fixes
 13. Invokes `full-code-review` skill (security + Rails best practices reviews)
-14. Invokes `railspilot-staff-review` skill (pattern-based staff review — final validation)
-15. Reviews identify: "Extract notification logic to service object, apply Result pattern"
-16. Addresses feedback from all code reviews (simplify, full-code-review, staff review)
+14. Addresses code review feedback (e.g., "Extract notification logic to service object, apply Result pattern")
+15. Invokes `railspilot-staff-review` skill (pattern-based staff review — final validation on clean code)
+16. Addresses staff review feedback
 17. Runs validation: `bundle exec rspec`, `bin/lint`
 18. Creates logical commits with proper messages
 19. Creates PR with comprehensive description and Linear linking
@@ -874,9 +882,9 @@ Implement PROJ-456
 11. Addresses any feedback from TDD
 12. Invokes `simplify` skill to review code for reuse, quality, and efficiency, then applies fixes
 13. Runs `full-code-review` skill (security + Rails best practices)
-14. Runs `railspilot-staff-review` skill (pattern-based review — final validation)
-15. Reviews identify issues from all three reviews
-16. Addresses feedback from simplify, full-code-review, and staff review
+14. Addresses code review feedback
+15. Runs `railspilot-staff-review` skill (pattern-based review — final validation on clean code)
+16. Addresses staff review feedback
 17. Runs validation: `bundle exec rspec`, `bin/lint`
 18. Creates logical commits with Jira smart commit format
 19. Creates PR with `PROJ-456:` in title and Jira link in body
