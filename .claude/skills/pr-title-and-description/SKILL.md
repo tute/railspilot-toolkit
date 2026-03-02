@@ -1,7 +1,6 @@
 ---
 name: pr-title-and-description
-description: Generates a PR title and bullet-point description from the current branch diff, matching the project's tone. Use when asked for a PR title or description.
-disable-model-invocation: true
+description: Generates a PR title and bullet-point description from the current branch diff, matching the project's tone. Use when asked to make a PR, create a PR, open a PR, or generate a PR title/description.
 ---
 
 Generate a short PR title + explanatory but concise PR description for the current git branch.

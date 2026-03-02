@@ -3,79 +3,73 @@ name: railspilot-staff-review
 description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review.
 ---
 
-Goal is to catch issues a staff engineer would flag before they see your code.
+Orchestration skill for comprehensive staff-engineer code reviews using RailsPilot's pattern library. Launches the `staff-engineer-reviewer` agent to evaluate code against established patterns.
 
 ## Workflow
 
-**Step 1: Identify what to review**
+**Step 1: Determine Review Scope**
 
-Determine the scope:
-- If the user provides a commit SHA, or mentions 'last N commits', review that diff
-- If no SHA, review the current branch changes against the base branch
+Identify what to review:
+- If user provides a commit SHA or 'last N commits', review that diff
+- Otherwise, review current branch changes against the base branch (main)
 
-**Step 2: Load the patterns**
+**Step 2: Launch Staff Engineer Reviewer Agent**
 
-Read the patterns file at `.claude/skills/railspilot-staff-review/patterns.md`. Each
-pattern has an ID, a category, a description, and detection hints.
+Use the Agent tool to launch `staff-engineer-reviewer` with:
+- Git diff of the changes to review
+- Patterns file path: `.claude/skills/railspilot-staff-review/patterns.md`
 
-**Step 3: Analyze each changed file**
+The agent will:
+- Load the entire patterns.md file containing all known patterns
+- Analyze each changed file against applicable patterns
+- Apply the "How RailsPilot Thinks" philosophy
+- Return findings organized by severity/category with pattern IDs, file references, and concrete suggestions
 
-For every file in the diff, check against ALL patterns in the patterns file. For each pattern:
-1. Check if the pattern applies to this file type (Ruby, JS, ERB, migration, etc.)
-2. Note the specific line(s) and what the improvement would look like
+**Step 3: Check Previous Decisions**
 
-**Step 4: Apply "How RailsPilot Thinks"**
+Before consolidating findings, check for previous reviews:
+- Search memory for previous staff review decisions
+- Read decision log file (if exists): `code_review_decisions.md`
+- Note any previously-decided concerns to avoid redundancy
 
-After pattern matching, re-read the "General: How RailsPilot Thinks" section and run through these questions for the entire diff:
-- **Subtractive check:** Is there code here that could be deleted? Does anything duplicate what the framework or libraries provides?
-- **Completeness check:** Does every behavior change have a corresponding test?
-- **Security first-draft check:** Are there new fields, URLs, or user inputs that need validation or encryption in this commit?
-- **Surface area check:** Is there anything in this diff that the ticket didn't ask for? Should we remove or extract into another task and commit?
-- **View cleanliness check:** Is there logic in ERB that belongs in a presenter or helper?
+**Step 4: Consolidate Findings**
 
-**Step 5: Generate the review**
+Merge and organize the agent's findings:
+- Remove duplicate concerns from the decision log
+- Organize by category and severity (Critical, High, Medium, Low)
+- Highlight critical issues requiring immediate attention
+- Note positive observations
 
-Output a review organized by severity:
+**Step 5: Update Decision Tracking**
 
-```
-## Staff Review: [branch or commit description]
+For decisions made during the review:
+- Update `code_review_decisions.md` with audit trail
+- Include rationale and context
 
-### Security
-- **[PATTERN-ID] [Pattern name]** — file.rb:42
-  Current: [what the code does now]
-  Suggested: [what a staff engineer would do]
+## Review Methodology
 
-### Architecture
-- **[PATTERN-ID] [Pattern name]** — file.rb:15
-  Current: [...]
-  Suggested: [...]
+The `staff-engineer-reviewer` agent handles all review methodology. See that agent's documentation for:
+- The "How RailsPilot Thinks" philosophy (9 core principles)
+- Detailed review process (pattern matching, completeness checks, security-first approach)
+- Output format and presentation standards
+- How patterns are applied and referenced
 
-### Simplicity
-- ...
+## Pattern Library
 
-### Completeness
-- ...
+All patterns are stored in `.claude/skills/railspilot-staff-review/patterns.md` and cover:
 
-### Code Hygiene
-- ...
+- **General**: How RailsPilot Thinks philosophy
+- **Security**: Data encryption, credential handling
+- **Architecture**: Error handling, service objects
+- **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
+- **Completeness**: Tests, edge cases, Stimulus patterns
+- **Testing**: Proper test structure, system under test protection
+- **Scope & Discipline**: One concern per commit, ticket scope adherence
 
-### Robustness
-- ...
+## Extending the Library
 
-### Testing
-- ...
-```
-
-## Rules
-
-- Show concrete code suggestions, not vague advice.
-- For each finding, reference the specific pattern ID so the user can look up the full explanation.
-- If the code is already good, say so. Don't force improvements where none are needed.
-- When suggesting changes, show minimal diffs — just the relevant lines, not full file rewrites.
-- Limit output to actionable findings. Aim for under 80 lines unless there are many real issues.
-
-## Extending
-
-To add new patterns learned from future reviews, edit
-`.claude/skills/railspilot-staff-review/patterns.md` and add entries following the existing
-format. Each review by a senior engineer is an opportunity to add patterns.
+To add new patterns learned from future reviews:
+1. Edit `.claude/skills/railspilot-staff-review/patterns.md`
+2. Add new pattern following existing format
+3. Include ID, category, applies-to scope, and concrete examples
+4. Each staff review is an opportunity to add patterns
