@@ -256,29 +256,6 @@ Present the complete plan for confirmation:
 
 ### Step 11: Full Code Review
 
-After code simplification, invoke the full code review skill:
-
-```
-Invoke the Skill tool with: full-code-review
-```
-
-**full-code-review** launches specialized review subagents in parallel:
-
-**Security Review (rails-security-reviewer):**
-
-**Rails Best Practices Review (rails-best-practices-reviewer):**
-
--**Frontend Review (if applicable):**
--- ViewComponent best practices
--- Tailwind CSS conventions
--- StimulusJS patterns
--- Accessibility (ARIA attributes)
-
-**Output:**
-- Consolidated security and Rails best practices findings
-- Decision tracking to prevent redundancy
-- Prioritized feedback by severity and impact
-
 ### Step 12: Address Code Review Feedback
 
 Before the staff engineer review, address all findings from simplify and full code review so the staff review sees clean code:
@@ -298,31 +275,6 @@ Before the staff engineer review, address all findings from simplify and full co
 **Note:** Do NOT proceed to staff review until all code review feedback is addressed.
 
 ### Step 13: Staff Engineer Review
-
-After all code review findings are resolved, invoke the staff engineer review skill on clean code:
-
-```
-Invoke the Skill tool with: railspilot-staff-review
-```
-
-**railspilot-staff-review** launches the staff-engineer-reviewer agent to analyze code against the RailsPilot pattern library:
-
-- Security considerations and vulnerability detection
-- Architecture decisions and design patterns
-- Code simplicity and maintainability
-- Completeness of implementation
-- Code hygiene and consistency
-- Robustness and error handling
-- Test coverage and quality
-
-The agent loads all patterns from `.claude/skills/railspilot-staff-review/patterns.md` and applies the "How RailsPilot Thinks" philosophy.
-
-**Output:**
-- Pattern-based findings organized by severity
-- Pattern IDs for reference and learning
-- Concrete code suggestions with examples
-
-**Note:** Staff review runs LAST as the final validation gate. It reviews code that has already been simplified and had all senior-level findings resolved, so it can focus on architecture, patterns, and strategic concerns.
 
 ### Step 14: Address Staff Review Feedback
 
@@ -403,24 +355,11 @@ Present checklist to user:
 
 This skill orchestrates multiple specialized skills in a specific sequence:
 
-**tdd-skill (Step 9):**
-- Enforces Red-Green-Refactor cycles
-- Ensures test-first development
-- Guides test pyramid strategy
-
-**commit (Steps 9 through 15):**
-- Commit the changes
-- Ensure meaningful commit history
-
-**simplify (Step 11) + full-code-review (Step 12) → Address findings (Step 13):**
-- Simplify auto-fixes code reuse, quality, and efficiency issues
-- Full code review runs security and Rails reviews concurrently
-- All findings from both are addressed before staff review sees the code
-
-**railspilot-staff-review (Step 14) → Address findings (Step 15):**
-- Launches staff-engineer-reviewer agent on already-clean code
-- Focuses on architecture, patterns, and strategic concerns
-- Runs as the final validation gate
+1. **tdd-skill** (Step 9)
+2. **commit** (Steps 9 through 14)
+3. **simplify** (Step 10) + **full-code-review** (Step 11) → Address findings (Step 12)
+4. **railspilot-staff-review** (Step 13) → Address findings (Step 14)
+5. **pr-title-and-description** (Step 16)
 
 ## Project-Specific Conventions
 
