@@ -26,7 +26,7 @@ available (in Rails, it would take precedense before `$PORT`).
 - `rails-security-reviewer`: Security auditing and multi-tenant data isolation
 - `refactor-planner`: Safe, incremental refactoring plans
 - `railspilot-progress-reporter`: Monthly client progress reports
-- `calendar-fetcher` / `gmail-fetcher` / `jira-fetcher`: Lightweight data fetchers for `/today`
+- `jira-fetcher`: Lightweight Jira data fetcher for `/today`
 
 ### Skills
 

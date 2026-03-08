@@ -10,7 +10,7 @@ Generate a daily task summary from Google Calendar, Gmail, and Jira, intelligent
 
 ## What This Command Does
 
-1. Spawns 3 parallel Task subagents to fetch and normalize data from each source
+1. Spawns 3 parallel subagents to fetch and normalize data from each source using the `gws` and `jira` CLI tools
 2. Each subagent processes data in its own context window, returning compact summaries
 3. Main agent merges summaries and generates plain text output
 4. Saves to: `daily_notes/YYYY-MM-DD.txt` (relative to project root)
@@ -25,9 +25,53 @@ Resolve these values before running:
 
 ## Requirements
 
-- Google Workspace MCP server configured
-- Atlassian Jira MCP server configured
-- Permissions for Calendar, Gmail, and Jira access
+- `gws` CLI installed and authenticated (Google Workspace CLI for Calendar and Gmail)
+- Atlassian Jira MCP server configured (for Jira)
+
+## CLI Reference: `gws` (Google Workspace CLI)
+
+### Calendar: List events for a date range
+
+```bash
+gws calendar events list --params '{
+  "calendarId": "primary",
+  "timeMin": "YYYY-MM-DDT00:00:00-03:00",
+  "timeMax": "YYYY-MM-DDT23:59:59-03:00",
+  "singleEvents": true,
+  "orderBy": "startTime"
+}'
+```
+
+Returns JSON with `items` array. Each item has: `summary`, `start.dateTime`, `end.dateTime`, `location`, `htmlLink`, `attendees`, `description`.
+
+### Gmail: List inbox messages
+
+```bash
+gws gmail users messages list --params '{
+  "userId": "me",
+  "maxResults": 20,
+  "q": "in:inbox"
+}'
+```
+
+IMPORTANT: Do NOT use date filters like `newer_than:` — the user keeps emails in inbox as a pending queue, so older emails are intentional.
+
+Returns JSON with `messages` array of `{id, threadId}`.
+
+### Gmail: Get message metadata
+
+```bash
+gws gmail users messages get --params '{
+  "userId": "me",
+  "id": "MESSAGE_ID",
+  "format": "metadata",
+  "metadataHeaders": ["From", "Subject", "Date"]
+}'
+```
+
+Returns JSON with `snippet`, `labelIds`, `internalDate`, and `payload` (headers).
+
+Batch multiple messages by looping IDs in a single shell command for efficiency.
 
 ## Normalized Task Schema
 
@@ -60,142 +104,83 @@ All subagents return JSON arrays conforming to this schema:
 
 Follow these steps to generate today's task summary:
 
-### 0. Verify MCP Server Availability (CRITICAL)
-
-Before proceeding, check if the required MCP servers are enabled:
-
-1. Read the file: `.claude/settings.local.json` (if it exists)
-2. Check the `disabledMcpjsonServers` array
-3. **If it contains "google_workspace" OR "atlassian_jira":**
-   - STOP immediately
-   - Display this error message to the user:
-
-   ```
-   ⚠️  MCP Servers Required but Disabled
-
-   To enable them:
-   1. Edit: .claude/settings.local.json
-   2. Remove "google_workspace" and "atlassian_jira" from the "disabledMcpjsonServers" array
-   3. Restart Claude Code
-
-   Note: These servers are disabled by default to avoid polluting the context window
-   in unrelated sessions. You can disable them again after running /today.
-   ```
-   - Do NOT proceed with the rest of the command
-   - Do NOT attempt to modify the settings file automatically
-4. **If the array is empty or doesn't contain these servers:**
-   - Proceed to next step below
-
 ### 1. Calculate Today's Date and Time Boundaries
 
 Determine the current date and create RFC3339 formatted timestamps for today's start and end:
 
 - Get today's date in YYYY-MM-DD format
 - Determine the day of week (important for POD-3 standup logic)
-- Create today_start: `YYYY-MM-DDT00:00:00` with local timezone (e.g., `-08:00`)
+- Create today_start: `YYYY-MM-DDT00:00:00` with local timezone (e.g., `-03:00`)
 - Create today_end: `YYYY-MM-DDT23:59:59` with local timezone
 - Note the current time for time-sensitive priority calculations
 
-### 2. Spawn Three Task Subagents in Parallel
+### 2. Spawn Three Subagents in Parallel
 
-Make THREE Task tool calls in parallel in a single message. Each Task has its own context window, processes the raw MCP data, and returns only the compact normalized JSON.
+Make THREE Agent tool calls in parallel in a single message. Each agent has its own context window, processes the raw CLI/API data, and returns only the compact normalized JSON.
 
-**IMPORTANT**:
-- Pass the calculated date boundaries and current time to each Task in its description.
-- Use the specialized subagent_type for each task to ensure they have access to the correct MCP tools:
-  - Calendar: `subagent_type: "calendar-fetcher"`
-  - Gmail: `subagent_type: "gmail-fetcher"`
-  - Jira: `subagent_type: "jira-fetcher"`
+**IMPORTANT**: Pass the calculated date boundaries and current time to each agent in its prompt.
 
 ---
 
-#### Task 1: Calendar Subagent
+#### Agent 1: Calendar (via `gws` CLI)
 
 ```
-Task(
-  subagent_type: "calendar-fetcher",
-  description: "Fetch and normalize today's calendar events. Return JSON array only.
+Agent(
+  description: "Fetch and normalize today's calendar events",
+  prompt: "Fetch and normalize today's calendar events. Return JSON array only.
 
 TODAY'S INFO:
 - Date: {YYYY-MM-DD}
 - Day of week: {day_name}
 - Current time: {HH:MM}
-- Time range: {today_start} to {today_end}
 - Timezone: {timezone}
 
-STEP 1: Fetch calendar events using:
-mcp__google_workspace__get_events(
-  user_google_email: '{USER_EMAIL}',
-  calendar_id: 'primary',
-  time_min: '{today_start}',
-  time_max: '{today_end}',
-  detailed: true
-)
+STEP 1: Run this Bash command:
+gws calendar events list --params '{\"calendarId\": \"primary\", \"timeMin\": \"{today_start}\", \"timeMax\": \"{today_end}\", \"singleEvents\": true, \"orderBy\": \"startTime\"}'
 
-STEP 2: For each event, apply priority logic:
+STEP 2: For each event in the items array, apply priority logic:
 
 1. POD-3 Standups:
-   - If title contains 'POD-3' AND today is NOT Friday → priority = 'low', low_priority_reason = 'POD-3 standup (not Friday)'
-   - If title contains 'POD-3' AND today IS Friday → apply normal rules below
+   - If title contains 'POD-3' AND today is NOT Friday -> priority = 'low', low_priority_reason = 'POD-3 standup (not Friday)'
+   - If title contains 'POD-3' AND today IS Friday -> apply normal rules below
 
 2. Family Reminders:
-   - If title contains 'Family' (case-insensitive) → priority = 'low', low_priority_reason = 'Family reminder'
+   - If title contains 'Family' (case-insensitive) -> priority = 'low', low_priority_reason = 'Family reminder'
 
 3. Time-Sensitive:
-   - If event starts within 8 hours AND not low priority → priority = 'high'
+   - If event starts within 8 hours AND not low priority -> priority = 'high'
    - Action should include 'Leave by X:XX' if location requires travel
 
 4. Default: priority = 'medium'
 
-STEP 3: Return ONLY a JSON array (no explanation) with this structure for each event:
-{
-  'title': event summary,
-  'source': 'calendar',
-  'source_type': 'event',
-  'priority': 'high' | 'medium' | 'low',
-  'due_date': event start time (ISO 8601),
-  'url': event.htmlLink,
-  'action': specific actionable step (or null if low priority),
-  'low_priority_reason': reason string (only if low priority),
-  'metadata': {
-    'start_time': formatted start time (12-hour format),
-    'end_time': formatted end time (12-hour format),
-    'location': location or null
-  }
-}
-
+STEP 3: Return ONLY a JSON array with the normalized task schema.
 If no events found, return empty array: []
-If API fails, return: {'error': 'Could not fetch calendar events'}
+If CLI fails, return: {\"error\": \"Could not fetch calendar events\"}
 "
 )
 ```
 
 ---
 
-#### Task 2: Gmail Subagent
+#### Agent 2: Gmail (via `gws` CLI)
 
 ```
-Task(
-  subagent_type: "gmail-fetcher",
-  description: "Fetch and normalize inbox emails. Return JSON array only.
+Agent(
+  description: "Fetch and normalize inbox emails",
+  prompt: "Fetch and normalize inbox emails. Return JSON array only.
 
-STEP 1: Search inbox using:
-mcp__google_workspace__search_gmail_messages(
-  user_google_email: '{USER_EMAIL}',
-  query: 'in:inbox',
-  page_size: 50
-)
+STEP 1: List inbox messages (no date filter — inbox is used as a pending queue):
+gws gmail users messages list --params '{\"userId\": \"me\", \"maxResults\": 20, \"q\": \"in:inbox\"}'
 
-STEP 2: Batch fetch full content (max 25 per batch):
-mcp__google_workspace__get_gmail_messages_content_batch(
-  user_google_email: '{USER_EMAIL}',
-  message_ids: [list of IDs],
-  format: 'full'
-)
+STEP 2: For each message, fetch metadata. Batch them efficiently in a single shell command:
+for id in ID1 ID2 ID3 ...; do
+  gws gmail users messages get --params \"{\\\"userId\\\": \\\"me\\\", \\\"id\\\": \\\"$id\\\", \\\"format\\\": \\\"metadata\\\", \\\"metadataHeaders\\\": [\\\"From\\\", \\\"Subject\\\", \\\"Date\\\"]}\"
+  echo '---SEP---'
+done
 
 STEP 3: For each email, apply priority logic:
 
-Newsletter Detection (any of these → priority = 'low'):
+Newsletter Detection (any of these -> priority = 'low'):
 - Sender domain: substack.com, beehiiv.com, convertkit.com, mailchimp.com, sendgrid.net, buttondown.email
 - Content contains 'Unsubscribe' or 'unsubscribe from this list'
 - Subject contains 'Issue #', 'Vol.', 'Volume', 'Weekly', 'Monthly', 'Digest', 'Newsletter'
@@ -204,36 +189,23 @@ Newsletter Detection (any of these → priority = 'low'):
 If newsletter: low_priority_reason = 'Newsletter'
 Otherwise: priority = 'medium'
 
-STEP 4: Return ONLY a JSON array (no explanation) with this structure for each email:
-{
-  'title': email subject,
-  'source': 'gmail',
-  'source_type': 'email',
-  'priority': 'medium' | 'low',
-  'due_date': email date (ISO 8601),
-  'url': 'https://mail.google.com/mail/u/0/#inbox/{message_id}',
-  'action': specific actionable step extracted from content (reply, review, download, print, etc.) or null if low priority,
-  'low_priority_reason': reason string (only if low priority),
-  'metadata': {
-    'from': sender name and email,
-    'snippet': 1-sentence summary of email content
-  }
-}
-
+STEP 4: Return ONLY a JSON array with the normalized task schema.
+URL format: https://mail.google.com/mail/u/0/#inbox/{message_id}
 If no emails found, return empty array: []
-If API fails, return: {'error': 'Could not fetch Gmail messages'}
+If CLI fails, return: {\"error\": \"Could not fetch Gmail messages\"}
 "
 )
 ```
 
 ---
 
-#### Task 3: Jira Subagent
+#### Agent 3: Jira (via MCP)
 
 ```
-Task(
+Agent(
   subagent_type: "jira-fetcher",
-  description: "Fetch and normalize Jira issues. Return JSON array only.
+  description: "Fetch and normalize Jira issues",
+  prompt: "Fetch and normalize Jira issues. Return JSON array only.
 
 TODAY'S DATE: {YYYY-MM-DD}
 
@@ -258,40 +230,24 @@ STEP 2: For each issue, apply priority logic:
      - If only your comments or none: has_qa_comments = false, continue to next rules
 
 2. Jira Priority Mapping:
-   - 'Highest' or 'High' → priority = 'high'
-   - 'Medium' → priority = 'medium'
-   - 'Low' or 'Lowest' → priority = 'low'
-   - Missing → priority = 'medium'
+   - 'Highest' or 'High' -> priority = 'high'
+   - 'Medium' -> priority = 'medium'
+   - 'Low' or 'Lowest' -> priority = 'low'
+   - Missing -> priority = 'medium'
 
 3. Due Date Override:
-   - If duedate is today or past → priority = 'high' (unless already high)
-   - If duedate within 7 days → at least 'medium'
+   - If duedate is today or past -> priority = 'high' (unless already high)
+   - If duedate within 7 days -> at least 'medium'
 
 4. Action Logic:
    - If has_qa_comments: 'Respond to QA comments and address feedback'
    - If status is 'IN QA' and no QA comments: 'Waiting on QA', and priority is low
    - Otherwise: Extract actionable step from status (e.g., 'Continue development', 'Submit for review', 'Update documentation')
 
-STEP 3: Return ONLY a JSON array (no explanation) with this structure for each issue:
-{
-  'title': '[KEY]: summary' (e.g., 'POD-123: Fix login bug'),
-  'source': 'jira',
-  'source_type': 'issue',
-  'priority': 'high' | 'medium' | 'low',
-  'due_date': duedate or null (ISO 8601),
-  'url': 'https://{JIRA_SITE}.atlassian.net/browse/{KEY}',
-  'action': specific actionable step,
-  'low_priority_reason': reason string (only if low priority),
-  'metadata': {
-    'key': issue key,
-    'status': status name,
-    'has_qa_comments': boolean,
-    'relevant_comments': array
-  }
-}
-
+STEP 3: Return ONLY a JSON array with the normalized task schema.
+URL format: https://{JIRA_SITE}.atlassian.net/browse/{KEY}
 If no issues found, return empty array: []
-If API fails, return: {'error': 'Could not fetch Jira tasks'}
+If API fails, return: {\"error\": \"Could not fetch Jira tasks\"}
 "
 )
 ```
@@ -300,7 +256,7 @@ If API fails, return: {'error': 'Could not fetch Jira tasks'}
 
 ### 3. Parse and Merge Subagent Results
 
-After receiving responses from all three Tasks:
+After receiving responses from all three agents:
 
 1. Parse each JSON response
 2. Check for error objects: `{"error": "..."}`
@@ -311,7 +267,7 @@ After receiving responses from all three Tasks:
 
 Sort all tasks by priority, then by source type within priority:
 
-**Priority Order:** High → Medium → Low
+**Priority Order:** High -> Medium -> Low
 
 **Within Each Priority Level:**
 1. Calendar events (sorted by start_time, earliest first)
@@ -326,26 +282,26 @@ Create plain text output optimized for terminal viewing:
 Daily Tasks - [Month DD, YYYY]
 ==============================
 
-[List all tasks in priority order: High → Medium → Low]
+[List all tasks in priority order: High -> Medium -> Low]
 [Use plain text formatting - no markdown links]
 
 [For each task, render based on source_type:]
 
 **Calendar Event:**
-• [title] - [start time] to [end time]
+* [title] - [start time] to [end time]
 - Location: [location if present]
 - Action: [actionable next step]
 - [full url]
 
 **Jira Issue:**
-• [[KEY]] [summary]
+* [[KEY]] [summary]
 - Status: [status]
 - Due: [due date if present]
 - Action: [actionable next step]
 - [full url]
 
 **Email:**
-• [subject]
+* [subject]
 - From: [sender]
 - Summary: [snippet]
 - Action: [actionable next step]
@@ -358,7 +314,7 @@ Generated at [YYYY-MM-DD HH:MM:SS]
 
 **Formatting Rules:**
 1. Plain text format, not markdown
-2. Single unified task list organized by priority (High → Medium → Low)
+2. Single unified task list organized by priority (High -> Medium -> Low)
 3. NO --- separators between items (only at footer). No PRIORITY titles, order makes it implicit.
 4. Event times in 12-hour format (e.g., "9:00 AM to 10:30 AM")
 5. High and Medium priority items show `action` field
@@ -376,13 +332,13 @@ Generated at [YYYY-MM-DD HH:MM:SS]
 
 Handle subagent failures gracefully:
 
-- **Calendar Task fails or returns error**: Skip calendar items, add footer note: `⚠️ Could not fetch calendar events`
-- **Gmail Task fails or returns error**: Skip email items, add footer note: `⚠️ Could not fetch Gmail messages`
-- **Jira Task fails or returns error**: Skip Jira items, add footer note: `⚠️ Could not fetch Jira tasks`
+- **Calendar agent fails or returns error**: Skip calendar items, add footer note: "Could not fetch calendar events"
+- **Gmail agent fails or returns error**: Skip email items, add footer note: "Could not fetch Gmail messages"
+- **Jira agent fails or returns error**: Skip Jira items, add footer note: "Could not fetch Jira tasks"
 - **Multiple failures**: Create minimal file with all applicable error notes
 - **No content from any source**: Show message "No tasks found for today"
 
-Always create the markdown file even if some Tasks fail, so the user has a record of what was attempted.
+Always create the file even if some agents fail, so the user has a record of what was attempted.
 
 ## Usage
 
@@ -392,16 +348,13 @@ Always create the markdown file even if some Tasks fail, so the user has a recor
 
 This will generate a file at `daily_notes/YYYY-MM-DD.txt` with all of today's tasks from Calendar, Gmail, and Jira.
 
-Each run overwrites the existing file for today with fresh data from Google Calendar, Gmail, and Jira.
+Each run overwrites the existing file for today with fresh data.
 
 ## Architecture Benefits
 
-By using Task subagents with specialized agent types:
-- Raw MCP responses stay in subagent context windows (discarded after task completes)
+By using subagents:
+- Raw API responses stay in subagent context windows (discarded after task completes)
 - Main agent context only contains compact JSON summaries (~5-10 lines per task vs full email bodies)
-- Parallel execution is preserved via simultaneous Task calls
+- Parallel execution is preserved via simultaneous Agent calls
 - Each source is isolated - one failure doesn't affect others
-- Each agent only has access to the MCP tools it needs:
-  - `calendar-fetcher`: only `mcp__google_workspace__get_events`
-  - `gmail-fetcher`: only `mcp__google_workspace__search_gmail_messages` and `mcp__google_workspace__get_gmail_messages_content_batch`
-  - `jira-fetcher`: only `mcp__jira__jira_get`
+- Calendar and Gmail use `gws` CLI (no MCP dependency), Jira uses MCP
