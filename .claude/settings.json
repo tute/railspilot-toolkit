@@ -19,6 +19,7 @@
       "Bash(ruby -rjson -e:*)",
       "Bash(test:*)",
       "Bash(xargs dirname:*)",
+      "Bash(acli:*)",
       "Bash(yarn test:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.livekit.io)",
@@ -32,10 +33,7 @@
   },
   "model": "opus",
   "enableAllProjectMcpServers": false,
-  "enabledMcpjsonServers": [
-    "google_workspace",
-    "atlassian_jira"
-  ],
+  "enabledMcpjsonServers": [],
   "disabledMcpjsonServers": [],
   "hooks": {
     "Notification": [

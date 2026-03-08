@@ -20,13 +20,13 @@ Generate a daily task summary from Google Calendar, Gmail, and Jira, intelligent
 Resolve these values before running:
 
 - **USER_EMAIL**: Run `git config user.email` to get the current user's email
-- **JIRA_SITE**: Resolve from MCP server configuration or `$ATLASSIAN_SITE_NAME`
+- **JIRA_SITE**: Resolve from `acli jira auth status` (the site name, e.g. `your-site`)
 - **JIRA_PROJECT**: Resolve from the Jira project key in recent commits, or ask the user
 
 ## Requirements
 
 - `gws` CLI installed and authenticated (Google Workspace CLI for Calendar and Gmail)
-- Atlassian Jira MCP server configured (for Jira)
+- `acli` CLI installed and authenticated (Atlassian CLI for Jira)
 
 ## CLI Reference: `gws` (Google Workspace CLI)
 
@@ -199,7 +199,7 @@ If CLI fails, return: {\"error\": \"Could not fetch Gmail messages\"}
 
 ---
 
-#### Agent 3: Jira (via MCP)
+#### Agent 3: Jira (via `acli` CLI)
 
 ```
 Agent(
@@ -209,15 +209,11 @@ Agent(
 
 TODAY'S DATE: {YYYY-MM-DD}
 
-STEP 1: Fetch assigned issues using:
-mcp__jira__jira_get(
-  path: '/rest/api/3/search/jql',
-  queryParams: {
-    'jql': 'project = {JIRA_PROJECT} AND assignee = currentUser() AND resolution = Unresolved ORDER BY priority DESC, duedate ASC',
-    'maxResults': '50',
-    'fields': 'key,summary,status,priority,duedate,updated,assignee,comment'
-  }
-)
+STEP 1: Fetch assigned issues using acli:
+acli jira workitem search --jql 'project = {JIRA_PROJECT} AND assignee = currentUser() AND resolution = Unresolved ORDER BY priority DESC, duedate ASC' --limit 50 --json
+
+Then for each issue that is 'IN QA' or needs comment inspection, fetch full details:
+acli jira workitem view {ISSUE-KEY} --fields key,summary,status,priority,duedate,updated,comment --json
 
 STEP 2: For each issue, apply priority logic:
 
@@ -357,4 +353,4 @@ By using subagents:
 - Main agent context only contains compact JSON summaries (~5-10 lines per task vs full email bodies)
 - Parallel execution is preserved via simultaneous Agent calls
 - Each source is isolated - one failure doesn't affect others
-- Calendar and Gmail use `gws` CLI (no MCP dependency), Jira uses MCP
+- All sources use CLI tools (no MCP dependency): `gws` for Calendar/Gmail, `acli` for Jira

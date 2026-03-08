@@ -21,7 +21,7 @@ Claude will auto-detect whether the project uses Linear or Jira, fetch the issue
 The skill orchestrates a 15-step professional software engineering workflow:
 
 1. **Detect Task Manager** - Examines recent commits on master to identify Linear or Jira
-2. **Fetch Issue** - Retrieves complete issue details via appropriate MCP/API
+2. **Fetch Issue** - Retrieves complete issue details via Linear MCP or `acli` CLI
 3. **Gather Additional Context** - Searches Obsidian, Sentry, and GitHub for related information
 4. **Move to In Progress** - Updates issue status for team visibility
 5. **Create Feature Branch** - Uses task manager's branch naming convention
@@ -142,7 +142,7 @@ This skill requires one of the following task manager integrations:
 | Task Manager | Option 1 | Option 2 |
 |--------------|----------|----------|
 | **Linear** | Linear MCP server | - |
-| **Jira** | Jira MCP server | REST API credentials (`JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_DOMAIN`) |
+| **Jira** | `acli` CLI (Atlassian CLI) | - |
 
 Additional MCP servers (optional but recommended):
 
