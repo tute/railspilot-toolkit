@@ -73,7 +73,7 @@ Retrieve the complete issue using the detected task manager's API.
 
 | | Linear | Jira |
 |---|---|---|
-| **API call** | `mcp__linear__get_issue(id: <issue-id>)` | `mcp__jira__jira_get(path: "/rest/api/3/issue/<issue-key>")` |
+| **API call** | `mcp__linear__get_issue(id: <issue-id>)` | `acli jira workitem view <issue-key> --json` |
 | **Title** | `title` | `fields.summary` |
 | **Branch hint** | `branchName` field | Derive: `<initials>/<issue-key>-<slugified-summary>` |
 
@@ -168,7 +168,7 @@ Update the issue status to reflect active development. This provides visibility 
 1. Get team ID from issue → `mcp__linear__list_issue_statuses(team: <team-id>)` → `mcp__linear__update_issue(id: <issue-id>, state: <in-progress-state-id>)`
 
 **Jira:**
-1. `mcp__jira__jira_get(path: "/rest/api/3/issue/<issue-key>/transitions")` → find "In Progress" transition → `mcp__jira__jira_post(path: "/rest/api/3/issue/<issue-key>/transitions", body: {"transition":{"id":"<id>"}})`
+1. `acli jira workitem transition --key <issue-key> --status "In Progress" --yes`
 
 ### Step 5: Create Feature Branch
 
@@ -395,12 +395,9 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - Linear MCP server must be configured and available
 - Required tools: `mcp__linear__get_issue`, `mcp__linear__update_issue`, `mcp__linear__list_issue_statuses`
 
-**Jira MCP or REST API:**
-- Jira MCP server configured, OR
-- Environment variables for REST API fallback:
-  - `JIRA_EMAIL`: Your Atlassian account email
-  - `JIRA_API_TOKEN`: API token from https://id.atlassian.com/manage-profile/security/api-tokens
-  - `JIRA_DOMAIN`: Your Jira domain (e.g., `company.atlassian.net`)
+**Jira (`acli` CLI):**
+- `acli` CLI installed (`brew tap atlassian/homebrew-acli && brew install acli`)
+- Authenticated via `acli jira auth login --site SITE --email EMAIL --token`
 
 **Git Repository:**
 - Current directory must be a git repository
@@ -433,7 +430,7 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 
 **Issue Not Found:**
 - Verify issue ID format is uppercase (e.g., `TRA-9` not `tra-9`, `PROJ-123` not `proj-123`)
-- Confirm MCP integration is working (Linear MCP or Jira MCP)
+- Confirm integration is working (Linear MCP or `acli` CLI for Jira)
 - Check user has access to the team/project/issue
 
 **Status Transition Not Available (Jira):**
