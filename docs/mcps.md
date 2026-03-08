@@ -2,36 +2,18 @@
 
 The `/today` command pulls data from **Google Calendar**, **Gmail**, and **Jira**.
 
-MCPs are configured in `~/.cursor/mcp.json`, which we link to `./.mcp.json` for Claude (it may contain access tokens):
+## Google Workspace (`gws` CLI)
+
+Calendar and Gmail are accessed via the `gws` CLI tool (not MCP). See the
+[`/today` skill](.claude/skills/today/SKILL.md) for usage details.
+
+Install and authenticate `gws` following its own setup instructions
+(https://github.com/googleworkspace/cli). Once authenticated, verify with:
 
 ```bash
-ln -s ~/.cursor/mcp.json .mcp.json
+gws calendar events list --params '{"calendarId": "primary", "singleEvents": true, "maxResults": 1}'
+gws gmail users messages list --params '{"userId": "me", "maxResults": 1}'
 ```
-
-## Google Workspace MCP (Gmail + Calendar)
-
-- **Server**: `workspace-mcp` (Google Workspace MCP)
-- Requires [`uv`/`uvx`](https://github.com/astral-sh/uv)
-- Docs: https://github.com/taylorwilsdon/google_workspace_mcp
-
-Configure OAuth credentials:
-1. Create a Google Cloud OAuth client (Desktop is simplest for local use).
-2. Set credentials in `~/.mcp-servers/google_workspace_mcp/.env` (`GOOGLE_OAUTH_CLIENT_ID`,
-  `GOOGLE_OAUTH_CLIENT_SECRET`)
-
-In `~/.cursor/mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "google_workspace": {
-      "command": "uvx",
-      "args": ["workspace-mcp", "--tools", "gmail", "calendar"]
-    }
-  }
-}
-```
-
 
 ## Atlassian Jira MCP
 
@@ -59,11 +41,19 @@ Create an Atlassian API token:
 }
 ```
 
+MCPs are configured in `~/.cursor/mcp.json`, which we link to `./.mcp.json`
+for Claude (it may contain access tokens):
+
+```bash
+ln -s ~/.cursor/mcp.json .mcp.json
+```
+
 ## Verification (smoke test)
 
-1. Restart Cursor after updating `~/.cursor/mcp.json`.
-2. Confirm the MCP servers are available in Cursor/Claude.
-3. Run `/today` and verify it can pull:
-   - Calendar events
-   - Inbox emails
-   - Jira issues (assigned to you)
+1. Verify `gws` CLI is authenticated (see above).
+2. Restart Cursor after updating `~/.cursor/mcp.json`.
+3. Confirm the Jira MCP server is available in Cursor/Claude.
+4. Run `/today` and verify it can pull:
+   - Calendar events (via `gws`)
+   - Inbox emails (via `gws`)
+   - Jira issues (via MCP, assigned to you)

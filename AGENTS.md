@@ -13,8 +13,9 @@ symlinks these configs into development environments.
   installation step (but may run it to ensure it works)
 - **Tool versions** are managed by `mise` (see `.mise.toml`): Node.js (latest),
   Python 3.12, and uv (latest). Use `mise exec --` to run project binaries.
-- **MCP servers** (Jira via `npx`, Google Workspace via `uvx`) require external
-  API credentials and are optional for toolkit development.
+- **External services**: `gws` CLI for Google Workspace (Calendar, Gmail),
+  Jira MCP server via `npx`. Both require API credentials and are optional
+  for toolkit development.
 
 ### Lint / test / build / run
 
