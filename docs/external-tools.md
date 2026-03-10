@@ -7,8 +7,32 @@ The `/today` command pulls data from **Google Calendar**, **Gmail**, and **Jira*
 Calendar and Gmail are accessed via the `gws` CLI tool (not MCP). See the
 [`/today` skill](.claude/skills/today/SKILL.md) for usage details.
 
-Install and authenticate `gws` following its own setup instructions
-(https://github.com/googleworkspace/cli). Once authenticated, verify with:
+### Install
+
+```bash
+npm install -g @googleworkspace/cli
+```
+
+### Prerequisites
+
+`gws auth setup` requires the `gcloud` CLI (Google Cloud SDK) to be installed
+and authenticated. Install `gcloud` first:
+https://cloud.google.com/sdk/docs/install
+
+Then run the one-time setup:
+
+```bash
+gcloud auth login
+gws auth setup      # Creates Cloud project, enables APIs, logs you in
+```
+
+For subsequent logins:
+
+```bash
+gws auth login
+```
+
+### Verify
 
 ```bash
 gws calendar events list --params '{"calendarId": "primary", "singleEvents": true, "maxResults": 1}'
@@ -21,9 +45,17 @@ Jira is accessed via Atlassian's official CLI tool (`acli`).
 
 ### Install
 
+macOS:
+
 ```bash
 brew tap atlassian/homebrew-acli
 brew install acli
+```
+
+Arch Linux:
+
+```bash
+yay -S acli-bin
 ```
 
 ### Authenticate
