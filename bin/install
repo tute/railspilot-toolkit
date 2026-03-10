@@ -11,6 +11,7 @@ ln -sfn ~/Code/railspilot/toolkit/.claude/CLAUDE.md CLAUDE.md
 ln -sfn ~/Code/railspilot/toolkit/.claude/agents agents
 ln -sfn ~/Code/railspilot/toolkit/.claude/settings.json settings.json
 ln -sfn ~/Code/railspilot/toolkit/.claude/skills skills
+ln -sfn ~/Code/railspilot/toolkit/.claude/statusline.sh statusline.sh
 
 if [ -n "${1:-}" ]; then
   cd "$1"
