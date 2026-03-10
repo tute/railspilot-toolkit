@@ -53,6 +53,8 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash \"$HOME/.claude/statusline.sh\""
+    "command": "bash \"$HOME/.claude/statusline.sh\"",
+    "claudit@quickstop": true,
+    "skill-creator@claude-plugins-official": true
   }
 }

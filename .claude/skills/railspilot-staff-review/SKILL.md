@@ -1,6 +1,6 @@
 ---
 name: railspilot-staff-review
-description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review.
+description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review, "staff review", "pattern review", or "review this like a staff engineer". This is the most thorough single-agent review — for multi-agent reviews, use full-code-review.
 ---
 
 Orchestration skill for comprehensive staff-engineer code reviews using RailsPilot's pattern library. Launches the `staff-engineer-reviewer` agent to evaluate code against established patterns.
@@ -28,7 +28,6 @@ The agent will:
 **Step 3: Check Previous Decisions**
 
 Before consolidating findings, check for previous reviews:
-- Search memory for previous staff review decisions
 - Read decision log file (if exists): `code_review_decisions.md`
 - Note any previously-decided concerns to avoid redundancy
 

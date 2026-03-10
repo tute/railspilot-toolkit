@@ -207,31 +207,10 @@ Break down the issue into an actionable implementation plan:
 - **Implementation Steps**: Ordered list of development tasks
 - **Acceptance Criteria**: Definition of done
 
-### Step 7: Save Plan to Memory
+### Step 7: Save Plan
 
-Store the implementation plan using memory MCP tools:
-
-```
-mcp__memory__create_entities(entities: [
-  {
-    name: "Issue <issue-id>",
-    entityType: "implementation-plan",
-    observations: [
-      "Task Manager: <linear|jira>",
-      "Requirements: <requirements>",
-      "Architecture: <architecture-decisions>",
-      "Test Strategy: <test-approach>",
-      "Status: planning-complete"
-    ]
-  }
-])
-```
-
-This creates permanent tracking of:
-- Issue context and requirements
-- Implementation approach and reasoning
-- Progress throughout development
-- Lessons learned for future work
+Create a TodoList with tasks for the implementation steps. This provides
+visibility into progress and ensures nothing gets skipped.
 
 ### Step 8: Review Plan with User
 
@@ -295,7 +274,7 @@ Before creating commits, ensure everything passes:
 **Validation Steps:**
 ```bash
 # Run full test suite
-bundle exec rspec
+mise exec -- rspec
 
 # Run linting (Standard, ERB, Brakeman)
 bin/lint
@@ -405,7 +384,7 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - Git configured with user credentials
 
 **Testing and Linting:**
-- `bundle exec rspec` available for testing
+- `mise exec -- rspec` available for testing
 - `bin/lint` script available for linting
 - Ruby/Rails development environment configured
 
@@ -472,7 +451,7 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 12. **Address Code Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
 13. **Staff Engineer Review** — invokes `railspilot-staff-review` skill (final validation on clean code)
 14. **Address Staff Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
-15. **Validation & Linting** — runs `bundle exec rspec`, `bin/lint`, fixes any failures
+15. **Validation & Linting** — runs `mise exec -- rspec`, `bin/lint`, fixes any failures
 16. **Create PR title and description** — invokes `pr-title-and-description` skill
 17. **Completion Summary** — presents PR title and description with a checklist of all completed steps
 
