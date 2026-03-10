@@ -1,20 +1,59 @@
 ---
 name: tdd-skill
-description: Guides TDD implementation via strict Red-Green-Refactor cycles, one piece at a time. Use when implementing features or fixes with TDD.
+description: Guides TDD implementation via strict Red-Green-Refactor cycles, one piece at a time. Use when implementing features or fixes with TDD, or whenever CLAUDE.md says to use TDD. This skill applies to ALL implementation work — features, bug fixes, refactors with behavior changes. Even "simple" changes benefit from the discipline.
 ---
 
-The goal of this skill is to implement a true test driven development workflow. This means:
+Implement using strict test-driven development: one Red-Green-Refactor cycle at a
+time. The discipline is the point — it prevents writing more code than needed and
+catches design problems early.
 
-1. Writing the simplest test for ONE discrete piece of functionality.
-2. Run the new test and verify that it fails as expected.
-3. Write the minimal amount of code needed to make the test pass.
-4. Run the test to verify it passes.
-5. Once tests pass, look for opportunities to refactor.
-6. Run tests once again to verify refactoring didn't break anything.
+## The cycle
 
-Repeat this until you've completed the functionality desired.
+1. **Red**: Write the simplest test for ONE discrete piece of functionality. Run
+   it with `mise exec -- rspec <file>:<line>` and verify it fails with the
+   expected error message. If it fails for the wrong reason, fix the test first.
 
-Remember to never:
+2. **Green**: Write the minimum code to make that one test pass. Resist the urge
+   to implement more than what the test demands. Run the test again to confirm it
+   passes.
 
-1. Write an entire test file up front.
-2. Implement more than one discrete piece of functionality at a time
+3. **Refactor**: With the test green, look for opportunities to clean up — both
+   in the production code and the test. Remove duplication, improve naming,
+   extract methods. Run the test again to verify nothing broke.
+
+4. **Repeat**: Pick the next piece of functionality and start a new cycle.
+
+## What counts as "one piece"
+
+- One validation rule
+- One branch of a conditional
+- One association or scope
+- One method on a service object
+- One error/edge case
+- One step in a multi-step workflow
+
+If you're unsure whether something is one piece or two, err on the side of
+smaller. You can always go faster; you can't easily undo a big untested jump.
+
+## When a test fails unexpectedly
+
+- If the Red step fails with the wrong error: fix the setup, not the production
+  code. The test should fail because the behavior isn't implemented yet, not
+  because of a typo or missing factory.
+- If the Green step breaks other tests: you've changed existing behavior. Stop,
+  understand why, and decide whether the other tests need updating or your
+  implementation approach is wrong.
+
+## When to stop
+
+- All acceptance criteria from the task are covered by tests
+- You can't think of another meaningful behavior to test
+- Edge cases are handled (nil inputs, empty collections, unauthorized access)
+
+## Rules
+
+- Never write an entire test file up front
+- Never implement more than one discrete piece of functionality per cycle
+- Never write production code without a failing test demanding it
+- Run only the relevant spec file during cycles, not the full suite (save that
+  for the end)

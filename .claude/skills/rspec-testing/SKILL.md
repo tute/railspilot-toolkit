@@ -92,14 +92,9 @@ response.should have_http_status(:success)
 ```
 
 ### One-Liners
-Use `is_expected` for concise one-line specs:
+Don’t use shoulda-matchers for associations or validations.
 
-```ruby
-subject { article }
-
-it { is_expected.to be_valid }
-it { is_expected.to be_persisted }
-```
+For behavior tests, prefer explicit setup/execute/expect over `subject`.
 
 ## System Test Best Practices
 
@@ -323,21 +318,6 @@ order = Order.new(payment_service: payment_service)
 ### Test Organization
 ```ruby
 RSpec.describe ClassName do
-  # Setup (let, before)
-  let(:resource) { create(:resource) }
-
-  before do
-    # common setup
-  end
-
-  # Validations
-  describe 'validations' do
-  end
-
-  # Associations
-  describe 'associations' do
-  end
-
   # Class methods
   describe '.class_method' do
   end
@@ -346,11 +326,29 @@ RSpec.describe ClassName do
   describe '#instance_method' do
     context 'when condition' do
       it 'does something' do
+        resource = create(:resource)
+
+        result = resource.instance_method
+
+        expect(result).to eq(expected)
       end
     end
   end
+
+  # Extract repeated setup into private methods, not let/before blocks
+  private
+
+  def create_resource_with_dependencies
+    user = create(:user)
+    create(:resource, user: user)
+  end
 end
 ```
+
+### Prefer Inline Setup Over let/before
+Use the setup/execute/expect pattern directly in each test. Extract common setup
+into private methods when repetition gets excessive — but some repetition is fine
+and preferred over indirection.
 
 ### Expectation Matchers
 ```ruby

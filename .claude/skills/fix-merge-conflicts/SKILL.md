@@ -23,13 +23,17 @@ High-level plan:
      - Compiles and passes type checks, and
      - Preserves existing public APIs and behavior.
    - Language-aware strategy:
+     - Gemfile/Gemfile.lock: merge gem entries conservatively; run `mise exec -- bundle install` to regenerate the lockfile.
+     - db/schema.rb: accept the higher schema version number; merge both sides' table/column changes. Run `mise exec -- rails db:migrate` if needed.
+     - config/routes.rb: merge both sides' routes; check for duplicate path definitions.
      - package.json/pnpm-lock.yaml/yarn.lock: merge keys conservatively; run install to regenerate lockfiles.
-     - .lock files (package-lock.json, yarn.lock, pnpm-lock.yaml): prefer regenerating via the package manager rather than manual edits.
+     - .lock files (Gemfile.lock, package-lock.json, yarn.lock, pnpm-lock.yaml): prefer regenerating via the package manager rather than manual edits.
      - Generated files and build artifacts: prefer keeping them out of version control if applicable; otherwise prefer current branch (ours).
      - Config files: preserve union of safe settings; avoid deleting required fields.
      - Text/markdown: include both unique content, deduplicate headings.
      - Binary files: prefer current branch (ours) unless project docs indicate otherwise.
 3) Validate
+   - If Ruby/Rails present: run `mise exec -- bundle install` if Gemfile changed, then `mise exec -- rspec` and `mise exec -- rubocop` if available.
    - If Node/TypeScript/JS present: install deps if manifests changed (use --frozen-lockfile false equivalents), then run lint/typecheck/build/tests if available.
    - If other ecosystems detected (Python, Go, etc.), run their standard build/tests when available.
 4) Finalize
