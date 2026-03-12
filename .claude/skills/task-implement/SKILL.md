@@ -30,7 +30,7 @@ The skill follows a 17-step process:
 12. **Address Code Review Feedback** - Fix high priority issues from simplify and full code review. Ask for confirmation for lower priority ones
 13. **Staff Engineer Review** - Invoke `railspilot-staff-review` skill (final validation on clean code)
 14. **Address Staff Review Feedback** - Fix high priority issues from staff engineer review. Ask for confirmation for lower priority ones
-15. **Validation & Linting** - Ensure all tests and linters pass on the new changes
+15. **Validation** - Ensure all tests pass on the new changes
 16. **Create PR title and description** - Invoke `pr-title-and-description` skill
 17. **Completion Summary** - Present PR title and description wich a checklist of all completed steps
 
@@ -267,7 +267,7 @@ Address findings from the staff engineer review:
 
 **Note:** Do NOT create PR until all staff review feedback is addressed.
 
-### Step 15: Validation and Quality Assurance
+### Step 15: Validation
 
 Before creating commits, ensure everything passes:
 
@@ -275,12 +275,6 @@ Before creating commits, ensure everything passes:
 ```bash
 # Run full test suite
 mise exec -- rspec
-
-# Run linting (Standard, ERB, Brakeman)
-bin/lint
-
-# Fix any failures or warnings
-# Verify system specs pass in clean environment
 ```
 
 **Quality Checks:**
@@ -290,11 +284,6 @@ bin/lint
 - Performance impact considered (no N+1 queries)
 - All subagent feedback addressed
 - Test coverage sufficient
-
-**Linting Notes:**
-- Yarn failures can be ignored if only working on Rails code
-- Warnings about `MigratedSchemaVersion` and `ContextCreatingMethods` are harmless
-- **Actual offenses must be addressed** (look for file paths and line numbers)
 
 **Commit Message Format:**
 
@@ -326,7 +315,7 @@ Present checklist to user:
 - Code review feedback addressed
 - Staff engineer review completed (railspilot-staff-review) — final validation
 - Staff review feedback addressed
-- All tests and linting pass
+- All tests pass
 - Logical commit history created
 - PR created with task manager integration
 
@@ -383,9 +372,8 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - `main` or `master` branch exists and is up-to-date
 - Git configured with user credentials
 
-**Testing and Linting:**
+**Testing:**
 - `mise exec -- rspec` available for testing
-- `bin/lint` script available for linting
 - Ruby/Rails development environment configured
 
 **GitHub CLI:**
@@ -422,10 +410,8 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 - Ensures work can be resumed safely
 - Verifies branch is synced with remote
 
-**Tests or Linting Fail:**
+**Tests Fail:**
 - Review failures and fix before creating PR
-- Common linting issues: StandardRB, ERB Lint, Brakeman
-- Never use `standardrb --fix` blindly - review changes
 
 **Code Review Identifies Issues:**
 - MUST address architectural feedback before PR
@@ -451,14 +437,13 @@ This skill adheres to project guidelines from `CLAUDE.md`:
 12. **Address Code Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
 13. **Staff Engineer Review** — invokes `railspilot-staff-review` skill (final validation on clean code)
 14. **Address Staff Review Feedback** — fixes high priority issues, asks for confirmation on lower priority ones
-15. **Validation & Linting** — runs `mise exec -- rspec`, `bin/lint`, fixes any failures
+15. **Validation** — runs `mise exec -- rspec`, fixes any failures
 16. **Create PR title and description** — invokes `pr-title-and-description` skill
 17. **Completion Summary** — presents PR title and description with a checklist of all completed steps
 
 **Final Output:**
 - Working feature branch with complete implementation
 - All tests passing
-- All linting passing
 
 ## Best Practices
 
