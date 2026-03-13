@@ -1,4 +1,7 @@
 {
+  "env": {
+    "ENABLE_LSP_TOOL": "1"
+  },
   "attribution": {},
   "permissions": {
     "allow": [
@@ -66,13 +69,21 @@
       }
     ]
   },
-  "enabledPlugins": {
-    "claudit@quickstop": true
-  },
   "statusLine": {
     "type": "command",
-    "command": "bash \"$HOME/.claude/statusline.sh\"",
+    "command": "bash \"$HOME/.claude/statusline.sh\""
+  },
+  "enabledPlugins": {
     "claudit@quickstop": true,
+    "ruby-lsp@claude-plugin-directory": true,
     "skill-creator@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "anthropic-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/skills"
+      }
+    }
   }
 }
