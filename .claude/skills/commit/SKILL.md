@@ -44,4 +44,3 @@ https://link-to-issue-tracker (when applicable)
 - Never commit files that likely contain secrets (.env, credentials.json, etc.)
 - Never skip hooks (--no-verify) unless explicitly asked
 - If a pre-commit hook fails, fix the issue and create a NEW commit — never amend
-- End the message with: `Co-Authored-By: Claude <noreply@anthropic.com>`
