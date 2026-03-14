@@ -75,14 +75,21 @@
   },
   "enabledPlugins": {
     "claudit@quickstop": true,
-    "ruby-lsp@claude-plugin-directory": true,
-    "skill-creator@claude-plugins-official": true
+    "ruby-lsp@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "codebase-readiness@dgalarza-workflows": true
   },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
       "source": {
         "source": "github",
         "repo": "anthropics/skills"
+      }
+    },
+    "dgalarza-workflows": {
+      "source": {
+        "source": "github",
+        "repo": "dgalarza/claude-code-workflows"
       }
     }
   }
