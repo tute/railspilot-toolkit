@@ -28,6 +28,8 @@ Code Quality
 
 * Assertive style: Use `find`, `find_by!`, `sole` — let exceptions surface problems.
   Don't guard with `find_by` + `return unless` unless the caller explicitly needs nil handling.
+* Prefer POROs over mixins: Extract plain objects we can test and compose
+  independently. If a mixin seems clearly better, ask before proceeding.
 * Explicit over implicit: Prefer clarity over cleverness
 * Single Responsibility: Each class/method does one thing well
 * Domain-driven naming: Use business language (Measurements not ProgressEntries)
