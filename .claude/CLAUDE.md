@@ -14,6 +14,8 @@
   `Service` suffix. Example: `Namespace::ClassName#call`
 - Self-improvement loop: After ANY correction, update `tasks/lessons.md` with the
   pattern (create the file if it doesn't exist). Review lessons at session start.
+- Google Workspace: Always use the `gws` CLI for calendar, drive, gmail, etc.
+  Never use built-in Claude Code MCP integrations for Google services.
 
 Architecture & Design
 
