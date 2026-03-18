@@ -2,7 +2,10 @@
   "env": {
     "ENABLE_LSP_TOOL": "1"
   },
-  "attribution": {},
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
     "allow": [
       "Bash(bin/rails:*)",
@@ -28,11 +31,14 @@
       "Bash(git stash:*)",
       "Bash(git status:*)",
       "Bash(git worktree:*)",
+      "Bash(gws --help)",
+      "Bash(gws auth:*)",
       "Bash(head:*)",
       "Bash(ls:*)",
       "Bash(lsof:*)",
       "Bash(mkdir:*)",
       "Bash(mise exec:*)",
+      "Bash(mise which:*)",
       "Bash(mv:*)",
       "Bash(ruby -rjson -e:*)",
       "Bash(tail:*)",
@@ -42,8 +48,9 @@
       "Bash(which:*)",
       "Bash(xargs dirname:*)",
       "Bash(yarn test:*)",
-      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developer.atlassian.com)",
       "WebFetch(domain:docs.livekit.io)",
+      "WebFetch(domain:github.com)",
       "WebSearch"
     ],
     "deny": [],
