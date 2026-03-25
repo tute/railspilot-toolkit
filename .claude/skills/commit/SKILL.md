@@ -1,6 +1,7 @@
 ---
 name: commit
 description: Stages and commits to git current work with a message explaining the why, architecture decisions, and user flow. Use when asked to commit, save progress, or when the user says "commit this" or "save my changes".
+effort: low
 ---
 
 Stage and commit the current work with a well-crafted commit message.
