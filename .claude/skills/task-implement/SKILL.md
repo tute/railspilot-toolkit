@@ -294,8 +294,7 @@ mise exec -- rspec
 - Reference which review feedback was addressed
 - Note any breaking changes or migration requirements
 
-Linear issue: <Linear issue URL>  OR  Jira issue: <Jira issue URL>
-Implemented with Claude Code
+<Linear issue URL>  OR  <Jira issue URL>
 ```
 
 **Differences:** Jira prefixes the subject with the issue key (e.g., `PROJ-142 Add user notification service`). Linear does not prefix.
