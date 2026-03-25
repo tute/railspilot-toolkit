@@ -376,6 +376,11 @@ expect { action }.to raise_error(ErrorClass)
 expect { action }.not_to raise_error
 ```
 
+## Scaling: When the Suite Gets Slow (~3+ min)
+
+1. **First**: disable query log tags and raise log level in test env (`query_log_tags_enabled = false`, `log_level = :fatal`). I/O from SQL annotations is often the biggest bottleneck.
+2. **Then**: if still slow, add `parallel_tests` gem. Key changes: append `<%= ENV['TEST_ENV_NUMBER'] %>` to test DB name in `database.yml`, and set per-process SimpleCov dirs if applicable. Run with `bundle exec parallel_rspec spec/`.
+
 ## Resources
 
 This skill includes detailed reference documentation in the `references/` directory:
