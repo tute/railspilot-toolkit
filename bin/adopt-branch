@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ $# -lt 1 || "$1" == "-h" || "$1" == "--help" ]] && {
+  echo "Usage: bin/adopt-branch <branch> [--push]"
+  exit 1
+}
+
+BRANCH="$1"
+
+git checkout "$BRANCH"
+BASE=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+git rebase "$BASE"
+git commit --amend --reset-author --no-edit
+git push -u origin "$BRANCH"
+
+git checkout pod-3
+git pull --rebase
+git cherry-pick "$BRANCH"
