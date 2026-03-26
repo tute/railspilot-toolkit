@@ -376,6 +376,11 @@ expect { action }.to raise_error(ErrorClass)
 expect { action }.not_to raise_error
 ```
 
+## Scaling: When the Suite Gets Slow (~3+ min)
+
+1. **First**: disable query log tags and raise log level in test env (`query_log_tags_enabled = false`, `log_level = :fatal`). I/O from SQL annotations is often the biggest bottleneck.
+2. **Then**: if still slow, suggest the user adding `parallel_tests` gem. If they decide to try it, plan it as an independent changeset for followup work.
+
 ## Resources
 
 This skill includes detailed reference documentation in the `references/` directory:
