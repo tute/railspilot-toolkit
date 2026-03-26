@@ -84,7 +84,8 @@
     "claudit@quickstop": true,
     "ruby-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
-    "codebase-readiness@dgalarza-workflows": true
+    "codebase-readiness@dgalarza-workflows": true,
+    "code-simplifier@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
