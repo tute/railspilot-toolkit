@@ -3,6 +3,10 @@
 - Use `mise exec --` prefix for any project binaries (rspec, rubocop, brakeman,
   rails, etc.)
 - Use task agents for preliminary explorations when appropriate.
+- When spawning subagents, always include the current date (YYYY-MM-DD) and day
+  of week in the prompt. Subagents don't inherit system context — they can't
+  infer "today". When passing dates, pre-compute relative labels ("3 days ago",
+  "yesterday") — LLMs struggle with date math on raw timestamps.
 - Enter plan mode for any non-trivial task (3+ steps or architectural decisions)
 - For every change, use the TDD skill, as can be found in `.claude/skills/tdd-skill`
 - When I report a bug, don't start by trying to fix it. Instead, start by

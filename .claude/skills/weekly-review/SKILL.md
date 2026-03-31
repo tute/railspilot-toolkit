@@ -49,6 +49,12 @@ If no commits in the last 7 days, state that and skip to Part 2.
 - Read `.claude/skills/railspilot-staff-review/patterns.md` — understand existing
   coverage and ID numbering
 
+Before analyzing, add temporal context to observations and lessons:
+- Pre-compute relative time labels ("today", "3 days ago", "2 weeks ago")
+- Insert gap markers between non-consecutive date groups ("[5 days later]")
+- Focus on 🔴 high-priority observations (errors) first, then 🟡 medium
+  (file changes), skip 🟢 low-priority older than 7 days
+
 ### 5. Cross-reference digest with lessons
 
 This is where the two parts synergize:
