@@ -14,23 +14,30 @@ them into the appropriate place (patterns.md, CLAUDE.md, skills, or lessons.md).
    marker entry). Derive the project hash with:
    `git remote get-url origin | md5sum | cut -c1-12`
 
-2. **Read existing documentation** — read `tasks/lessons.md`,
+2. **Add temporal context** — before analyzing, pre-compute relative time for
+   each observation and lesson entry. LLMs struggle with raw date math, so
+   annotate the data:
+   - Add relative labels: "today", "yesterday", "3 days ago", "2 weeks ago"
+   - Insert gap markers between non-consecutive date groups: "[3 days later]"
+   - Focus on 🔴 high-priority observations first (errors, failures), then
+     🟡 medium (file changes), then 🟢 low (reads, routine successes)
+   - Drop 🟢 low-priority observations older than 7 days from analysis
+
+3. **Read existing documentation** — read `tasks/lessons.md`,
    `.claude/skills/railspilot-staff-review/patterns.md`, and `.claude/CLAUDE.md`
    to understand what's already captured. Skip anything already documented.
 
-3. **Analyze the session** — look for these signal types, ranked by value:
-   - **User corrections** — the user said "no", "actually", "don't", "instead",
-     or undid a change. These are the strongest signal of an undocumented
+4. **Analyze the session** — look for these signal types, ranked by value:
+   - **User corrections** (🔴) — the user said "no", "actually", "don't",
+     "instead", or undid a change. Strongest signal of an undocumented
      preference.
-   - **Error-then-fix sequences** — a Bash tool failed (non-zero exit), then
-     subsequent tools resolved it. The resolution is the pattern.
-   - **Repeated workflows** — same tool sequence used 3+ times (e.g., always
-     running tests after editing a model).
+   - **Error-then-fix sequences** (🔴→🟢) — a Bash tool failed (non-zero
+     exit, priority: high), then subsequent tools resolved it.
+   - **Repeated workflows** — same tool sequence used 3+ times.
    - **Rails-specific conventions** — service object naming, AR query patterns,
-     test structure choices, migration conventions, Hotwire/Stimulus usage,
-     controller organization.
+     test structure choices, migration conventions, Hotwire/Stimulus usage.
 
-4. **Categorize findings** — for each pattern, determine where it belongs:
+5. **Categorize findings** — for each pattern, determine where it belongs:
    - **patterns.md** — reusable code review patterns. Draft with proper format:
      `CATEGORY-NN: Title`, Applies to, Detection, Bad/Good Ruby examples.
      Categories: SEC, ARCH, SIMP, SCOPE, COMPLETE, or propose new ones
@@ -41,15 +48,15 @@ them into the appropriate place (patterns.md, CLAUDE.md, skills, or lessons.md).
    - **lessons.md** — corrections from this session (format: date, title,
      what happened, correct approach, applies-to area).
 
-5. **Present findings** — show each candidate with:
+6. **Present findings** — show each candidate with:
    - The observed pattern (with concrete examples from the session)
    - Where it should go and a draft of the text to add
    - Ask the user which to apply
 
-6. **Apply approved changes** — update the relevant files. For patterns.md,
+7. **Apply approved changes** — update the relevant files. For patterns.md,
    follow the existing format exactly. For lessons.md, append new entries.
 
-7. **Mark completion** — append a marker to the observations file:
+8. **Mark completion** — append a marker to the observations file:
    `{"type":"rails-learn-run","timestamp":"<now>"}`
 
 ## What makes a pattern worth capturing
@@ -58,3 +65,10 @@ them into the appropriate place (patterns.md, CLAUDE.md, skills, or lessons.md).
 - Error resolutions: worth capturing if the same class of error appeared 2+ times
 - Workflows: worth capturing if repeated 3+ times
 - Conventions: worth capturing if they reflect a deliberate, non-default choice
+
+## Priority reference
+
+Observations are tagged by the hook:
+- **high** — Bash errors (non-zero exit code)
+- **medium** — file changes (Edit, Write)
+- **low** — reads and successful commands
