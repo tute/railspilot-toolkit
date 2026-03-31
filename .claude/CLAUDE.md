@@ -15,8 +15,8 @@
 - Self-improvement loop: After ANY correction, update `tasks/lessons.md` with the
   pattern (create the file if it doesn't exist). Review lessons at session start.
   Run `/rails-learn` at the end of productive sessions to extract patterns into
-  patterns.md, CLAUDE.md, or skills. Run `/evolve-patterns` weekly to grow the
-  pattern library from accumulated lessons.
+  patterns.md, CLAUDE.md, or skills. Run `/weekly-review` weekly to summarize
+  changes and grow the pattern library from accumulated lessons.
 - Google Workspace: Always use the `gws` CLI for calendar, drive, gmail, etc.
   Never use built-in Claude Code MCP integrations for Google services.
 
