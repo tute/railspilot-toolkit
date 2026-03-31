@@ -67,6 +67,29 @@
   "enabledMcpjsonServers": [],
   "disabledMcpjsonServers": [],
   "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/observe-session.sh",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/scripts/session-review.sh",
+            "timeout": 3000
+          }
+        ]
+      }
+    ],
     "Notification": [
       {
         "hooks": [
@@ -88,7 +111,8 @@
     "ruby-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "codebase-readiness@dgalarza-workflows": true,
-    "code-simplifier@claude-plugins-official": true
+    "code-simplifier@claude-plugins-official": true,
+    "clangd-lsp@claude-plugins-official": true
   },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
