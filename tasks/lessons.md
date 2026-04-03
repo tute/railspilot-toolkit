@@ -21,3 +21,9 @@ that cross-references both data sources. Separate skills that "should be run
 together" create friction — a single skill with clear sections is better.
 
 **Applies to:** skill design, toolkit architecture
+
+### 2026-04-03: Global Claude config lives in toolkit, not ~/.claude
+
+`bin/install` symlinks `~/.claude/settings.json` → toolkit. Edit the toolkit copy.
+
+**Applies to:** configuration

@@ -73,18 +73,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/scripts/observe-session.sh",
-            "timeout": 3000
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .claude/scripts/session-review.sh",
+            "command": "bash /home/fedesapuppo/Code/railspilot/toolkit/.claude/scripts/observe-session.sh",
             "timeout": 3000
           }
         ]
