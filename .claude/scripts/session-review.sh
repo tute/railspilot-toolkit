@@ -30,6 +30,10 @@ fi
 COUNT=$(grep -c "\"session\":\"$SESSION_ID\"" "$OBS_FILE" 2>/dev/null || echo "0")
 
 if [ "$COUNT" -gt 20 ]; then
-  jq -n -c --arg reason "Productive session ($COUNT tool uses). Consider running /rails-learn to extract patterns before ending." \
-    '{"decision": "block", "reason": $reason}'
+  DAY_OF_WEEK=$(date +%u)
+  # Only block on Fridays (day 5) — silent during the week
+  if [ "$DAY_OF_WEEK" = "5" ]; then
+    jq -n -c --arg reason "Productive session ($COUNT tool uses). Consider running /rails-learn to extract patterns before ending." \
+      '{"decision": "block", "reason": $reason}'
+  fi
 fi

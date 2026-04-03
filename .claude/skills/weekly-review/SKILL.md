@@ -7,9 +7,33 @@ Combines the engineering digest with pattern evolution into a single weekly
 ritual. Part 1 answers "what happened?", Part 2 answers "what did we learn?",
 and they cross-reference each other for richer context.
 
+## Scope
+
+Determine the scope automatically:
+
+- **Single repo**: current directory is inside a git repo (i.e.,
+  `git rev-parse --is-inside-work-tree` succeeds). Use `git` commands directly.
+- **Multi-repo**: current directory is NOT a git repo, or user explicitly says
+  "all repos", "across projects", or names a parent folder. Discover repos
+  under the current directory and aggregate.
+
+For multi-repo, discover git repos under the target folder:
+
+```bash
+find ~/Code -maxdepth 3 -name .git -type d 2>/dev/null | xargs -I{} dirname {}
+```
+
+Then run Part 1 data gathering for each repo, and collect all observations
+from `~/.claude/observations/`. Derive each repo's hash:
+`git -C <repo-path> remote get-url origin 2>/dev/null | md5sum | cut -c1-12`
+
+Group the digest by repo, but cross-reference patterns across all repos.
+
 ## Part 1: Engineering Digest
 
 ### 1. Gather data
+
+For each repo in scope:
 
 ```bash
 git log --since="7 days ago" --pretty=format:"%h %s (%an, %ar)" --no-merges
@@ -37,15 +61,17 @@ For each significant commit or PR, read the diff with `git show <hash>`.
 - [Risk or follow-up with evidence]
 ```
 
-If no commits in the last 7 days, state that and skip to Part 2.
+In multi-repo mode, group changes by repo. Skip repos with no commits.
+If no commits across any repo in scope, state that and skip to Part 2.
 
 ## Part 2: Pattern Evolution
 
 ### 4. Read learning sources
 
 - Read `tasks/lessons.md` — identify recurring corrections (same area, 2+ times)
-- Read `~/.claude/observations/<project-hash>.jsonl` — identify error patterns
-  and repeated workflows. Derive hash: `git remote get-url origin | md5sum | cut -c1-12`
+- Read observations for each repo in scope from `~/.claude/observations/<hash>.jsonl`.
+  Derive hash: `git -C <repo> remote get-url origin | md5sum | cut -c1-12`.
+  In multi-repo mode, read all observation files and tag findings by repo.
 - Read `.claude/skills/railspilot-staff-review/patterns.md` — understand existing
   coverage and ID numbering
 
