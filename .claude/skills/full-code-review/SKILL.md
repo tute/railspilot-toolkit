@@ -1,6 +1,6 @@
 ---
 name: full-code-review
-description: Runs parallel subagent reviews for security (OWASP, multi-tenant, auth) and Rails best practices (POODR, N+1, service objects), consolidating findings. Use when asked for a full or comprehensive code review.
+description: Runs parallel subagent reviews for security (OWASP, multi-tenant, auth), Rails best practices (POODR, N+1, service objects), and accessibility (WCAG, ARIA, keyboard nav), consolidating findings. Use when asked for a full or comprehensive code review.
 ---
 
 # Full Code Review
@@ -9,7 +9,7 @@ Perform a comprehensive code review using parallel specialized subagents for sec
 
 ## Instructions
 
-You will launch TWO specialized subagents in parallel using the Task tool for comprehensive coverage:
+You will launch THREE specialized subagents in parallel using the Task tool for comprehensive coverage:
 
 1. **Check Previous Decisions**:
 
@@ -50,7 +50,21 @@ You will launch TWO specialized subagents in parallel using the Task tool for co
      - Dependency management and coupling
    - **Return**: Detailed code quality findings with file:line references, categorized by priority (High, Medium, Low)
 
-   **Both subagents should**:
+   **Subagent 3: Accessibility Review Specialist**
+
+   - **Get the diff**: Run `git diff main...HEAD` (or `git diff $ARGUMENTS...HEAD` if branch specified)
+   - **Accessibility Focus**:
+     - WCAG 2.1 AA compliance
+     - Keyboard navigation (tab order, escape, enter/space, arrow keys)
+     - ARIA attributes (aria-expanded, aria-live, aria-haspopup, roles)
+     - Screen reader support (accessible hiding, state announcements, labels)
+     - Semantic HTML over ARIA workarounds
+     - Focus management (return focus after close, visible focus indicators)
+     - Stimulus controllers: keyboard handlers, disconnect cleanup, data-action bindings
+     - Color contrast and non-color indicators
+   - **Return**: Detailed accessibility findings with file:line references, categorized by severity (Critical, High, Medium, Low)
+
+   **All subagents should**:
 
    - Respect previous decisions from the decision log
    - Focus only on genuinely new concerns
