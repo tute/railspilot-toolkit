@@ -1,0 +1,310 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/inline"
+
+gemfile(false, quiet: true) do
+  source "https://rubygems.org"
+  gem "concurrent-ruby", "~> 1.3"
+end
+
+require "bundler"
+require "concurrent"
+require "json"
+require "net/http"
+require "optparse"
+require "pathname"
+require "uri"
+
+Result = Struct.new(:name, :status, :detail, keyword_init: true)
+
+class GemfileMfaAuditor
+  USER_AGENT = "gemfile-mfa-audit/1.0"
+  MAX_REDIRECTS = 5
+  RETRIES = 3
+  DEFAULT_JOBS = 25
+
+  def initialize(jobs: DEFAULT_JOBS, open_timeout: 5, read_timeout: 10)
+    @jobs = [jobs.to_i, 1].max
+    @open_timeout = open_timeout.to_i
+    @read_timeout = read_timeout.to_i
+  end
+
+  def audit(gem_names)
+    return {} if gem_names.empty?
+
+    pool = Concurrent::FixedThreadPool.new(@jobs)
+    latch = Concurrent::CountDownLatch.new(gem_names.length)
+    results = Concurrent::Map.new
+
+    gem_names.each do |gem_name|
+      pool.post do
+        results[gem_name] = fetch_result(gem_name)
+      rescue StandardError => error
+        results[gem_name] = Result.new(
+          name: gem_name,
+          status: :error,
+          detail: "#{error.class}: #{error.message}"
+        )
+      ensure
+        latch.count_down
+      end
+    end
+
+    latch.wait
+    pool.shutdown
+    pool.wait_for_termination
+
+    gem_names.to_h { |gem_name| [gem_name, results[gem_name]] }
+  end
+
+  private
+
+  def fetch_result(gem_name)
+    attempts = 0
+
+    begin
+      attempts += 1
+      response = http_get(gem_api_uri(gem_name))
+
+      case response
+      when Net::HTTPSuccess
+        mfa_enabled = parse_mfa_status(response.body)
+
+        case mfa_enabled
+        when true
+          Result.new(name: gem_name, status: :enabled)
+        when false
+          Result.new(name: gem_name, status: :disabled)
+        else
+          Result.new(
+            name: gem_name,
+            status: :unknown,
+            detail: "Could not parse MFA status from API response"
+          )
+        end
+      when Net::HTTPNotFound
+        Result.new(name: gem_name, status: :missing, detail: "Not found on rubygems.org")
+      else
+        raise "HTTP #{response.code} #{response.message}"
+      end
+    rescue Timeout::Error, Errno::ECONNRESET, EOFError, SocketError, OpenSSL::SSL::SSLError => error
+      retry if attempts < RETRIES
+
+      Result.new(
+        name: gem_name,
+        status: :error,
+        detail: "#{error.class}: #{error.message}"
+      )
+    rescue StandardError => error
+      retry if attempts < RETRIES
+
+      Result.new(
+        name: gem_name,
+        status: :error,
+        detail: "#{error.class}: #{error.message}"
+      )
+    end
+  end
+
+  def gem_api_uri(gem_name)
+    URI("https://rubygems.org/api/v1/gems/#{URI.encode_uri_component(gem_name)}.json")
+  end
+
+  def http_get(uri, redirects_left = MAX_REDIRECTS)
+    raise "Too many redirects" if redirects_left.negative?
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = uri.scheme == "https"
+    http.open_timeout = @open_timeout
+    http.read_timeout = @read_timeout
+
+    store = OpenSSL::X509::Store.new
+    store.set_default_paths
+    store.flags = 0
+    http.cert_store = store
+
+    request = Net::HTTP::Get.new(uri)
+    request["User-Agent"] = USER_AGENT
+    request["Accept"] = "application/json"
+
+    response = http.request(request)
+
+    return response unless response.is_a?(Net::HTTPRedirection)
+
+    location = response["location"]
+    raise "Redirect without location" unless location
+
+    http_get(URI.join(uri, location), redirects_left - 1)
+  end
+
+  def parse_mfa_status(body)
+    data = JSON.parse(body)
+    metadata = data["metadata"] || {}
+    metadata["rubygems_mfa_required"] == "true"
+  rescue JSON::ParserError
+    nil
+  end
+end
+
+def parse_gemfile(gemfile_path)
+  definition = Dir.chdir(gemfile_path.dirname) do
+    Bundler::Dsl.evaluate(gemfile_path.to_s, nil, {})
+  end
+
+  definition.dependencies.map(&:name).uniq.sort
+rescue StandardError => error
+  raise "Could not parse #{gemfile_path}: #{error.class}: #{error.message}"
+end
+
+def parse_lockfile(lockfile_path)
+  content = lockfile_path.read
+  parser = Bundler::LockfileParser.new(content)
+  parser.specs.map(&:name).uniq.sort
+rescue StandardError => error
+  warn "Warning: Could not parse #{lockfile_path}: #{error.message}"
+  nil
+end
+
+def resolve_gemfile(path)
+  expanded = Pathname(path).expand_path
+  expanded = expanded.join("Gemfile") if expanded.directory?
+
+  raise "No Gemfile found at #{path}" unless expanded.file?
+
+  expanded
+end
+
+def percentage(numerator, denominator)
+  return "n/a" if denominator.zero?
+
+  format("%.1f%%", (numerator.to_f / denominator) * 100)
+end
+
+def print_report(label, gem_names, results)
+  selected = gem_names.map { |name| results.fetch(name) }
+
+  enabled = selected.select { |result| result.status == :enabled }.map(&:name).sort
+  disabled = selected.select { |result| result.status == :disabled }.map(&:name).sort
+  missing = selected.select { |result| result.status == :missing }
+  unknown = selected.select { |result| result.status == :unknown }
+  errors = selected.select { |result| result.status == :error }
+
+  checkable_count = enabled.length + disabled.length
+
+  puts label
+  puts "  gems: #{gem_names.length}"
+  puts "  checkable on rubygems.org: #{checkable_count}"
+  puts "  MFA required for pushes: #{enabled.length}/#{checkable_count} (#{percentage(enabled.length, checkable_count)})"
+  puts "  MFA not required: #{disabled.length}"
+
+  puts "  gems not requiring MFA for pushes:"
+  if disabled.empty?
+    puts "    - none"
+  else
+    disabled.each { |name| puts "    - #{name}" }
+  end
+
+  unless missing.empty?
+    puts "  not found on rubygems.org:"
+    missing.map(&:name).sort.each { |name| puts "    - #{name}" }
+  end
+
+  unless unknown.empty?
+    puts "  could not parse MFA status:"
+    unknown.map(&:name).sort.each { |name| puts "    - #{name}" }
+  end
+
+  unless errors.empty?
+    puts "  request errors:"
+    errors.sort_by(&:name).each do |result|
+      puts "    - #{result.name}: #{result.detail}"
+    end
+  end
+end
+
+options = {
+  jobs: GemfileMfaAuditor::DEFAULT_JOBS,
+  open_timeout: 5,
+  read_timeout: 10
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options] GEMFILE_OR_DIR [...]"
+
+  opts.on("-j", "--jobs N", Integer, "Concurrent RubyGems requests (default: #{options[:jobs]})") do |value|
+    options[:jobs] = value
+  end
+
+  opts.on("--open-timeout SECONDS", Integer, "HTTP open timeout (default: #{options[:open_timeout]})") do |value|
+    options[:open_timeout] = value
+  end
+
+  opts.on("--read-timeout SECONDS", Integer, "HTTP read timeout (default: #{options[:read_timeout]})") do |value|
+    options[:read_timeout] = value
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end
+
+begin
+  inputs = parser.parse(ARGV)
+
+  if inputs.empty?
+    if Pathname("Gemfile").file?
+      inputs = ["Gemfile"]
+    else
+      warn parser.to_s
+      exit 1
+    end
+  end
+
+  gemfiles = inputs.map { |input| resolve_gemfile(input) }
+  gems_by_file = gemfiles.to_h { |gemfile| [gemfile, parse_gemfile(gemfile)] }
+
+  transitive_by_file = {}
+  gemfiles.each do |gemfile|
+    lockfile = gemfile.dirname.join("Gemfile.lock")
+    next unless lockfile.file?
+
+    lockfile_gems = parse_lockfile(lockfile)
+    next unless lockfile_gems
+
+    transitive_by_file[gemfile] = lockfile_gems - gems_by_file[gemfile]
+  end
+
+  all_gems = (gems_by_file.values + transitive_by_file.values).flatten.uniq.sort
+
+  auditor = GemfileMfaAuditor.new(
+    jobs: options[:jobs],
+    open_timeout: options[:open_timeout],
+    read_timeout: options[:read_timeout]
+  )
+
+  results = auditor.audit(all_gems)
+
+  gemfiles.each_with_index do |gemfile, index|
+    puts if index.positive?
+    print_report("#{gemfile} (direct)", gems_by_file.fetch(gemfile), results)
+
+    next unless transitive_by_file[gemfile]
+
+    puts
+    print_report("#{gemfile} (transitive)", transitive_by_file[gemfile], results)
+  end
+
+  if gemfiles.length > 1 || transitive_by_file.any?
+    puts
+    print_report("OVERALL", all_gems, results)
+  end
+rescue OptionParser::ParseError => error
+  warn error.message
+  warn parser.to_s
+  exit 1
+rescue StandardError => error
+  warn error.message
+  exit 1
+end
