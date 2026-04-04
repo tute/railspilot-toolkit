@@ -39,10 +39,11 @@ available (in Rails, it would take precedense before `$PORT`).
 #### Code Quality
 
 - `code-review`: Focused diff review for bugs, edge cases, and performance
+- `frontend`: Anti-"AI slop" design principles
 - `full-code-review`: Parallel security + Rails best practices review
 - `railspilot-staff-review`: Code review through a staff engineer's lens
 - `rspec-testing`: RSpec best practices (Better Specs, thoughtbot)
-- `frontend`: Anti-"AI slop" design principles
+- `vulnerability-scan`: Whole-project security audit (CVEs, secrets, dangerous patterns)
 
 #### Git & PR
 
