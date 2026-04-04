@@ -109,13 +109,41 @@ end
 
 ## Simplicity
 
-### SIMP-04: Keep Jobs Thin
+### SIMP-04: Keep Jobs Thin — Let Errors Surface
 
 **Applies to:** Background jobs
 
-Jobs should do three things: fetch data, call a service, log that they ran. Business logic belongs in service objects. Retry logic belongs in the framework. Accounting belongs in monitoring tools.
+Jobs own three things: scheduling/retry semantics, record lifecycle (e.g. marking `processed_at`), and delegating to a service. Business logic belongs in service objects. Retry logic belongs in the framework (Solid Queue, Sidekiq). Don't rescue exceptions in jobs — let them propagate so the framework retries transient failures and surfaces persistent ones in dashboards.
 
-**Detection:** Look for jobs longer than ~15 lines, or jobs that contain business logic, conditionals, or error handling beyond the basic call.
+**Detection:** Look for jobs longer than ~15 lines, jobs that contain business logic or conditionals, or jobs that rescue exceptions and return silently instead of letting the framework handle retries.
+
+```ruby
+# Bad — business logic in job, swallows errors
+class ProcessWebhookJob < ApplicationJob
+  def perform(event_id)
+    event = WebhookEvent.find(event_id)
+    data = JSON.parse(event.payload)
+    patient = Patient.find_by(ehr_id: data["patient_id"])
+    return unless patient
+    appointment = patient.appointments.find_or_initialize_by(ehr_id: data["id"])
+    appointment.update!(status: data["status"])
+    event.update!(processed_at: Time.current)
+  rescue => e
+    Rails.logger.error("Webhook failed: #{e.message}")
+  end
+end
+
+# Good — thin job, delegates to service, lets errors surface
+class ProcessWebhookJob < ApplicationJob
+  retry_on StandardError, wait: :polynomially_longer, attempts: 5
+
+  def perform(event_id)
+    event = WebhookEvent.find(event_id)
+    Webhook::ProcessAppointment.call(event:)
+    event.update!(processed_at: Time.current)
+  end
+end
+```
 
 ---
 
