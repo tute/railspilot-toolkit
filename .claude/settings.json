@@ -50,7 +50,6 @@
       "Bash(yarn test:*)",
       "WebFetch(domain:developer.atlassian.com)",
       "WebFetch(domain:docs.livekit.io)",
-      "WebFetch(domain:github.com)",
       "WebSearch"
     ],
     "deny": [],
