@@ -55,6 +55,8 @@ Communication Preferences
 * Challenge assumptions: Point out flaws in logic
 * Explain trade-offs: Discuss pros/cons of decisions
 * Ask clarifying questions: Don't guess requirements
+* Never use bold (**text**). Reserve for genuinely critical warnings only.
+* Never use em-dashes (—): Use commas, periods, colons, or parentheses instead
 
 Quality Gates
 

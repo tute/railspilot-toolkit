@@ -30,23 +30,27 @@ available (in Rails, it would take precedense before `$PORT`).
 
 ### Skills
 
-**Development Workflow**
+#### Development Workflow
+
 - `task-implement`: Full issue-to-PR workflow from a Linear/Jira issue (TDD, code reviews, PR creation)
 - `tdd-skill`: Red-Green-Refactor TDD methodology
 - `fix-merge-conflicts`: Non-interactive merge conflict resolution
 
-**Code Quality**
+#### Code Quality
+
 - `code-review`: Focused diff review for bugs, edge cases, and performance
 - `full-code-review`: Parallel security + Rails best practices review
 - `railspilot-staff-review`: Code review through a staff engineer's lens
 - `rspec-testing`: RSpec best practices (Better Specs, thoughtbot)
 - `frontend`: Anti-"AI slop" design principles
 
-**Git & PR**
+#### Git & PR
+
 - `git-commit`: Commit with a well-structured message explaining the why
 - `pr-title-and-description`: PR title and description from branch diff
 
-**Utilities**
+#### Utilities
+
 - `today`: Daily task summary from Calendar, Gmail, and Jira
 - `visualize`: Mermaid diagram for data lineage and architecture
 - `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
