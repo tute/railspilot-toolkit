@@ -59,6 +59,7 @@
     ],
     "defaultMode": "acceptEdits"
   },
+  "model": "opus",
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [],
   "disabledMcpjsonServers": [],
@@ -92,7 +93,7 @@
     "command": "bash \"$HOME/.claude/statusline.sh\""
   },
   "enabledPlugins": {
-    "claudit@quickstop": true,
+    "claudit@quickstop": false,
     "ruby-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "codebase-readiness@dgalarza-workflows": true,
