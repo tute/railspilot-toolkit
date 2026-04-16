@@ -316,7 +316,7 @@ Present checklist to user:
 - Staff review feedback addressed
 - All tests pass
 - Logical commit history created
-- PR created with task manager integration
+- pr-title-and-description given
 
 ## Integration with Other Skills
 
