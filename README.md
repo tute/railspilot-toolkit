@@ -56,6 +56,7 @@ available (in Rails, it would take precedense before `$PORT`).
 - `visualize`: Mermaid diagram for data lineage and architecture
 - `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
 - `document-past-chats`: Analyze chat history for recurring patterns and insights
+- `playwright`: Capture Playwright e2e proof (video + screenshots) for a feature, with helpers for forced visibility, absence banners, and dev-overlay stripping
 
 ## Docs
 
