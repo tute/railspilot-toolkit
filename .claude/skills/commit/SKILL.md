@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Stages and commits to git current work with a message explaining the why, architecture decisions, and user flow. Use when asked to commit, save progress, or when the user says "commit this" or "save my changes".
+description: Stages and commits to git current work with a message explaining the why, architecture decisions, and user flow. Also generates GitHub PR titles and descriptions as copy-pasteable markdown. Use when asked to commit, save progress, or when the user says "commit this", "save my changes", "make a PR", "create a PR", "open a PR", "PR this", "ready for review", or "open a pull request".
 effort: low
 ---
 
@@ -14,8 +14,18 @@ Stage and commit the current work with a well-crafted commit message.
    which can accidentally include sensitive files (.env, credentials) or large
    binaries. If changes span multiple concerns, suggest separate commits.
 4. Draft a commit message following the format below.
-5. Stage the files and commit. Use a HEREDOC for the message to preserve formatting.
-6. Run `git status` after committing to verify success.
+
+If the user is asking for a **GitHub PR title and description** (e.g. "make a
+PR", "PR this", "ready for review", "open a pull request"), then:
+generate the PR title and description, then **output it inside a single
+fenced markdown code block** so the user can copy-paste it directly into
+GitHub; do not render the content verbatim in chat.
+
+If the user is asking to **do the commit**, then:
+
+a. Stage the files and commit. Use a HEREDOC for the message to preserve formatting.
+b. Run `git status` after committing to verify success.
+
 
 ## Commit message format
 
