@@ -24,6 +24,8 @@ available (in Rails, it would take precedense before `$PORT`).
 - `rails-feature-developer`: TDD-driven Rails feature development with Hotwire
 - `rails-code-reviewer`: Code review for Rails conventions and POODR principles
 - `rails-security-reviewer`: Security auditing and multi-tenant data isolation
+- `staff-engineer-reviewer`: Pattern-library review through a staff engineer's lens
+- `layered-rails-gradual`: Phased roadmaps for incremental layered-architecture adoption
 - `refactor-planner`: Safe, incremental refactoring plans
 - `railspilot-progress-reporter`: Monthly client progress reports
 - `jira-fetcher`: Lightweight Jira data fetcher for `/today`
@@ -44,20 +46,42 @@ available (in Rails, it would take precedense before `$PORT`).
 - `railspilot-staff-review`: Code review through a staff engineer's lens
 - `rspec-testing`: RSpec best practices (Better Specs, thoughtbot)
 - `vulnerability-scan`: Whole-project security audit (CVEs, secrets, dangerous patterns)
+- `best-practices`: Modern web security, compatibility, and code quality
+
+#### Codebase Analysis
+
+- `codebase-diagnostic`: Git-history diagnostics for churn, bus factor, and bug clusters
+- `rails-codebase-audit`: Legacy Rails audit with prioritized fix-now/quarter/ignore tiers
+- `weekly-summarizer`: Weekly engineering digest of meaningful changes
+
+#### Web Quality
+
+- `accessibility`: WCAG 2.2 audits and fixes
+- `performance`: Page-speed and load-time optimization
+- `core-web-vitals`: LCP, INP, and CLS optimization
+- `seo`: Search visibility and structured data
+- `web-quality-audit`: Combined performance/a11y/SEO/best-practices audit
 
 #### Git & PR
 
-- `git-commit`: Commit with a well-structured message explaining the why
-- `pr-title-and-description`: PR title and description from branch diff
+- `commit`: Commit with a well-structured message explaining the why; also generates PR titles/descriptions
 
-#### Utilities
+#### Productivity
 
 - `today`: Daily task summary from Calendar, Gmail, and Jira
+- `gws-gmail`: Send, read, and manage email
+- `gws-gmail-triage`: Unread inbox summary
+- `fact-checker`: Investigate a news article URL for accuracy and rhetorical manipulation
+
+#### Meta
+
 - `visualize`: Mermaid diagram for data lineage and architecture
 - `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
 - `document-past-chats`: Analyze chat history for recurring patterns and insights
+- `claude_deslop`: Audit your Claude setup for redundancy, conflicts, and dead weight
+- `caveman`, `caveman-compress`, `caveman-help`: Token-compressed communication mode
 
 ## Docs
 
-- [MCP server setup](docs/mcps.md)
+- [External tools](docs/external-tools.md)
 - [Onboarding checklist](docs/onboarding.md)
