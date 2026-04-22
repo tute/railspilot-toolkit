@@ -1,19 +1,21 @@
 #!/usr/bin/env sh
 set -eu
 
+TOOLKIT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
 cd ~/.cursor
-ln -sfn ~/Code/railspilot/toolkit/.cursor/rules rules
-ln -sfn ~/Code/opensource/dotfiles/cursor/settings.json settings.json
-ln -sfn ~/Code/railspilot/toolkit/.cursor/worktrees.json worktrees.json
+ln -sfn "$TOOLKIT_ROOT/.cursor/rules" rules
+ln -sfn "$TOOLKIT_ROOT/.cursor/settings.json" settings.json
+ln -sfn "$TOOLKIT_ROOT/.cursor/worktrees.json" worktrees.json
 
 cd ~/.claude
-ln -sfn ~/Code/railspilot/toolkit/.claude/CLAUDE.md CLAUDE.md
-ln -sfn ~/Code/railspilot/toolkit/.claude/agents agents
-ln -sfn ~/Code/railspilot/toolkit/.claude/settings.json settings.json
-ln -sfn ~/Code/railspilot/toolkit/.claude/skills skills
-ln -sfn ~/Code/railspilot/toolkit/.claude/statusline.sh statusline.sh
+ln -sfn "$TOOLKIT_ROOT/.claude/CLAUDE.md" CLAUDE.md
+ln -sfn "$TOOLKIT_ROOT/.claude/agents" agents
+ln -sfn "$TOOLKIT_ROOT/.claude/settings.json" settings.json
+ln -sfn "$TOOLKIT_ROOT/.claude/skills" skills
+ln -sfn "$TOOLKIT_ROOT/.claude/statusline.sh" statusline.sh
 
 if [ -n "${1:-}" ]; then
   cd "$1"
-  ln -sfn ~/Code/railspilot/toolkit/conductor.json conductor.json
+  ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json
 fi

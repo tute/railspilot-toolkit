@@ -1,5 +1,10 @@
 // macos ~/Library/Application\ Support/Cursor/User/settings.json
 // linux ~/.config/Cursor/User/settings.json
+
+// Extensions:
+// MateuszDrewniak.ruby-test-runner
+// Shopify.ruby-lsp
+// rubocop.vscode-rubocop
 {
   "crashReporting.enabled": "off",
   "editor.codeLens": false,
@@ -32,5 +37,7 @@
     "editor.defaultFormatter": "vscode.json-language-features"
   },
   "editor.formatOnPaste": true,
-  "cursor.composer.usageSummaryDisplay": "always"
+  "cursor.composer.usageSummaryDisplay": "always",
+  "rubocop.autocorrect": false,
+  "rubyLsp.formatter": "none"
 }
