@@ -11,7 +11,7 @@ This skill automates the entire development lifecycle from issue to merged PR. I
 ```
 Implement TRA-142
 Implement PROJ-456
-/implement https://your-site.atlassian.net/browse/PROJ-123-613
+/implement https://your-site.atlassian.net/browse/PROJ-123
 ```
 
 Claude will auto-detect whether the project uses Linear or Jira, fetch the issue, gather context from Obsidian/Sentry/GitHub, create a branch, plan the implementation, write tests first, implement the feature, run parallel code reviews, address feedback, and create a comprehensive PR.

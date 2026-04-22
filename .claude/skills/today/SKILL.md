@@ -109,7 +109,7 @@ Follow these steps to generate today's task summary:
 Determine the current date and create RFC3339 formatted timestamps for today's start and end:
 
 - Get today's date in YYYY-MM-DD format
-- Determine the day of week (important for POD-3 standup logic)
+- Determine the day of week (useful for recurring standup logic)
 - Create today_start: `YYYY-MM-DDT00:00:00` with local timezone (e.g., `-03:00`)
 - Create today_end: `YYYY-MM-DDT23:59:59` with local timezone
 - Note the current time for time-sensitive priority calculations
@@ -140,12 +140,12 @@ gws calendar events list --params '{\"calendarId\": \"primary\", \"timeMin\": \"
 
 STEP 2: For each event in the items array, apply priority logic:
 
-1. POD-3 Standups:
-   - If title contains 'POD-3' AND today is NOT Friday -> priority = 'low', low_priority_reason = 'POD-3 standup (not Friday)'
-   - If title contains 'POD-3' AND today IS Friday -> apply normal rules below
+1. Recurring Standups:
+   - If title contains 'standup' (case-insensitive) AND today is not the usual standup day -> priority = 'low', low_priority_reason = 'Recurring standup (off-day)'
+   - Otherwise -> apply normal rules below
 
-2. Family Reminders:
-   - If title contains 'Family' (case-insensitive) -> priority = 'low', low_priority_reason = 'Family reminder'
+2. Family/Personal Reminders:
+   - If calendar is not 'primary' or title suggests a personal reminder -> priority = 'low', low_priority_reason = 'Personal reminder'
 
 3. Time-Sensitive:
    - If event starts within 8 hours AND not low priority -> priority = 'high'
@@ -315,7 +315,7 @@ Generated at [YYYY-MM-DD HH:MM:SS]
 4. Event times in 12-hour format (e.g., "9:00 AM to 10:30 AM")
 5. High and Medium priority items show `action` field
 6. Low priority items show `low_priority_reason` instead of action
-7. Jira issue titles always include the key (e.g., "[POD-123] Summary")
+7. Jira issue titles always include the key (e.g., "[PROJ-123] Summary")
 
 ### 6. Write File to Daily Notes Directory
 
