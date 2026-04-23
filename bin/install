@@ -3,9 +3,15 @@ set -eu
 
 TOOLKIT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+case "$(uname -s)" in
+  Darwin) CURSOR_USER_DIR="$HOME/Library/Application Support/Cursor/User" ;;
+  Linux)  CURSOR_USER_DIR="$HOME/.config/Cursor/User" ;;
+esac
+
+
 cd ~/.cursor
+ln -sfn "$TOOLKIT_ROOT/.cursor/settings.json" "$CURSOR_USER_DIR/settings.json"
 ln -sfn "$TOOLKIT_ROOT/.cursor/rules" rules
-ln -sfn "$TOOLKIT_ROOT/.cursor/settings.json" settings.json
 ln -sfn "$TOOLKIT_ROOT/.cursor/worktrees.json" worktrees.json
 
 cd ~/.claude
