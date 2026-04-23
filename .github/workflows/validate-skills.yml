@@ -1,0 +1,64 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/**"
+      - ".github/workflows/validate-skills.yml"
+      - ".github/scripts/quick_validate.py"
+
+jobs:
+  validate-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Find and validate changed skills
+        run: |
+          VALIDATE_SCRIPT=".github/scripts/quick_validate.py"
+          FAILED=0
+          BASE_REF="origin/${{ github.base_ref }}"
+          CHANGED=$(git diff --name-only "$BASE_REF"...HEAD)
+
+          if echo "$CHANGED" | grep -q '^\.claude/skills/'; then
+            SKILL_DIRS=$(echo "$CHANGED" | grep '^\.claude/skills/' \
+              | sed 's|\(.claude/skills/[^/]*\)/.*|\1|' | sort -u)
+          elif echo "$CHANGED" | grep -qE '^\.github/workflows/validate-skills\.yml$|^\.github/scripts/quick_validate\.py$'; then
+            echo "Validator or workflow changed; validating all skills."
+            SKILL_DIRS=$(find .claude/skills -mindepth 1 -maxdepth 1 -type d | sort)
+          else
+            SKILL_DIRS=""
+          fi
+
+          if [ -z "$SKILL_DIRS" ]; then
+            echo "No skill directories to validate."
+            exit 0
+          fi
+
+          for dir in $SKILL_DIRS; do
+            if [ -f "$dir/SKILL.md" ]; then
+              echo "Validating $dir..."
+              if python3 "$VALIDATE_SCRIPT" "$dir"; then
+                echo " PASS"
+              else
+                echo " FAIL"
+                FAILED=1
+              fi
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "::error::One or more skills failed validation."
+            exit 1
+          fi
+
+          echo "All skills passed validation."

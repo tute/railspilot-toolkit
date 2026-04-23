@@ -1,3 +1,8 @@
+---
+name: claude-deslop
+description: Audits Claude setup files (CLAUDE.md, skills, context) for redundancy, conflicts, and bloat; suggests cuts and a leaner CLAUDE.md. Use when asked to deslop, trim instructions, or review AI context quality.
+---
+
 read my entire setup before responding. check my claude .md, every skill in my skills folder, every file in my context folder, and any other instruction files you can find.
 
 then go through every rule, instruction, and preference you found. for each one, tell me:

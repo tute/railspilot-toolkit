@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: Implements a Linear or Jira issue end-to-end: branch, TDD, code reviews. Auto-detects task manager from recent commits. Use when given an issue ID (e.g., TRA-9, PROJ-456) and asked to implement it.
+description: "Implements a Linear or Jira issue end-to-end: branch, TDD, code reviews. Auto-detects task manager from recent commits. Use when given an issue ID (e.g., TRA-9, PROJ-456) and asked to implement it."
 disable-model-invocation: true
 ---
 
