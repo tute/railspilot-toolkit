@@ -58,10 +58,6 @@
     ],
     "defaultMode": "acceptEdits"
   },
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
-  },
   "model": "opus",
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [],
@@ -88,7 +84,8 @@
     "ruby-lsp@claude-plugins-official": true,
     "skill-creator@claude-plugins-official": true,
     "codebase-readiness@dgalarza-workflows": true,
-    "code-simplifier@claude-plugins-official": true
+    "code-simplifier@claude-plugins-official": true,
+    "evals-skills@hamelsmu-evals-skills": true
   },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
@@ -102,6 +99,16 @@
         "source": "github",
         "repo": "dgalarza/claude-code-workflows"
       }
+    },
+    "hamelsmu-evals-skills": {
+      "source": {
+        "source": "github",
+        "repo": "hamelsmu/evals-skills"
+      }
     }
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true
   }
 }
