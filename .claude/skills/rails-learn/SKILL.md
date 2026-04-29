@@ -1,6 +1,6 @@
 ---
 name: rails-learn
-description: Extracts reusable patterns from the current session. Covers corrections, error resolutions, repeated workflows, Rails conventions. Use at the end of a productive session, when asked to "learn from this session", or when the Stop hook suggests it.
+description: Extracts reusable patterns from the current session. Covers corrections, error resolutions, repeated workflows, Rails conventions. Use at the end of a productive session or when asked to "learn from this session".
 ---
 
 Extract patterns from the current session and recent commits, then persist them
