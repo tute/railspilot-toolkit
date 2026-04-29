@@ -3,6 +3,10 @@
 - Use `mise exec --` prefix for any project binaries (rspec, rubocop, brakeman,
   rails, etc.)
 - Use task agents for preliminary explorations when appropriate.
+- When spawning subagents, always include the current date (YYYY-MM-DD) and day
+  of week in the prompt. Subagents don't inherit system context, so they can't
+  infer "today". When passing dates, pre-compute relative labels ("3 days ago",
+  "yesterday"), since LLMs struggle with date math on raw timestamps.
 - Enter plan mode for any non-trivial task (3+ steps or architectural decisions)
 - For every change, use the TDD skill, as can be found in `.claude/skills/tdd-skill`
 - When I report a bug, don't start by trying to fix it. Instead, start by
@@ -14,6 +18,9 @@
   `Service` suffix. Example: `Namespace::ClassName#call`
 - Self-improvement loop: After ANY correction, update `tasks/lessons.md` with the
   pattern (create the file if it doesn't exist). Review lessons at session start.
+  Run `/rails-learn` at the end of productive sessions to extract patterns into
+  patterns.md, CLAUDE.md, or skills. Run `/weekly-review` weekly to summarize
+  changes and grow the pattern library from accumulated lessons.
 - Google Workspace: Always use the `gws` CLI for calendar, drive, gmail, etc.
   Never use built-in Claude Code MCP integrations for Google services.
 

@@ -52,7 +52,7 @@ available (in Rails, it would take precedense before `$PORT`).
 
 - `codebase-diagnostic`: Git-history diagnostics for churn, bus factor, and bug clusters
 - `rails-codebase-audit`: Legacy Rails audit with prioritized fix-now/quarter/ignore tiers
-- `weekly-summarizer`: Weekly engineering digest of meaningful changes
+- `weekly-review`: Weekly engineering digest plus pattern evolution from accumulated lessons
 
 #### Web Quality
 
@@ -76,6 +76,7 @@ available (in Rails, it would take precedense before `$PORT`).
 #### Meta
 
 - `visualize`: Mermaid diagram for data lineage and architecture
+- `rails-learn`: Extract patterns from the current session into patterns.md, CLAUDE.md, or skills
 - `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
 - `document-past-chats`: Analyze chat history for recurring patterns and insights
 - `claude_deslop`: Audit your Claude setup for redundancy, conflicts, and dead weight
