@@ -26,9 +26,8 @@ into the appropriate place (patterns.md, CLAUDE.md, a skill, or lessons.md).
      structure, migration conventions, Hotwire/Stimulus usage.
 
 4. Categorize each candidate by destination:
-   - patterns.md: reusable code review patterns. Follow the existing format.
-     Categories: SEC, ARCH, SIMP, SCOPE, COMPLETE, or propose new ones (TEST,
-     QUERY, HOTWIRE, MIGRATION).
+   - patterns.md: reusable code review patterns. Follow the existing format
+     and categories, or propose new ones.
    - CLAUDE.md: cross-session preferences and conventions.
    - Skill improvements: testing patterns into rspec-testing, etc.
    - `tasks/lessons.md`: corrections from this session (date, title, what
@@ -48,7 +47,7 @@ into the appropriate place (patterns.md, CLAUDE.md, a skill, or lessons.md).
 
 ## What's worth capturing
 
-- Corrections: always (even once, since the user had to fix Claude).
-- Error resolutions: if the same class of error recurs 2+ times.
-- Workflows: if repeated 3+ times.
-- Conventions: if they reflect a deliberate, non-default choice.
+- Corrections: always, even once (the user had to fix Claude).
+- Error resolutions: same class of error 2+ times.
+- Workflows: same sequence 3+ times.
+- Conventions: deliberate, non-default choices only.
