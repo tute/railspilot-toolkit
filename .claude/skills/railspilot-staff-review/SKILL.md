@@ -1,7 +1,7 @@
 ---
 name: railspilot-staff-review
 description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review, "staff review", "pattern review", or "review this like a staff engineer". This is the most thorough single-agent review — for multi-agent reviews, use full-code-review.
-allowed-tools: Bash, Read, Edit, Write, Task
+allowed-tools: Bash, Read, Edit, Write, Task, AskUserQuestion
 ---
 
 Orchestration skill for comprehensive staff-engineer code reviews using RailsPilot's pattern library. Launches the `staff-engineer-reviewer` agent to evaluate code against established patterns.
@@ -40,18 +40,25 @@ Merge and organize the agent's findings:
 - Highlight critical issues requiring immediate attention
 - Note positive observations
 
-**Step 5: Implement High/Medium Confidence Findings**
+**Step 5: Confirm and Implement Selected Findings**
 
-After consolidating findings, automatically fix issues rated **high** or **medium** confidence — those where the fix is unambiguous and safe:
+Review is read-only by default. Before any code changes happen, present the actionable findings to the user and let them choose which to apply.
 
-1. Group actionable findings by concern (one concern = one commit)
-2. For each concern, starting with the highest severity:
+1. Group actionable findings by concern (one concern = one commit). For each concern, classify the fix:
+   - High confidence: mechanical fix (e.g., missing authorization check, exposed secret, missing test assertion)
+   - Medium confidence: fix is clear but touches more code (e.g., extracting a service object, adding error handling)
+   - Low confidence / design call: requires product or architectural input — never auto-applied
+
+2. Use AskUserQuestion (`multiSelect: true`) to present the high/medium concerns, grouped by priority. Include a "Skip — leave all as recommendations" option. Low-confidence findings are listed in the report only, not offered as selectable options.
+
+3. For each concern the user approves:
    - Make the code change
    - Run relevant tests to verify correctness
    - Commit using the commit skill format, referencing the pattern ID in the message
-3. Skip findings that are low confidence, require design decisions, or could change behavior in ambiguous ways — leave those as review comments for the developer
 
-A finding is **high confidence** when the fix is mechanical (e.g., missing authorization check, exposed secret, missing test assertion). **Medium confidence** means the fix is clear but touches more code (e.g., extracting a service object, adding error handling). If a fix could alter business logic in ways that need product input, leave it as a recommendation.
+4. Findings the user does not select stay in the consolidated report as recommendations the developer can act on later.
+
+If the user declines all findings, skip directly to Step 6 with no commits.
 
 **Step 6: Update Decision Tracking**
 
