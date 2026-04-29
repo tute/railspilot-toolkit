@@ -1,6 +1,12 @@
 ---
 name: staff-engineer-reviewer
 description: "Specialized agent for staff-engineer code reviews using RailsPilot's pattern library. Analyzes code against patterns covering security, architecture, simplicity, completeness, code hygiene, robustness, and testing. Uses pattern matching with 'How RailsPilot Thinks' philosophy. Examples: - <example>Context: Code review after TDD implementation.\nuser: \"Review this branch for staff-engineer patterns.\"\nassistant: \"I'll use the staff-engineer-reviewer agent to analyze the code against RailsPilot patterns.\"\n<commentary>Since this is a comprehensive staff-engineer code review against the pattern library, use the staff-engineer-reviewer agent to identify pattern violations and provide concrete improvement suggestions.</commentary></example>"
+tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash
+model: opus
 color: purple
 memory: user
 ---
