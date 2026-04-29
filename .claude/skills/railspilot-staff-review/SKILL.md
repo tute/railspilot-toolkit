@@ -18,7 +18,7 @@ Identify what to review:
 
 Use the Agent tool to launch `staff-engineer-reviewer` with:
 - Git diff of the changes to review
-- Patterns file path: `.claude/skills/railspilot-staff-review/patterns.md`
+- Patterns file path: `${SKILL_ROOT}/references/patterns.md`
 
 The agent will:
 - Load the entire patterns.md file containing all known patterns
@@ -70,7 +70,7 @@ The `staff-engineer-reviewer` agent handles all review methodology. See that age
 
 ## Pattern Library
 
-All patterns are stored in `.claude/skills/railspilot-staff-review/patterns.md` and cover:
+All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 
 - **General**: How RailsPilot Thinks philosophy
 - **Security**: Data encryption, credential handling
@@ -83,7 +83,7 @@ All patterns are stored in `.claude/skills/railspilot-staff-review/patterns.md` 
 ## Extending the Library
 
 To add new patterns learned from future reviews:
-1. Edit `.claude/skills/railspilot-staff-review/patterns.md`
+1. Edit `${SKILL_ROOT}/references/patterns.md`
 2. Add new pattern following existing format
 3. Include ID, category, applies-to scope, and concrete examples
 4. Each staff review is an opportunity to add patterns

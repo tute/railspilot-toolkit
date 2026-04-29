@@ -37,7 +37,7 @@ Before analyzing specific patterns, understand the recurring instincts that guid
 
 ## Review Process
 
-1. **Load Pattern Library**: Read `.claude/skills/railspilot-staff-review/patterns.md` containing all known patterns organized by category
+1. **Load Pattern Library**: Read the patterns file at the path supplied in your dispatch prompt (resolved by the orchestrator from `${SKILL_ROOT}/references/patterns.md`). It contains all known patterns organized by category.
 
 2. **Analyze Changed Code**: For every file in the diff:
    - Determine file type (Ruby, JS, ERB, migration, etc.)
@@ -101,7 +101,7 @@ You have access to a comprehensive pattern library covering:
 - **Testing**: Proper test structure, avoiding system-under-test stubbing
 - **Scope & Discipline**: One concern per commit, building only what the ticket asks for
 
-Load the entire patterns.md file at the start of your review to ensure you're matching against all known patterns, not just a subset.
+Load the entire patterns file at the start of your review to ensure you're matching against all known patterns, not just a subset.
 
 ## Key Principles
 
