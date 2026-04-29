@@ -29,11 +29,9 @@ inside each repo so per-repo identities are respected.
    repo has zero commits after filtering, note the week was quiet there and
    skip to the next one.
 
-2. Analyze and cluster.
-   - Group related commits into themes (e.g., "Auth overhaul", "Performance").
-   - Identify user-facing or system impact per theme.
-   - Flag security-related changes (auth, permissions, dependencies, secrets).
-   - Note areas with missing test coverage or rollout risk.
+2. Analyze and cluster. Group related commits into themes with user-facing
+   or system impact. Flag security changes and areas with missing test
+   coverage or rollout risk.
 
 3. Compose the digest. Output Key Changes and Watchlist sections, grouped by
    repo in multi-repo mode. Skip repos with no commits. If no commits across
@@ -50,13 +48,10 @@ inside each repo so per-repo identities are respected.
    the same area is a strong pattern candidate. For commits that touched
    areas with known pattern violations, flag them.
 
-6. Identify and draft pattern candidates:
-   - Follow the existing format in patterns.md exactly: `### CATEGORY-NN:
-     Title`, Applies to, description, Detection, Bad/Good Ruby code blocks.
-   - Use existing categories (SEC, ARCH, SIMP, SCOPE, COMPLETE) or propose
-     new ones (TEST, QUERY, HOTWIRE, MIGRATION).
-   - If the same pattern keeps getting violated in lessons.md, suggest
-     strengthening its Detection hints or promoting it to CLAUDE.md.
+6. Identify and draft pattern candidates. Follow the existing format and
+   categories in patterns.md, or propose new ones. If the same pattern
+   keeps getting violated in lessons.md, suggest strengthening its
+   Detection hints or promoting it to CLAUDE.md.
 
 7. Present everything in a single report:
    - Section A: This Week's Digest (from Part 1).
@@ -66,11 +61,8 @@ inside each repo so per-repo identities are respected.
 
    Ask which candidates to apply.
 
-8. Apply approved changes: append patterns to patterns.md; promote to
-   CLAUDE.md when warranted. After a lesson from `tasks/lessons.md` has been
-   promoted into patterns.md, CLAUDE.md, or a skill, delete it from
-   `tasks/lessons.md` so the file stays a short queue of pending corrections,
-   not an unbounded log.
+8. Apply approved changes and clean up promoted lessons (same rule as
+   `/rails-learn` step 6: delete from `tasks/lessons.md` after promotion).
 
 ## When to run
 
