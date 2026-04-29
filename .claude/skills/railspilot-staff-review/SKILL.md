@@ -1,6 +1,7 @@
 ---
 name: railspilot-staff-review
 description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review, "staff review", "pattern review", or "review this like a staff engineer". This is the most thorough single-agent review — for multi-agent reviews, use full-code-review.
+argument-hint: "[<commit-sha> | last-N | <base>..<head> | (empty for branch vs main)]"
 allowed-tools: Bash, Read, Edit, Write, Task, AskUserQuestion
 ---
 
@@ -10,9 +11,14 @@ Orchestration skill for comprehensive staff-engineer code reviews using RailsPil
 
 **Step 1: Determine Review Scope**
 
-Identify what to review:
-- If user provides a commit SHA or 'last N commits', review that diff
-- Otherwise, review current branch changes against the base branch (main)
+Parse `$ARGUMENTS` to pick the diff:
+
+- A 40-character hex string: treat as a commit SHA, review `git show <sha>`
+- `last-N` or `last N commits`: review `git log -p -<N>` (or `git diff HEAD~N..HEAD`)
+- A range like `<base>..<head>` or `<base>...<head>`: pass directly to `git diff`
+- Empty: review current branch against the base branch. Default base is `main`; fall back to `master` if `main` does not exist via `git rev-parse --verify`
+
+If parsing is ambiguous (e.g. a non-SHA string that is not a recognized form), confirm scope with AskUserQuestion before continuing. If the resolved diff is empty, report that and stop without dispatching the agent.
 
 **Step 2: Launch Staff Engineer Reviewer Agent**
 
@@ -28,9 +34,7 @@ The agent will:
 
 **Step 3: Check Previous Decisions**
 
-Before consolidating findings, check for previous reviews:
-- Read decision log file (if exists): `code_review_decisions.md`
-- Note any previously-decided concerns to avoid redundancy
+Before consolidating findings, check for previous reviews. The decision log lives at `tasks/code_review_decisions.md` (project root). If the file does not exist, treat the history as empty and continue. If it exists, read it and note any previously-decided concerns so the same finding is not surfaced twice.
 
 **Step 4: Consolidate Findings**
 
@@ -53,8 +57,8 @@ Review is read-only by default. Before any code changes happen, present the acti
 
 3. For each concern the user approves:
    - Make the code change
-   - Run relevant tests to verify correctness
-   - Commit using the commit skill format, referencing the pattern ID in the message
+   - Run relevant tests to verify correctness. If tests fail, stop after the first failure, report which finding broke them, and skip remaining selected fixes — do not commit a broken state.
+   - Commit by invoking the `/commit` skill (see ~/.claude/skills/commit/SKILL.md). Reference the pattern ID (e.g. `SEC-02`) in the commit title.
 
 4. Findings the user does not select stay in the consolidated report as recommendations the developer can act on later.
 
@@ -62,10 +66,29 @@ If the user declines all findings, skip directly to Step 6 with no commits.
 
 **Step 6: Update Decision Tracking**
 
-For decisions made during the review:
-- Update `code_review_decisions.md` with audit trail
-- Include rationale and context
-- Note which findings were auto-fixed (with commit SHAs) and which were left as recommendations
+Append (do not overwrite) to `tasks/code_review_decisions.md` at the project root. Create the file if it is missing.
+
+Each entry uses this schema:
+
+```markdown
+## YYYY-MM-DD HH:MM — <scope reviewed: SHA, range, or "branch vs main">
+
+- <pattern-id>: <one-line summary>
+  - decision: applied | recommended | dismissed
+  - commit: <sha if applied, otherwise empty>
+  - rationale: <why this decision>
+```
+
+Group entries newest-on-top. Include every actionable finding from Step 4 — applied, left as recommendation, and dismissed alike — so future reviews can suppress redundancy.
+
+## Error Handling
+
+- Empty diff: stop after Step 1 and tell the user there is nothing to review.
+- Agent returns no findings: skip Steps 5-6 and report "no actionable findings".
+- Tests fail during Step 5: stop applying fixes, leave the broken-test finding in the report, do not commit, do not proceed to Step 6 for the failing concern.
+- `${SKILL_ROOT}/references/patterns.md` missing: report the missing path and stop — the agent cannot operate without the library.
+- `tasks/code_review_decisions.md` missing in Step 3: treat as empty history. In Step 6, create the file with a top-level header before appending the first entry.
+- `/commit` skill unavailable: fall back to a direct `git commit` with a message that still references the pattern ID, and note the fallback in the decision log entry.
 
 ## Review Methodology
 
