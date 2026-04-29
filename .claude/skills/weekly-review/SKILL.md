@@ -22,13 +22,6 @@ Always filter `git log` by `--author="$(git config user.email)"` so team
 commits don't drown out your own work. In multi-repo mode, run `git config`
 inside each repo so per-repo identities are respected.
 
-## Temporal context
-
-Before analyzing lessons or commits, pre-compute relative time labels
-("today", "3 days ago", "2 weeks ago") and insert gap markers between
-non-consecutive date groups ("[5 days later]"). LLMs struggle with raw date
-math, so annotate before reasoning.
-
 ## Part 1: Engineering Digest
 
 1. Gather data. For each repo in scope, collect commits from the last 7 days
