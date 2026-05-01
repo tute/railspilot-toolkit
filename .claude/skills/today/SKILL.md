@@ -30,6 +30,8 @@ Resolve these values before running:
 
 ## CLI Reference: `gws` (Google Workspace CLI)
 
+`--params` is for path/query parameters (e.g. `calendarId`). `--json` is for the request body resource. Always split them — mixing them into one flag causes validation errors.
+
 ### Calendar: List events for a date range
 
 ```bash
@@ -43,6 +45,21 @@ gws calendar events list --params '{
 ```
 
 Returns JSON with `items` array. Each item has: `summary`, `start.dateTime`, `end.dateTime`, `location`, `htmlLink`, `attendees`, `description`.
+
+### Calendar: Create an event
+
+```bash
+gws calendar events insert \
+  --params '{"calendarId": "primary"}' \
+  --json '{
+    "summary": "Event title",
+    "start": {"dateTime": "2026-05-04T11:30:00-03:00"},
+    "end": {"dateTime": "2026-05-04T12:15:00-03:00"},
+    "description": "Optional description."
+  }'
+```
+
+`calendarId` goes in `--params`; the event resource body goes in `--json`. End time must be computed from start + duration — there is no `--duration` flag.
 
 ### Gmail: List inbox messages
 
