@@ -157,6 +157,14 @@ class ProcessWebhookJob < ApplicationJob
 end
 ```
 
+### SIMP-05: Drop Defensive Code the Layer Above Already Owns
+
+**Applies to:** Services wrapped by an error-mapping helper, transaction, `retry_on`, or `around_action`
+
+If an outer wrapper already maps an error class to `Result.failure`/retry, an inner `begin/rescue` for that class (or a subclass) is dead defense. Same for guards that retest a condition another line already enforces. Trim them and prefer idiomatic Ruby: `unless x` over `if x.nil?`, `break unless x` before the equality check instead of `if x && x == y`.
+
+**Detection:** `begin/rescue` inside a `with_*errors`/`safely`/`handle` block rescuing a class the wrapper already maps; `rescue` re-raising a sibling type the caller already rescues via the parent; `if x && x == y` paired with `break unless x`; `if foo.nil?` guarding a single early return; multiple guards re-checking a precondition validations/policies already enforce.
+
 ---
 
 ## Scope & Discipline
