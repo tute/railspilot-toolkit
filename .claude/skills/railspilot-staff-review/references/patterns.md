@@ -165,6 +165,12 @@ If an outer wrapper already maps an error class to `Result.failure`/retry, an in
 
 **Detection:** `begin/rescue` inside a `with_*errors`/`safely`/`handle` block rescuing a class the wrapper already maps; `rescue` re-raising a sibling type the caller already rescues via the parent; `if x && x == y` paired with `break unless x`; `if foo.nil?` guarding a single early return; multiple guards re-checking a precondition validations/policies already enforce.
 
+### SIMP-06: Don't Defend Against Impossible States
+
+Applies to all code, JS browser-quirk paranoia most of all. Every guard, try/catch, and feature check is a claim a future reader must verify; once it stops being true the defense is dead code that hides bugs. Audit each one: can it actually fail per spec, is it paranoia for a now-fixed browser bug, is the precondition already guaranteed by surrounding code, does the layer above already own it (SIMP-05)? Keep a guard only if it survives all four, then add one line naming the real scenario it catches.
+
+Detection: empty catch bodies, try/catch around operations the spec says cannot throw, feature checks for capabilities every supported browser already has, target-existence checks for elements your own partial renders, optional chaining where the receiver was assigned the line before, rescues that swallow errors which should bubble.
+
 ---
 
 ## Scope & Discipline
