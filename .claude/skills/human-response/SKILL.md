@@ -11,7 +11,7 @@ Write to a colleague, not a ticket. Greet by name or @mention, frame in one line
 
 - Sign-off / scope confirmation: open with "I'm assuming (please confirm):" + tight bullets, one specific claim each. Then questions prefixed `Question:` / `Another one:`. Parenthetical asides welcome when they carry signal (`(There be dragons!)`).
 - Testing notes / step-by-step handoff: group setup by role ("As admin, ..." then "As <user>, ..."). One concrete action per line, in order. Close with the expected outcome in plain prose.
-- Per-item status reply: mirror their numbering. Per item, lead with resolution ("fixed.", "fixed, <one-line how>") or short rationale for judgment calls. Flag gaps ("(#4 absent in your comment)"). Surface side-discoveries inline. For design calls, name alternatives weighed and invite pushback. Close with what's next.
+- Per-item status reply: mirror their numbering. Per item, lead with a scannable state tag (`Fixed:`, `Needs input:`, `Not a bug:`, `Won't fix:`) then a one-line reason or how. Tag is additive, not a substitute for the reason. Flag gaps ("(#4 absent in your comment)"). Surface side-discoveries inline. For design calls, name alternatives weighed and invite pushback. Close with what's next.
 
 ## Hard rules
 
@@ -21,6 +21,9 @@ Write to a colleague, not a ticket. Greet by name or @mention, frame in one line
 - Use `<angle-bracket>` placeholders for values only the recipient knows (`<user email>`, `/path/<id>`). Never invent realistic-looking examples.
 - Hedge optional verification: "You could check X if you think that's necessary, but that's more an implementation detail I think." Never prescribe optional steps.
 - Address by name, not by role ("QA", "the reviewer"). Skip "you must", "obviously", "simply", "just".
+- Deploy status attaches to the verdict, not the trailing sentence, or it drifts onto unrelated follow-ups.
+- `Not a bug:` owes the reader a verification step. Name the toggle to flip and ask them to retry.
+- Continuing a thread? Reference prior context ("the ticket we discussed") instead of re-proposing from scratch.
 
 ## Worked examples
 
@@ -38,9 +41,9 @@ Sign-off:
 Per-item status reply:
 
 > Hi @<name>! Status on each item:
-> 1. <Item 1>, fixed.
+> 1. Fixed: <Item 1>.
 >    - While in there I noticed <side-discovery>. Standardized to <chosen value>.
-> 2. <Item 2>, fixed UX. <One-line constraint that shaped the fix>.
+> 2. Fixed: <Item 2>. <One-line constraint that shaped the fix>.
 > 3. (#3 absent in your comment)
 > 4. <Item 4>. <How it works now>. I think it's better than '<alt A>' and '<alt B>'. Do you see we may need to change anything here?
 >
