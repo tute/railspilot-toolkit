@@ -5,6 +5,7 @@ description: Subtractively improve Rails JavaScript — cut conditionals/guards,
 
 Improve by deleting. A change adding lines needs justification; one removing them rarely does. Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`references/patterns.md`).
 
+- Grep the codebase first. Before writing new logic, search for existing controllers or modules that already handle the same scenario (e.g. offline detection, retry, fallback). Even 80% overlap is enough — adapt and extract rather than duplicate.
 - Assume the platform or framework already has it. Before hand-rolling a method, check [MDN](https://developer.mozilla.org/en-US/docs/Web/API) or the Stimulus/Turbo docs; if it likely exists but you're unsure of the name or signature, search online to confirm rather than reimplement. Replace custom registries, owner-keys, and constants with the native call.
 - Prefer Hotwired ([Stimulus](https://stimulus.hotwired.dev/handbook/introduction), [Turbo](https://turbo.hotwired.dev/handbook/introduction)): declarative `data-action` over imperative `addEventListener`; let Stimulus manage listener lifecycle — delete `connect()`/`disconnect()` wiring and `.bind()`s. Reach for the built-in shorthands before hand-rolling: event filters (`keydown.esc@window->c#m` replaces an `event.key` check and its handler method), `@window`/`@document` modifiers, `this.dispatch(name, { prefix: false })` to emit, and targets/values/outlets.
 - Custom event names are tokens, never colons: `ai-offline`, not `connectivity:offline`.
@@ -13,7 +14,7 @@ Improve by deleting. A change adding lines needs justification; one removing the
 - Remove non-essential `try`/`catch`. Let errors surface unless the catch does real recovery.
 - No `if (flag)` around cleanup. If you clean, clean everything, unconditionally.
 - Rename for the domain; let the diff show the rest.
-- Over 500 lines signals excess complexity. The fix is deletion, not splitting: garbage spread across many commits is still garbage. Cut it.
+- Over 500 lines signals excess complexity. The fix is deletion, not splitting.
 
 ## Idioms to reach for before plain/verbose JS
 

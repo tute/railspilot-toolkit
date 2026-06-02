@@ -43,7 +43,7 @@ Merge and organize the agent's findings:
 - Organize by category and severity (Critical, High, Medium, Low)
 - Highlight critical issues requiring immediate attention
 - Note positive observations
-- If the diff touches `app/javascript/`, flag that a dedicated `improve-rails-js` pass should run. Severity triage here under-weights JS subtraction, so those wins get listed as Low and forgotten; don't try to do the subtraction inline.
+- If the diff touches `app/javascript/`, spawn an agent whose sole job is to invoke and apply the `improve-rails-js` skill against the same scope. Pass the skill path and the diff so the agent can run it end-to-end without further input.
 
 **Step 5: Confirm and Implement Selected Findings**
 
