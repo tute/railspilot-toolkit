@@ -11,6 +11,7 @@ Improve by deleting. A change adding lines needs justification; one removing the
 - Custom event names are tokens, never colons: `ai-offline`, not `connectivity:offline`.
 - Delete comments the code already states; keep only the why. A `// walk back across the run` above the loop that walks back across the run is noise — cut it.
 - Delete redundant guards. If `connect()` already gated setup, the inner `if` is dead — drop it so the method reads as a straight pipeline. Fewer variables, fewer conditionals, lower cyclomatic complexity.
+- Delete defensive state, not just defensive branches. If an invariant is already enforced at the lifecycle boundaries (data wiped on both sign-in and sign-out), drop the ownership/claim/owner-key bookkeeping that re-checks it mid-flight. The cheapest version of "is this queue stale?" is making a stale queue impossible.
 - Remove non-essential `try`/`catch`. Let errors surface unless the catch does real recovery.
 - No `if (flag)` around cleanup. If you clean, clean everything, unconditionally.
 - Rename for the domain; let the diff show the rest.
