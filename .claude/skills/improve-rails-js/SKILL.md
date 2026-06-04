@@ -7,7 +7,7 @@ Improve by deleting. New lines of code need justification: do we need to solve f
 Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`references/patterns.md`).
 
 - Assume the platform or framework already has it. Before hand-rolling a method, check [MDN](https://developer.mozilla.org/en-US/docs/Web/API) or the Stimulus/Turbo docs. Confirm the name or signature with documentation.
-- Prefer Hotwired ([Stimulus](https://stimulus.hotwired.dev/handbook/introduction), [Turbo](https://turbo.hotwired.dev/handbook/introduction)): declarative `data-action` over imperative `addEventListener`; let Stimulus manage listener lifecycle — delete `connect()`/`disconnect()` wiring and `.bind()`s. Reach for the built-in shorthands before hand-rolling: event filters (`keydown.esc@window->c#m` replaces an `event.key` check and its handler method), `@window`/`@document` modifiers, `this.dispatch(name, { prefix: false })` to emit, and targets/values/outlets.
+- Prefer Hotwired ([Stimulus](https://stimulus.hotwired.dev/handbook/introduction), [Turbo](https://turbo.hotwired.dev/handbook/introduction)): declarative `data-action` over imperative `addEventListener`; let Stimulus manage listener lifecycle — delete `connect()`/`disconnect()` wiring and `.bind()`s. For the controller API itself (action filters, `@window`/`@document`, `this.dispatch`, targets/values/outlets), use the `hwc-stimulus-fundamentals` skill.
 - Custom event names are tokens, never colons: `ai-offline`, not `connectivity:offline`.
 - Delete comments the code already states; keep only the why. A `// walk back across the run` above the loop that walks back across the run is noise — cut it.
 - Delete redundant guards. If `connect()` already gated setup, the inner `if` is dead — drop it so the method reads as a straight pipeline. Fewer variables, fewer conditionals, lower cyclomatic complexity.
@@ -19,12 +19,7 @@ Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`reference
 
 ## Idioms to reach for before plain/verbose JS
 
-Stimulus:
-- Outlets (`static outlets`, `this.xOutlet`, `xOutletConnected(outlet, el)`) instead of `application.getControllerForElementAndIdentifier` + `querySelector` to reach another controller.
-- `nameValueChanged(value, prev)` (fires on connect and every change) instead of manually calling an update after each setter.
-- `nameTargetConnected(el)` / `nameTargetDisconnected(el)` instead of a hand-rolled `MutationObserver` watching for added/removed nodes.
-- `static classes` + `this.xClass` instead of hardcoded class strings like `"show"`/`"hidden"` scattered through the controller.
-- Action options instead of handler-body plumbing: `:prevent`, `:stop`, `:once`, `:self`. Omit the event for the element's default (`button#m` = click, `form#m` = submit, `input#m` = input).
+For Stimulus controller fundamentals (outlets, `valueChanged` callbacks, target connect/disconnect callbacks, `static classes`, action filters/options, lifecycle-owned setup vs. global `boot()`), use the `hwc-stimulus-fundamentals` skill.
 
 Turbo:
 - `<turbo-frame src loading="lazy">` for scoped/lazy section loads instead of `fetch().then(r => r.text())` + `innerHTML`.

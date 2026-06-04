@@ -21,6 +21,9 @@ ln -sfn "$TOOLKIT_ROOT/.claude/settings.json" settings.json
 ln -sfn "$TOOLKIT_ROOT/.claude/skills" skills
 ln -sfn "$TOOLKIT_ROOT/.claude/statusline.sh" statusline.sh
 
+(cd "$HOME" && npx -y skills add TheHotwireClub/hotwire_club-skills --skill hwc-stimulus-fundamentals -a claude-code) \
+  || echo "Warning: could not install hwc-stimulus-fundamentals (run from \$HOME: npx skills add TheHotwireClub/hotwire_club-skills --skill hwc-stimulus-fundamentals -a claude-code)"
+
 if [ -n "${1:-}" ]; then
   cd "$1"
   ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json
