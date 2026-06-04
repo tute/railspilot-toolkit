@@ -3,7 +3,8 @@ name: improve-rails-js
 description: Subtractively improve Rails JavaScript — cut conditionals/guards, prefer platform APIs and Hotwired (Turbo/Stimulus), tighten names. Use when asked to improve, simplify, or clean up Rails JS/Stimulus controllers.
 ---
 
-Improve by deleting. A change adding lines needs justification; one removing them rarely does. Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`references/patterns.md`).
+Improve by deleting. New lines of code need justification: do we need to solve for this? Can it be solved with less code than we are trying to add?
+Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`references/patterns.md`).
 
 - Grep the codebase first. Before writing new logic, search for existing controllers or modules that already handle the same scenario (e.g. offline detection, retry, fallback). Even 80% overlap is enough — adapt and extract rather than duplicate.
 - Assume the platform or framework already has it. Before hand-rolling a method, check [MDN](https://developer.mozilla.org/en-US/docs/Web/API) or the Stimulus/Turbo docs; if it likely exists but you're unsure of the name or signature, search online to confirm rather than reimplement. Replace custom registries, owner-keys, and constants with the native call.
