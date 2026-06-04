@@ -20,7 +20,7 @@ magenta='\033[38;2;180;140;255m'
 dim='\033[2m'
 reset='\033[0m'
 
-sep=" ${dim}│${reset} "
+sep=" ${dim}·${reset} "
 
 # ── Helpers ─────────────────────────────────────────────
 format_tokens() {
@@ -141,14 +141,13 @@ else
     pct_used=0
 fi
 
-thinking_on=false
-settings_path="$HOME/.claude/settings.json"
-if [ -f "$settings_path" ]; then
-    thinking_val=$(jq -r '.alwaysThinkingEnabled // false' "$settings_path" 2>/dev/null)
-    [ "$thinking_val" = "true" ] && thinking_on=true
-fi
+effort=$(echo "$input" | jq -r '.effort.level // empty')
+# Strip any parenthetical (e.g. "(1M context)") from the model name
+model_short=$(echo "$model_name" | sed 's/ *([^)]*)//')
 
-# ── LINE 1: Model │ Context % │ Directory (branch) │ Session │ Thinking ──
+total_cost=$(echo "$input" | jq -r '.cost.total_cost_usd // 0' | awk '{printf "%.2f", $1}')
+
+# ── LINE 1: Model (effort) │ Context % │ Directory (branch) │ Session │ Total ──
 pct_color=$(color_for_pct "$pct_used")
 cwd=$(echo "$input" | jq -r '.cwd // ""')
 [ -z "$cwd" ] || [ "$cwd" = "null" ] && cwd=$(pwd)
@@ -180,24 +179,22 @@ if [ -n "$session_start" ] && [ "$session_start" != "null" ]; then
     fi
 fi
 
-line1="${blue}${model_name}${reset}"
-line1+="${sep}"
-line1+="✍️ ${pct_color}${pct_used}%${reset}"
-line1+="${sep}"
-line1+="${cyan}${dirname}${reset}"
+line1="📁 ${cyan}${dirname}${reset}"
 if [ -n "$git_branch" ]; then
-    line1+=" ${green}(${git_branch}${red}${git_dirty}${green})${reset}"
-fi
-if [ -n "$session_duration" ]; then
-    line1+="${sep}"
-    line1+="${dim}⏱ ${reset}${white}${session_duration}${reset}"
+    line1+="${sep}${green}${git_branch}${red}${git_dirty}${reset}"
 fi
 line1+="${sep}"
-if $thinking_on; then
-    line1+="${magenta}◐ thinking${reset}"
-else
-    line1+="${dim}◑ thinking${reset}"
+line1+="🧠 ${blue}${model_short}${reset}"
+if [ -n "$effort" ]; then
+    line1+=" ${dim}(${reset}${magenta}${effort}${dim})${reset}"
 fi
+line1+="${sep}"
+line1+="🧮 ${white}${used_tokens}${reset} ${pct_color}(${pct_used}%)${reset}"
+if [ -n "$session_duration" ]; then
+    line1+="${sep}${dim}⏱ ${reset}${white}${session_duration}${reset}"
+fi
+line1+="${sep}"
+line1+="💰 ${white}\$${total_cost}${reset}"
 
 # ── OAuth token resolution ──────────────────────────────
 get_oauth_token() {
@@ -314,15 +311,8 @@ if [ -n "$usage_data" ] && echo "$usage_data" | jq -e . >/dev/null 2>&1; then
         extra_bar=$(build_bar "$extra_pct" "$bar_width")
         extra_pct_color=$(color_for_pct "$extra_pct")
 
-        extra_reset=$(date -v+1m -v1d +"%b %-d" 2>/dev/null | tr '[:upper:]' '[:lower:]')
-        if [ -z "$extra_reset" ]; then
-            extra_reset=$(date -d "$(date +%Y-%m-01) +1 month" +"%b %-d" 2>/dev/null | tr '[:upper:]' '[:lower:]')
-        fi
-
         extra_col="${white}extra${reset}   ${extra_bar} ${extra_pct_color}\$${extra_used}${dim}/${reset}${white}\$${extra_limit}${reset}"
-        extra_reset_line="${dim}resets ${reset}${white}${extra_reset}${reset}"
         rate_lines+="\n${extra_col}"
-        rate_lines+="\n${extra_reset_line}"
     fi
 fi
 
