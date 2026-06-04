@@ -121,6 +121,19 @@ format_reset_time() {
     esac
 }
 
+format_countdown() {
+    local secs=$1
+    [ -z "$secs" ] && return
+    [ "$secs" -le 0 ] 2>/dev/null && return
+    if [ "$secs" -ge 3600 ]; then
+        printf "%dh %dm" $(( secs / 3600 )) $(( (secs % 3600) / 60 ))
+    elif [ "$secs" -ge 60 ]; then
+        printf "%dm" $(( secs / 60 ))
+    else
+        printf "%ds" "$secs"
+    fi
+}
+
 # ── Extract JSON data ───────────────────────────────────
 model_name=$(echo "$input" | jq -r '.model.display_name // "Claude"')
 
@@ -292,7 +305,14 @@ if [ -n "$usage_data" ] && echo "$usage_data" | jq -e . >/dev/null 2>&1; then
     five_hour_pct_color=$(color_for_pct "$five_hour_pct")
     five_hour_pct_fmt=$(printf "%3d" "$five_hour_pct")
 
-    rate_lines+="${white}current${reset} ${five_hour_bar} ${five_hour_pct_color}${five_hour_pct_fmt}%${reset} ${dim}⟳${reset} ${white}${five_hour_reset}${reset}"
+    five_hour_countdown=""
+    five_hour_reset_epoch=$(iso_to_epoch "$five_hour_reset_iso")
+    if [ -n "$five_hour_reset_epoch" ]; then
+        five_hour_countdown=$(format_countdown $(( five_hour_reset_epoch - $(date +%s) )))
+    fi
+
+    rate_lines+="${white}current${reset} ${five_hour_bar} ${five_hour_pct_color}${five_hour_pct_fmt}%${reset} ${dim}Resets at${reset} ${white}${five_hour_reset}${reset}"
+    [ -n "$five_hour_countdown" ] && rate_lines+=" ${dim}(${five_hour_countdown})${reset}"
 
     seven_day_pct=$(echo "$usage_data" | jq -r '.seven_day.utilization // 0' | awk '{printf "%.0f", $1}')
     seven_day_reset_iso=$(echo "$usage_data" | jq -r '.seven_day.resets_at // empty')
@@ -301,7 +321,7 @@ if [ -n "$usage_data" ] && echo "$usage_data" | jq -e . >/dev/null 2>&1; then
     seven_day_pct_color=$(color_for_pct "$seven_day_pct")
     seven_day_pct_fmt=$(printf "%3d" "$seven_day_pct")
 
-    rate_lines+="\n${white}weekly${reset}  ${seven_day_bar} ${seven_day_pct_color}${seven_day_pct_fmt}%${reset} ${dim}⟳${reset} ${white}${seven_day_reset}${reset}"
+    rate_lines+="\n${white}weekly${reset}  ${seven_day_bar} ${seven_day_pct_color}${seven_day_pct_fmt}%${reset} ${dim}Resets on${reset} ${white}${seven_day_reset}${reset}"
 
     extra_enabled=$(echo "$usage_data" | jq -r '.extra_usage.is_enabled // false')
     if [ "$extra_enabled" = "true" ]; then
