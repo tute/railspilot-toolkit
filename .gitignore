@@ -1,5 +1,2 @@
 .DS_Store
 .claude/settings.local.json
-
-# Third-party skills installed by bin/install, not vendored
-.claude/skills/hwc-stimulus-fundamentals/

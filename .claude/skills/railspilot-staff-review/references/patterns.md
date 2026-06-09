@@ -208,26 +208,3 @@ Every commit that adds or modifies behavior must include tests. A controller act
 Happy-path tests prove the feature works. Edge-case tests prove it doesn't break. Test nil inputs, empty collections, missing associations, boundary values, and permission failures. The push subscription specs test valid Chrome endpoints AND invalid HTTP URLs AND unknown domains AND malformed strings — not just "it creates a subscription."
 
 **Detection:** Count the contexts in a spec. If there's only one context (or no contexts, just `it` blocks), edge cases are likely missing. Look for models with validations that have no corresponding rejection tests.
-
-### COMPLETE-03: Stimulus Over Inline Scripts
-
-**Applies to:** JavaScript in views
-
-The project uses Stimulus for progressive enhancement. Inline `<script>` tags in views bypass the Stimulus architecture, can't be tested in isolation, don't get proper lifecycle management, and create implicit global state. New interactivity should be a Stimulus controller.
-
-**Detection:** Look for `<script>` tags in ERB views that contain event handlers, DOM manipulation, or initialization logic. Exception: third-party embed scripts (analytics, widgets) that must be inline.
-
-```erb
-<%# Bad — inline script, untestable, no lifecycle %>
-<script>
-  function initializeSurveyForm() {
-    document.querySelector('.survey-form').addEventListener('submit', ...)
-  }
-  document.addEventListener('turbo:load', initializeSurveyForm)
-</script>
-
-<%# Good — Stimulus controller, testable, proper lifecycle %>
-<div data-controller="survey-form">
-  <%= form_with ... data: { action: "submit->survey-form#handleSubmit" } %>
-</div>
-```
