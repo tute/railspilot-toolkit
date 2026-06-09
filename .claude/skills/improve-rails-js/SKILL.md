@@ -4,7 +4,6 @@ description: Subtractively improve Rails JavaScript — cut conditionals/guards,
 ---
 
 Improve by deleting. New lines of code need justification: do we need to solve for this? Can it be solved with less code than we are trying to add?
-Follow the JS/Stimulus patterns in the railspilot-staff-review skill (`references/patterns.md`).
 
 - Assume the platform or framework already has it. Before hand-rolling a method, check [MDN](https://developer.mozilla.org/en-US/docs/Web/API) or the Stimulus/Turbo docs. Confirm the name or signature with documentation.
 - Prefer Hotwired ([Stimulus](https://stimulus.hotwired.dev/handbook/introduction), [Turbo](https://turbo.hotwired.dev/handbook/introduction)): declarative `data-action` over imperative `addEventListener`; let Stimulus manage listener lifecycle — delete `connect()`/`disconnect()` wiring and `.bind()`s. For the controller API itself (action filters, `@window`/`@document`, `this.dispatch`, targets/values/outlets), use the `hwc-stimulus-fundamentals` skill.
