@@ -110,5 +110,6 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true
-  }
+  },
+  "tui": "fullscreen"
 }
