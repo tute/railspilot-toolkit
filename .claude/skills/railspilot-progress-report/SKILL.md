@@ -13,10 +13,11 @@ Read `template.md` in this skill directory for the canonical output format befor
 
 RailsPilot is an AI-augmented Rails development service. Tasks use GitHub issue/PR numbering and optional project tags in titles (e.g. `[Epic]`, `[Athena]`).
 
-**Data source: `gh` CLI primary, git fallback.**
+**Data source: `gh` CLI primary, git fallback, plus an always-on git cross-check.**
 
 - Primary: `gh` with `author:$ME` where `ME` comes from `gh api user --jq .login` (not `git config user.name`).
 - Fallback: when `gh` is unavailable or unauthenticated, use git commands below with `--author="$(git config user.email)"`.
+- Always: run the Step 1b direct-to-`main` cross-check even when `gh` works, since the PR query cannot see commits pushed straight to the default branch.
 - Do not call Jira, Asana, Linear, or any PM API. Do not browse the web to resolve task titles.
 - Derive issue links from PR bodies only (`Closes #N`, `Fixes #N`, or a trailing `https://github.com/.../issues/N` URL).
 
@@ -24,11 +25,18 @@ RailsPilot is an AI-augmented Rails development service. Tasks use GitHub issue/
 
 Run from the project root. Replace `YYYY-MM` with the target month.
 
+Compute the month boundaries instead of hardcoding a last day (months are not
+all 31 days; `..YYYY-MM-31` silently returns `[]` for 30-day months and
+February). Use a half-open range `[START, NEXT)`:
+
 ```bash
 ME="$(gh api user --jq .login)"
+START="YYYY-MM-01"
+NEXT="$(date -d "$START +1 month" +%Y-%m-01)"   # GNU date (Linux)
+# macOS: NEXT="$(date -j -v+1m -f %Y-%m-%d "$START" +%Y-%m-01)"
 
 gh pr list --state merged \
-  --search "merged:YYYY-MM-01..YYYY-MM-31 author:$ME" \
+  --search "merged:>=$START merged:<$NEXT author:$ME" \
   --limit 100 \
   --json number,title,mergedAt,additions,deletions,changedFiles,author,body,url
 ```
@@ -42,7 +50,7 @@ Collect loose commits only for dev-improvement slots (not headline features):
 
 ```bash
 git log --author="$(git config user.email)" \
-  --after="YYYY-MM-01" --before="YYYY-MM+1-01" \
+  --since="$START" --until="$NEXT" \
   --pretty=format:"%h %s" --no-merges
 ```
 
@@ -52,12 +60,50 @@ git log --author="$(git config user.email)" \
 AUTHOR="$(git config user.email)"
 
 git log --author="$AUTHOR" --merges \
-  --after="YYYY-MM-01" --before="YYYY-MM+1-01" \
+  --since="$START" --until="$NEXT" \
   --pretty=format:"%h %s"
 
 git log --author="$AUTHOR" \
-  --after="YYYY-MM-01" --before="YYYY-MM+1-01" \
+  --since="$START" --until="$NEXT" \
   --pretty=format:"%h %s" --no-merges
+```
+
+## Step 1b: Direct-to-`main` commit cross-check (ALWAYS run)
+
+The PR query in Step 1 structurally misses anything committed straight to the
+default branch (no PR). Always reconcile against the branch so direct commits
+are not silently dropped. Run this even when `gh` works (it is not just a
+fallback). Requires a local clone of the target repo.
+
+```bash
+git fetch origin --quiet
+BRANCH="$(gh repo view --json defaultBranchRef --jq .defaultBranchRef.name)"   # e.g. main
+OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+
+# Every commit you authored on the branch this month, with its associated PR (if any).
+git log "origin/$BRANCH" --author="$(git config user.email)" \
+  --since="$START" --until="$NEXT" --no-merges --pretty=%H \
+| while read -r sha; do
+    prs="$(gh api "repos/$OWNER_REPO/commits/$sha/pulls" --jq '.[].number' 2>/dev/null)"
+    if [ -z "$prs" ]; then
+      echo "DIRECT (no PR): $(git log -1 --pretty='%h %s' "$sha")"
+    fi
+  done
+```
+
+Match by associated PR, not by SHA: rebase/squash merges rewrite SHAs, so a
+commit can be "in" a counted PR under a different hash. The
+`commits/$sha/pulls` API resolves this reliably. Any commit printed as
+`DIRECT (no PR)` is real authored work that no PR represents; feed it through
+the Step 3 sizing rules (most direct commits are small housekeeping and belong
+in the consolidated **Dev improvements** slot, not a headline feature).
+
+Also sanity-check author identities, since a different commit email would evade
+both the PR `author:$ME` filter and the email-scoped `git log`:
+
+```bash
+git log "origin/$BRANCH" --since="$START" --until="$NEXT" --no-merges \
+  --pretty=format:"%an <%ae>" | sort | uniq -c | sort -rn
 ```
 
 ## Step 2: Authorship filter
@@ -136,6 +182,7 @@ Before presenting the draft, confirm each item:
 - [ ] Every PR `mergedAt` falls within the target month (print dates internally)
 - [ ] Each issue link was resolved from a PR body, not guessed
 - [ ] No commit is double-listed (already inside a counted PR)
+- [ ] Step 1b ran: every direct-to-`main` commit (no PR) is either represented or consciously dropped as trivial
 - [ ] Small/docs PRs are consolidated, not promoted to headline features
 - [ ] Carryover items from the prior month that shipped this month are included and noted if helpful
 
