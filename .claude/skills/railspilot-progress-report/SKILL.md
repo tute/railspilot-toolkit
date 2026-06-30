@@ -161,6 +161,14 @@ Count honestly. Optionally state the feature count in one closing sentence; do n
 
 Follow `template.md`. Ask the user for client name and month if not provided.
 
+### Line item style
+
+Each item follows the pattern: `[Topic tag]: brief plain-language summary.`
+
+- The topic tag is 2-4 words naming the feature area (e.g. `[Offline case sync]`, `[SOC2 compliance]`, `[Canvas LMS integration]`).
+- The summary is one short clause describing what was built. Do not chain multiple semicolons or list internal implementation details.
+- Keep it scannable. A client should understand what was delivered in one glance.
+
 ### Tone
 
 - Professional but warm. Name features, reference PR/issue numbers, state what was built.
