@@ -17,6 +17,7 @@ ln -sfn "$TOOLKIT_ROOT/.cursor/worktrees.json" worktrees.json
 cd ~/.claude
 ln -sfn "$TOOLKIT_ROOT/.claude/CLAUDE.md" CLAUDE.md
 ln -sfn "$TOOLKIT_ROOT/.claude/agents" agents
+ln -sfn "$TOOLKIT_ROOT/.claude/hooks" hooks
 ln -sfn "$TOOLKIT_ROOT/.claude/settings.json" settings.json
 ln -sfn "$TOOLKIT_ROOT/.claude/skills" skills
 ln -sfn "$TOOLKIT_ROOT/.claude/statusline.sh" statusline.sh
