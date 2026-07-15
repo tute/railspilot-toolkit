@@ -12,7 +12,13 @@ existing behavior.
 1. Run `git diff main...HEAD` to get the full diff.
 2. Read any changed files in full (not just the diff) to understand context.
 3. Review against the checklist below.
-4. Present findings in the output format specified.
+4. Verify every candidate finding before reporting it:
+   - Re-open the cited lines and surrounding code (do not work from memory of the diff)
+   - Confirm the issue is introduced or materially exposed by the diff, not pre-existing
+   - Search for callers, tests, config, or documentation that could invalidate the claim
+   - Calibrate severity to actual impact and likelihood
+   - Discard speculative, non-actionable, or unverifiable items
+5. Present findings in the output format specified.
 
 ## Review checklist
 
@@ -51,5 +57,6 @@ Overall risk level and suggested next steps.
 ## Rules
 
 - Only discuss what you observe in the diff — don't speculate beyond the changes
+- Do not report a finding merely because it sounds plausible. You are accountable for every finding in the report.
 - Use `mise exec --` for any project commands (rspec, rubocop, etc.)
 - Read changed files in full to understand surrounding context before flagging issues

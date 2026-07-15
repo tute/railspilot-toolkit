@@ -79,6 +79,36 @@ end
 
 Verify `acts_as_tenant` scoping on models, authorization (Pundit/policy) on controller actions, and no cross-tenant leaks via raw SQL or `unscoped`.
 
+### SEC-04: Trust Boundaries in Requests and Rendering
+
+**Applies to:** Controllers, routes, views, redirects, and Turbo/JSON endpoints
+
+State-changing actions must not be reachable through GET. Redirects must not accept untrusted external destinations without validation. Treat `html_safe`, `raw`, dynamic partial paths, user-authored rich text, and JavaScript interpolation as trust-boundary changes: verify escaping and sanitization at the final rendering context.
+
+**Detection:** Look for `get`/`match` routes that mutate state, `redirect_to params[...]` or open redirect helpers, and `html_safe`/`raw` applied to user-controlled or partially trusted content.
+
+```ruby
+# Bad — state change via GET; open redirect; unsanitized HTML
+get "/subscriptions/:id/cancel", to: "subscriptions#cancel"
+
+def create
+  redirect_to params[:return_to]
+end
+
+<%= user.bio.html_safe %>
+
+# Good — POST for mutation; validated redirect; escaped output
+resources :subscriptions do
+  member { post :cancel }
+end
+
+def create
+  redirect_to safe_return_path(params[:return_to])
+end
+
+<%= user.bio %>
+```
+
 ### PERF-01: No N+1 Queries
 
 **Applies to:** Controllers, views, jobs iterating associations
@@ -116,6 +146,113 @@ def self.send_notification(...)
 rescue ExpiredSubscription => e
   Rails.logger.warn("Subscription expired: #{e.message}")
   subscription.destroy
+end
+```
+
+### ARCH-03: Keep External I/O Outside Database Transactions
+
+**Applies to:** Services, controllers, and jobs that wrap writes with side effects
+
+Trace transaction boundaries across every write and side effect. Avoid HTTP calls, email delivery, storage uploads, and other external I/O inside a database transaction. Jobs and notifications that require committed data should be dispatched after commit.
+
+**Detection:** Look for `Net::HTTP`, API client calls, `deliver_later`/`deliver_now`, or file uploads nested inside `ActiveRecord::Base.transaction` / `Model.transaction` blocks. Prefer `after_commit` (or explicit post-commit enqueue) for side effects that depend on persisted state.
+
+```ruby
+# Bad — HTTP and mail inside the transaction
+ActiveRecord::Base.transaction do
+  order.update!(status: :paid)
+  PaymentGateway.charge!(order)
+  OrderMailer.receipt(order).deliver_now
+end
+
+# Good — commit first, then side effects
+ActiveRecord::Base.transaction do
+  order.update!(status: :paid)
+end
+PaymentGateway.charge!(order)
+OrderMailer.receipt(order).deliver_later
+```
+
+### ARCH-04: Callbacks Maintain Invariants, Not Workflows
+
+**Applies to:** ActiveRecord models with `before_*` / `after_*` callbacks
+
+Treat callbacks as local invariant maintenance, not as a hidden workflow engine. Multi-step business workflows belong in explicit collaborators where transaction ownership, reuse, failure handling, and tests are clear. Check ordering, recursion, skipped-callback APIs (`update_columns`, `insert_all`), and rollback behavior when callbacks remain.
+
+**Detection:** Callbacks that enqueue jobs, call external APIs, fan out to other models, or orchestrate multi-step processes. Prefer extracting that flow into a service or interactor invoked from the controller/job.
+
+```ruby
+# Bad — callback orchestrates a workflow
+class Order < ApplicationRecord
+  after_create :provision_everything
+
+  def provision_everything
+    Inventory.reserve!(self)
+    ShippingLabel.create!(order: self)
+    OrderMailer.confirmation(self).deliver_later
+  end
+end
+
+# Good — explicit collaborator owns the workflow
+class Orders::Place
+  def self.call(attrs)
+    order = Order.create!(attrs)
+    Inventory.reserve!(order)
+    ShippingLabel.create!(order:)
+    OrderMailer.confirmation(order).deliver_later
+    order
+  end
+end
+```
+
+### ARCH-05: Prefer Timestamp-Backed State Over Booleans
+
+**Applies to:** Models and migrations introducing boolean state columns
+
+Prefer timestamp-backed state over boolean columns when the domain benefits from knowing when a transition happened. Check predicate semantics, scopes, backfills, and whether repeated transitions are meaningful before accepting a boolean.
+
+**Detection:** New `boolean` columns named like `active`, `published`, `completed`, `verified`, or `canceled` where a `*_at` timestamp would answer both "is it?" and "when?".
+
+```ruby
+# Bad — boolean loses transition time
+add_column :articles, :published, :boolean, default: false, null: false
+
+# Good — timestamp carries state and timing
+add_column :articles, :published_at, :datetime
+
+# Predicates and scopes derive from the timestamp
+def published?
+  published_at.present?
+end
+
+scope :published, -> { where.not(published_at: nil) }
+```
+
+## Deploy Safety
+
+### SAFE-01: Migrations Must Survive Rolling Deploys
+
+**Applies to:** Database migrations and schema changes
+
+Review migrations as production operations, not only schema transformations. Check table size, locks, statement duration, index creation, and constraint validation. Destructive renames, removals, type changes, and new required values usually need expand-and-contract sequencing so old and new app versions can run against the same schema. Bypasses such as `safety_assured` require concrete, change-specific justification.
+
+**Detection:** `remove_column`/`rename_column`/`change_column` in a single deploy step, `add_column ... null: false` without a default/backfill plan, long-running indexes without `algorithm: :concurrently` where required, and unexplained `safety_assured` blocks.
+
+```ruby
+# Bad — breaks old app code mid-deploy; unjustified bypass
+class DropNicknameFromUsers < ActiveRecord::Migration[7.2]
+  def change
+    safety_assured { remove_column :users, :nickname, :string }
+  end
+end
+
+# Good — expand first (stop writing/reading), deploy, then contract later
+class StopUsingUsersNickname < ActiveRecord::Migration[7.2]
+  def change
+    # Deploy 1: stop reading/writing nickname in app code.
+    # Deploy 2 (this migration, after app no longer references it):
+    remove_column :users, :nickname, :string
+  end
 end
 ```
 
@@ -208,3 +345,50 @@ Every commit that adds or modifies behavior must include tests. A controller act
 Happy-path tests prove the feature works. Edge-case tests prove it doesn't break. Test nil inputs, empty collections, missing associations, boundary values, and permission failures. The push subscription specs test valid Chrome endpoints AND invalid HTTP URLs AND unknown domains AND malformed strings — not just "it creates a subscription."
 
 **Detection:** Count the contexts in a spec. If there's only one context (or no contexts, just `it` blocks), edge cases are likely missing. Look for models with validations that have no corresponding rejection tests.
+
+### COMPLETE-03: Jobs Must Tolerate At-Least-Once Delivery
+
+**Applies to:** Background jobs and anything they enqueue
+
+Assume jobs can be delivered more than once, retried after partial work, and run after records have changed or disappeared. Require idempotent effects or an explicit deduplication strategy where duplicates matter. Pass stable identifiers and small serializable values rather than mutable object graphs. Re-authorize or re-check relevant state at execution time instead of assuming enqueue-time state remains true.
+
+**Detection:** Jobs that mutate without a uniqueness/idempotency key, pass ActiveRecord objects as arguments, or trust enqueue-time authorization/state without re-checking in `perform`.
+
+```ruby
+# Bad — duplicate delivery double-charges; trusts enqueue-time state
+class ChargeOrderJob < ApplicationJob
+  def perform(order)
+    PaymentGateway.charge!(order)
+  end
+end
+
+# Good — stable id, idempotent charge, re-check state at execution
+class ChargeOrderJob < ApplicationJob
+  def perform(order_id)
+    order = Order.find(order_id)
+    return if order.charged?
+
+    PaymentGateway.charge!(order, idempotency_key: "order-#{order.id}")
+  end
+end
+```
+
+### COMPLETE-04: Cache Keys Must Include Every Result-Changing Input
+
+**Applies to:** Fragment caching, low-level Rails.cache usage, and HTTP cache headers
+
+Review cache keys for every input that can change the result, including tenant, locale, authorization, variants, and versioned records. Verify invalidation and stampede behavior. Never share sensitive cached output across scopes.
+
+**Detection:** `cache`/`Rails.cache.fetch` keys that omit `Current.tenant`, `I18n.locale`, role/permission, or record `cache_key_with_version` when those dimensions affect the rendered or returned data.
+
+```ruby
+# Bad — shared across tenants and locales
+Rails.cache.fetch("dashboard-stats") do
+  Dashboard::Stats.call(account: Current.account)
+end
+
+# Good — key includes every dimension that changes the result
+Rails.cache.fetch(["dashboard-stats", Current.account_id, I18n.locale]) do
+  Dashboard::Stats.call(account: Current.account)
+end
+```

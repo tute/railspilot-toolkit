@@ -38,7 +38,13 @@ Before consolidating findings, check for previous reviews. The decision log live
 
 **Step 4: Consolidate Findings**
 
-Merge and organize the agent's findings:
+Independently verify every candidate finding before accepting it into the report:
+- Re-read the cited lines and enough surrounding code to understand the execution path
+- Confirm the finding is introduced by or materially exposed by the reviewed diff
+- Search for callers, tests, config, or documentation that could invalidate the claim
+- Drop findings that do not survive independent verification
+
+Then merge and organize the verified findings:
 - Remove duplicate concerns from the decision log
 - Organize by category and severity (Critical, High, Medium, Low)
 - Highlight critical issues requiring immediate attention
@@ -104,10 +110,11 @@ The `staff-engineer-reviewer` agent handles all review methodology. See that age
 All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 
 - **General**: How RailsPilot Thinks philosophy
-- **Security**: Data encryption, credential handling
-- **Architecture**: Error handling, service objects
+- **Security**: Data encryption, credential handling, trust boundaries
+- **Architecture**: Error handling, transaction boundaries, callbacks, state modeling
+- **Deploy Safety**: Rolling-deploy-safe migrations
 - **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
-- **Completeness**: Tests, edge cases, Stimulus patterns
+- **Completeness**: Tests, edge cases, job idempotency, cache key completeness
 - **Testing**: Proper test structure, system under test protection
 - **Scope & Discipline**: One concern per commit, ticket scope adherence
 
