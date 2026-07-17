@@ -5,7 +5,7 @@
 // MateuszDrewniak.ruby-test-runner
 // Shopify.ruby-lsp
 // rubocop.vscode-rubocop
-{
+{ "workbench.colorTheme": "Catppuccin Latte", 
   "crashReporting.enabled": "off",
   "editor.codeLens": false,
   "editor.defaultFormatter": "Shopify.ruby-lsp",
@@ -24,13 +24,13 @@
   "ruby.useLanguageServer": true,
   "search.mode": "reuseEditor",
   "typescript.inlayHints.enumMemberValues.enabled": true,
-  "update.releaseTrack": "prerelease",
+  "update.releaseTrack": "dev",
   "vim.easymotion": true,
   "vim.useSystemClipboard": true,
   "window.autoDetectColorScheme": true,
   "window.commandCenter": true,
   "window.confirmSaveUntitledWorkspace": false,
-  "workbench.colorTheme": "Catppuccin Latte",
+
   "workbench.preferredLightColorTheme": "Quiet Light",
   "terminal.integrated.defaultProfile.linux": "zsh",
   "[json]": {
