@@ -1,0 +1,609 @@
+#!/usr/bin/env bash
+# internal-branch-review <branch> [--from N] [--only N] [--dry-run] [--runner claude|cursor-agent|codex]
+#
+# Automated review workflow for contributor branches pushed to a fork.
+# Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=PR
+#
+# Config (env vars, all optional except IBR_JIRA_BASE):
+#   IBR_JIRA_BASE          Jira base URL, e.g. https://myorg.atlassian.net/browse  (required)
+#   IBR_UPSTREAM_REMOTE    Git remote for upstream repo (default: origin)
+#   IBR_FORK_REMOTE        Git remote for contributor fork (default: first non-origin remote)
+#   IBR_BASE_BRANCH        Base branch to review against (default: inferred from origin/HEAD)
+#   IBR_STAFF_REVIEWER_MD  Path to staff-reviewer agent file (default: ~/.claude/agents/staff-engineer-reviewer.md)
+#   IBR_PATTERNS_MD        Path to review patterns file (default: ~/.claude/skills/railspilot-staff-review/references/patterns.md)
+#   IBR_COMMIT_SKILL_MD    Path to commit skill file (default: ~/.claude/skills/commit/SKILL.md)
+#   AGENT_RUNNER           Agent runner: claude (default), cursor-agent, codex
+set -euo pipefail
+
+# === Config ===
+UPSTREAM_REMOTE="${IBR_UPSTREAM_REMOTE:-origin}"
+FORK_REMOTE="${IBR_FORK_REMOTE:-}"
+BASE_BRANCH="${IBR_BASE_BRANCH:-}"
+JIRA_BASE="${IBR_JIRA_BASE:-}"
+STAFF_REVIEWER_MD="${IBR_STAFF_REVIEWER_MD:-${HOME}/.claude/agents/staff-engineer-reviewer.md}"
+PATTERNS_MD="${IBR_PATTERNS_MD:-${HOME}/.claude/skills/railspilot-staff-review/references/patterns.md}"
+COMMIT_SKILL_MD="${IBR_COMMIT_SKILL_MD:-${HOME}/.claude/skills/commit/SKILL.md}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_BASE="${SCRIPT_DIR}/logs"
+AGENT_RUNNER="${AGENT_RUNNER:-claude}"
+FENCE='```'
+DRY_RUN=false
+FROM_STEP=1
+ONLY_STEP=""
+BRANCH=""
+
+# === Usage ===
+usage() {
+  cat <<EOF
+Usage: internal-branch-review <branch> [options]
+
+Options:
+  --from N         Start from step N (resume after interruption)
+  --only N         Run only step N
+  --dry-run        Simulate without touching remotes or running agents
+  --runner R       Agent runner: claude (default), cursor-agent, codex
+
+Steps:
+  1  Setup (fetch + checkout)
+  2  Rebase-check against upstream base branch
+  3  Acceptance Criteria verification (agent)
+  4  Test coverage (agent)
+  5  Staff review with suggestion selection (agent)
+  6  Simplify + commit (agent)
+  7  PR to upstream
+
+Environment:
+  IBR_JIRA_BASE   Required. e.g. https://myorg.atlassian.net/browse
+  See script header for all env vars.
+EOF
+  exit 1
+}
+
+# === Arg parsing ===
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --from)    FROM_STEP="$2"; shift 2 ;;
+    --only)    ONLY_STEP="$2"; FROM_STEP="$2"; shift 2 ;;
+    --dry-run) DRY_RUN=true; shift ;;
+    --runner)  AGENT_RUNNER="$2"; shift 2 ;;
+    --help|-h) usage ;;
+    -*)        echo "Unknown flag: $1"; usage ;;
+    *)         BRANCH="$1"; shift ;;
+  esac
+done
+
+[[ -z "$BRANCH" ]] && { echo "Error: branch name required"; usage; }
+
+# === Infer git context ===
+
+# Fork remote: first remote that isn't the upstream remote
+if [[ -z "$FORK_REMOTE" ]]; then
+  FORK_REMOTE=$(git remote | grep -v "^${UPSTREAM_REMOTE}$" | head -1)
+  if [[ -z "$FORK_REMOTE" ]]; then
+    echo "Error: could not detect a fork remote. Set IBR_FORK_REMOTE."
+    exit 1
+  fi
+fi
+
+# Base branch: prefer origin/HEAD, fall back to main then master
+if [[ -z "$BASE_BRANCH" ]]; then
+  BASE_BRANCH=$(git remote show "$UPSTREAM_REMOTE" 2>/dev/null \
+    | grep 'HEAD branch' | awk '{print $NF}') || true
+  if [[ -z "$BASE_BRANCH" ]]; then
+    if git show-ref --verify --quiet "refs/remotes/${UPSTREAM_REMOTE}/main"; then
+      BASE_BRANCH="main"
+    else
+      BASE_BRANCH="master"
+    fi
+  fi
+fi
+
+# Upstream repo slug (org/repo) from remote URL
+UPSTREAM_URL=$(git remote get-url "$UPSTREAM_REMOTE" 2>/dev/null || echo "")
+UPSTREAM_REPO=$(echo "$UPSTREAM_URL" | sed -E 's|.*[:/]([^/]+/[^/]+)(\.git)?$|\1|' | sed 's/\.git$//')
+
+# Jira base URL
+if [[ -z "$JIRA_BASE" ]]; then
+  read -rp "IBR_JIRA_BASE not set. Enter Jira base URL (e.g. https://myorg.atlassian.net/browse): " JIRA_BASE
+fi
+
+# Extract Jira key from branch name (handles P3-772, PROJ-123, etc.)
+JIRA_KEY=$(echo "$BRANCH" | grep -oiE '[A-Z][A-Z0-9]*-[0-9]+' | tr '[:lower:]' '[:upper:]' | head -1 || true)
+if [[ -z "$JIRA_KEY" ]]; then
+  read -rp "Could not extract Jira key from '$BRANCH'. Enter key (e.g. PROJ-123), or Enter to skip: " JIRA_KEY
+fi
+
+JIRA_LINK="${JIRA_BASE}/${JIRA_KEY}"
+UPSTREAM_BASE="${UPSTREAM_REMOTE}/${BASE_BRANCH}"
+LOG_DIR="${LOG_BASE}/${BRANCH}"
+mkdir -p "$LOG_DIR"
+
+echo ""
+echo "internal-branch-review: ${BRANCH}"
+echo "  upstream:  ${UPSTREAM_REPO} (${UPSTREAM_BASE})"
+echo "  fork:      ${FORK_REMOTE}/${BRANCH}"
+[[ -n "$JIRA_KEY" ]] && echo "  jira:      ${JIRA_LINK}"
+echo "  runner:    ${AGENT_RUNNER}  dry-run: ${DRY_RUN}"
+echo ""
+
+# === Helpers ===
+
+should_run() {
+  local step=$1
+  [[ $step -ge $FROM_STEP ]] && { [[ -z "$ONLY_STEP" ]] || [[ "$step" == "$ONLY_STEP" ]]; }
+}
+
+confirm() {
+  local msg="${1:-Continue?}"
+  read -rp "${msg} [Y/n] " ans
+  [[ "${ans:-Y}" =~ ^[Yy]$ ]]
+}
+
+log_step() {
+  echo ""
+  echo "━━━ Step $1: $2 ━━━"
+}
+
+run_agent() {
+  # $1 = path to prompt file; output goes to stdout (caller tees to log)
+  local prompt
+  prompt=$(cat "$1")
+  case "$AGENT_RUNNER" in
+    claude)
+      claude -p "$prompt" --permission-mode acceptEdits
+      ;;
+    cursor-agent)
+      cursor-agent --print --force "$prompt"
+      ;;
+    codex)
+      codex exec "$prompt"
+      ;;
+    *)
+      echo "Unknown runner: $AGENT_RUNNER"; exit 1
+      ;;
+  esac
+}
+
+# Vendored from the /simplify Cursor command (adapted for headless runners)
+# Note: read -r -d '' avoids the single-quote-inside-$() parser issue
+read -r -d '' SIMPLIFY_INSTRUCTIONS << 'SIMPLIFY_EOF' || true
+Review and simplify the current branch diff against the upstream base branch.
+
+Apply three review lenses in a single pass:
+
+**Code quality — look for:**
+- Comments that restate the code instead of explaining intent/edge-cases
+- One-off helpers used only once that can be inlined
+- Nullable value proliferation forcing unnecessary defensive checks
+- Catch-all try/catch blocks swallowing errors without explanation
+- Unnecessary abstraction introduced before real reuse exists
+- Weak type escape hatches (avoidable casts, non-null assertions, any)
+- Duplicated or derived state that can be computed from source state
+- Dead or compatibility code preserved without evidence it is needed
+
+**Performance — look for:**
+- Blocking operations in hot paths
+- Uncached repeated expensive operations
+- N+1 queries where batching would help
+- String concatenation in loops
+
+**Reuse — look for:**
+- Existing helpers or patterns in the codebase that can replace new code in the diff
+
+After reviewing: make targeted fixes that reduce complexity or reuse existing patterns while preserving behavior. Skip issues that need a larger refactor — include those in the final summary. Run lightweight checks (linter, tests for touched files) after editing if practical. Summarize what you fixed and what you skipped but recommend.
+SIMPLIFY_EOF
+
+# === Step 1: Setup ===
+step_1_setup() {
+  log_step 1 "Setup"
+
+  if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+    echo "Error: working tree is dirty. Stash or commit your changes first."
+    exit 1
+  fi
+
+  echo "Fetching remotes..."
+  $DRY_RUN || git fetch "$UPSTREAM_REMOTE"
+  $DRY_RUN || git fetch "$FORK_REMOTE"
+
+  LOCAL="review/${BRANCH}"
+
+  if git show-ref --verify --quiet "refs/heads/${LOCAL}"; then
+    echo "Local branch ${LOCAL} already exists."
+    if confirm "Delete and re-checkout from ${FORK_REMOTE}/${BRANCH}?"; then
+      $DRY_RUN || git branch -D "${LOCAL}"
+      $DRY_RUN || git checkout -b "${LOCAL}" "${FORK_REMOTE}/${BRANCH}"
+    else
+      $DRY_RUN || git checkout "${LOCAL}"
+    fi
+  else
+    $DRY_RUN || git checkout -b "${LOCAL}" "${FORK_REMOTE}/${BRANCH}"
+  fi
+
+  echo "Checked out ${LOCAL} (${FORK_REMOTE}/${BRANCH})"
+  [[ -n "$JIRA_KEY" ]] && echo "Jira: ${JIRA_LINK}"
+}
+
+# === Step 2: Rebase-check ===
+step_2_rebase_check() {
+  log_step 2 "Rebase-check against ${UPSTREAM_BASE}"
+
+  MERGE_BASE=$(git merge-base "${UPSTREAM_BASE}" HEAD)
+  UPSTREAM_TIP=$(git rev-parse "${UPSTREAM_BASE}")
+
+  if [[ "$MERGE_BASE" == "$UPSTREAM_TIP" ]]; then
+    echo "Up to date with ${UPSTREAM_BASE}. No rebase needed."
+    return 0
+  fi
+
+  echo "${UPSTREAM_BASE} advanced beyond merge-base (${MERGE_BASE:0:8}). Checking conflicts..."
+  # merge-tree exit code: 0=clean, 1=conflicts
+  if ! git merge-tree --write-tree "$MERGE_BASE" HEAD "${UPSTREAM_BASE}" >/dev/null 2>&1; then
+    echo ""
+    echo "⚠ Conflicts detected."
+    echo ""
+    echo "Pushing ${UPSTREAM_BASE} to ${FORK_REMOTE}/${BASE_BRANCH} so the contributor can rebase..."
+    if $DRY_RUN; then
+      echo "[DRY-RUN] git push ${FORK_REMOTE} ${UPSTREAM_BASE}:${BASE_BRANCH}"
+    else
+      git push "${FORK_REMOTE}" "${UPSTREAM_BASE}:${BASE_BRANCH}"
+    fi
+    echo ""
+    echo "────────────────────────────────────────────────────"
+    echo "Message for contributor:"
+    echo "  New ${BASE_BRANCH} pushed to ${FORK_REMOTE}. Please rebase:"
+    echo "  git fetch ${FORK_REMOTE} && git rebase ${FORK_REMOTE}/${BASE_BRANCH}"
+    echo "────────────────────────────────────────────────────"
+    echo ""
+    if ! confirm "Continue review anyway (without rebase)?"; then
+      echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 3"
+      exit 0
+    fi
+  else
+    echo "No conflicts — branch rebases cleanly."
+    echo "Pushing ${UPSTREAM_BASE} to ${FORK_REMOTE}/${BASE_BRANCH} as a precaution..."
+    if $DRY_RUN; then
+      echo "[DRY-RUN] git push ${FORK_REMOTE} ${UPSTREAM_BASE}:${BASE_BRANCH}"
+    else
+      git push "${FORK_REMOTE}" "${UPSTREAM_BASE}:${BASE_BRANCH}"
+    fi
+  fi
+}
+
+# === Step 3: Acceptance Criteria ===
+step_3_ac_check() {
+  log_step 3 "Acceptance Criteria verification"
+
+  DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
+  PROMPT_FILE="${LOG_DIR}/3-ac-prompt.md"
+  LOG_FILE="${LOG_DIR}/3-ac-output.md"
+
+  ACLI_BIN=$(command -v acli 2>/dev/null || true)
+  JIRA_AC=""
+  if [[ -n "$ACLI_BIN" && -n "$JIRA_KEY" ]]; then
+    echo "Fetching Jira ticket via acli..."
+    JIRA_AC=$("$ACLI_BIN" jira workitem view "$JIRA_KEY" \
+      --fields key,summary,description,comment --json 2>/dev/null || true)
+  fi
+
+  if [[ -n "$JIRA_AC" ]]; then
+    cat > "$PROMPT_FILE" <<PROMPT
+Review whether the implementation satisfies every Acceptance Criteria item.
+
+## Jira ticket (${JIRA_KEY})
+${JIRA_AC}
+
+## Git diff (${UPSTREAM_BASE}...HEAD)
+${FENCE}diff
+${DIFF}
+${FENCE}
+
+For each AC item output: ✅ implemented | ❌ missing | ⚠️ partial.
+Number each item so it can be referenced later.
+PROMPT
+  else
+    cat > "$PROMPT_FILE" <<PROMPT
+Review whether the implementation satisfies every Acceptance Criteria item.
+
+${JIRA_KEY:+Jira ticket: ${JIRA_LINK}}
+
+If you have Atlassian MCP access, fetch the ticket and read its Acceptance Criteria.
+If not, ask the user to paste the AC before continuing.
+
+## Git diff (${UPSTREAM_BASE}...HEAD)
+${FENCE}diff
+${DIFF}
+${FENCE}
+
+For each AC item output: ✅ implemented | ❌ missing | ⚠️ partial.
+Number each item so it can be referenced later.
+PROMPT
+  fi
+
+  if $DRY_RUN; then
+    echo "[DRY-RUN] Would run AC check agent (prompt: ${PROMPT_FILE})"
+    return 0
+  fi
+
+  run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
+  echo ""
+  echo "(saved to ${LOG_FILE})"
+
+  if ! confirm "AC check complete. Continue?"; then
+    echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 4"
+    exit 0
+  fi
+}
+
+# === Step 4: Test coverage ===
+step_4_test_coverage() {
+  log_step 4 "Test coverage"
+
+  DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
+  CHANGED=$(git diff --name-only "${UPSTREAM_BASE}...HEAD")
+  PROMPT_FILE="${LOG_DIR}/4-coverage-prompt.md"
+  LOG_FILE="${LOG_DIR}/4-coverage-output.md"
+
+  cat > "$PROMPT_FILE" <<PROMPT
+Review test coverage for the changed files.
+
+## Changed files
+${CHANGED}
+
+## Git diff (${UPSTREAM_BASE}...HEAD)
+${FENCE}diff
+${DIFF}
+${FENCE}
+
+Steps:
+1. Identify the test file(s) for each changed source file (using the project's conventions).
+2. Run those tests using the project's test runner.
+3. Report coverage gaps: behaviors changed or added that have no test coverage.
+4. List each gap as a concrete test example.
+PROMPT
+
+  if $DRY_RUN; then
+    echo "[DRY-RUN] Would run coverage agent (prompt: ${PROMPT_FILE})"
+    return 0
+  fi
+
+  run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
+  echo ""
+  echo "(saved to ${LOG_FILE})"
+  echo ""
+  echo "Options: (a) write missing tests  (s) skip  (q) abort"
+  read -rp "Choice [a/s/q, default s]: " choice
+
+  case "${choice:-s}" in
+    a|A)
+      WRITE_PROMPT="${LOG_DIR}/4-write-tests-prompt.md"
+      COVERAGE_GAPS=$(cat "$LOG_FILE")
+      cat > "$WRITE_PROMPT" <<PROMPT
+Write the missing tests identified in the coverage report below.
+Follow the project's test conventions.
+
+## Coverage gaps
+${COVERAGE_GAPS}
+
+## Diff context
+${FENCE}diff
+${DIFF}
+${FENCE}
+
+After writing, run the new tests to confirm they pass.
+PROMPT
+      run_agent "$WRITE_PROMPT" | tee "${LOG_DIR}/4-write-tests-output.md"
+      ;;
+    q|Q)
+      echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 5"
+      exit 0
+      ;;
+    *)
+      echo "Skipping."
+      ;;
+  esac
+}
+
+# === Step 5: Staff review ===
+step_5_staff_review() {
+  log_step 5 "Staff review"
+
+  DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
+  PROMPT_FILE="${LOG_DIR}/5-staff-prompt.md"
+  LOG_FILE="${LOG_DIR}/5-staff-output.md"
+
+  # Build staff review prompt — include patterns file if available
+  {
+    if [[ -f "$STAFF_REVIEWER_MD" ]]; then
+      echo "Read the staff engineer review instructions at: ${STAFF_REVIEWER_MD}"
+    else
+      echo "You are a staff engineer reviewer. Apply your expertise to the diff below."
+    fi
+    if [[ -f "$PATTERNS_MD" ]]; then
+      echo "Read the pattern library at: ${PATTERNS_MD}"
+    fi
+    cat <<PROMPT
+
+Review the following diff. Output findings as a numbered list (1, 2, 3...) so each suggestion can be referenced by number for selective application.
+
+## Git diff (${UPSTREAM_BASE}...HEAD)
+${FENCE}diff
+${DIFF}
+${FENCE}
+PROMPT
+  } > "$PROMPT_FILE"
+
+  if $DRY_RUN; then
+    echo "[DRY-RUN] Would run staff review agent (prompt: ${PROMPT_FILE})"
+    return 0
+  fi
+
+  run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
+  echo ""
+  echo "(saved to ${LOG_FILE})"
+  echo ""
+  read -rp "Enter suggestion numbers to apply (space-separated, 'all', or Enter to skip): " selections
+
+  [[ -z "$selections" ]] && { echo "Skipping."; return 0; }
+
+  APPLY_PROMPT="${LOG_DIR}/5-apply-prompt.md"
+  STAFF_OUTPUT=$(cat "$LOG_FILE")
+  cat > "$APPLY_PROMPT" <<PROMPT
+Apply ONLY suggestions numbered: ${selections}
+from the staff review below. Leave all other code unchanged.
+
+## Staff review
+${STAFF_OUTPUT}
+
+## Diff context
+${FENCE}diff
+${DIFF}
+${FENCE}
+PROMPT
+
+  run_agent "$APPLY_PROMPT" | tee "${LOG_DIR}/5-apply-output.md"
+}
+
+# === Step 6: Simplify + commit ===
+step_6_simplify_commit() {
+  log_step 6 "Simplify + commit"
+
+  PROMPT_FILE="${LOG_DIR}/6-simplify-commit-prompt.md"
+  LOG_FILE="${LOG_DIR}/6-simplify-commit-output.md"
+
+  {
+    echo "$SIMPLIFY_INSTRUCTIONS"
+    echo ""
+    echo "After simplifying, read the commit skill at: ${COMMIT_SKILL_MD}"
+    echo "Commit each logical unit of change as a separate commit following that skill's format."
+    [[ -n "$JIRA_KEY" ]] && echo "Include this link in at least one commit body: ${JIRA_LINK}"
+  } > "$PROMPT_FILE"
+
+  if $DRY_RUN; then
+    echo "[DRY-RUN] Would run simplify+commit agent (prompt: ${PROMPT_FILE})"
+    return 0
+  fi
+
+  run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
+  echo ""
+  echo "(saved to ${LOG_FILE})"
+
+  if ! confirm "Simplify + commit done. Continue to PR step?"; then
+    echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 7"
+    exit 0
+  fi
+}
+
+# === Step 7: PR to upstream ===
+step_7_pr() {
+  log_step 7 "PR to upstream"
+
+  COMMIT_COUNT=$(git log "${UPSTREAM_BASE}..HEAD" --oneline | wc -l | tr -d ' ')
+  echo "Commits ahead of ${UPSTREAM_BASE}: ${COMMIT_COUNT}"
+  git log "${UPSTREAM_BASE}..HEAD" --oneline
+  echo ""
+
+  if [[ "$COMMIT_COUNT" -gt 1 ]] && confirm "Squash to a single commit?"; then
+    DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
+    MSG_PROMPT="${LOG_DIR}/7-squash-msg-prompt.md"
+    cat > "$MSG_PROMPT" <<PROMPT
+Read the commit skill at: ${COMMIT_SKILL_MD}
+Write a single commit message for the following diff.
+${JIRA_KEY:+Include ${JIRA_LINK} in the body.}
+Output ONLY the commit message (title + body). Nothing else.
+
+## Git diff (${UPSTREAM_BASE}...HEAD)
+${FENCE}diff
+${DIFF}
+${FENCE}
+PROMPT
+
+    COMMIT_MSG=$(run_agent "$MSG_PROMPT")
+    echo ""
+    echo "Proposed commit message:"
+    echo "────────────────────────────────────────────────────"
+    echo "$COMMIT_MSG"
+    echo "────────────────────────────────────────────────────"
+
+    if confirm "Use this message and squash?"; then
+      if $DRY_RUN; then
+        echo "[DRY-RUN] git reset --soft ${UPSTREAM_BASE} && git commit"
+      else
+        git reset --soft "${UPSTREAM_BASE}"
+        git commit -m "$COMMIT_MSG"
+      fi
+    fi
+  fi
+
+  if ! confirm "Push ${FORK_REMOTE}/${BRANCH} and open PR to ${UPSTREAM_REPO}?"; then
+    echo ""
+    echo "Stopped before push. When ready:"
+    echo "  git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
+    echo "  gh pr create --repo ${UPSTREAM_REPO} --head ${FORK_REMOTE}:${BRANCH} --base ${BASE_BRANCH}"
+    return 0
+  fi
+
+  if $DRY_RUN; then
+    echo "[DRY-RUN] git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
+    echo "[DRY-RUN] gh pr create --repo ${UPSTREAM_REPO} --head ${FORK_REMOTE}:${BRANCH}"
+    return 0
+  fi
+
+  git push "${FORK_REMOTE}" "HEAD:${BRANCH}" --force-with-lease
+
+  DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
+  PR_BODY_PROMPT="${LOG_DIR}/7-pr-body-prompt.md"
+  cat > "$PR_BODY_PROMPT" <<PROMPT
+Write a GitHub PR description for this diff.
+Format:
+
+## Summary
+[2-3 bullet points]
+
+## Test plan
+[testing checklist]
+
+${JIRA_KEY:+${JIRA_LINK}}
+
+Output ONLY the PR description body. Nothing else.
+
+## Git diff
+${FENCE}diff
+${DIFF}
+${FENCE}
+PROMPT
+
+  PR_BODY=$(run_agent "$PR_BODY_PROMPT")
+  FORK_USER=$(git remote get-url "$FORK_REMOTE" | sed -E 's|.*[:/]([^/]+)/.*|\1|')
+  PR_TITLE="${JIRA_KEY:+[${JIRA_KEY}] }$(git log -1 --format='%s')"
+
+  gh pr create \
+    --repo "${UPSTREAM_REPO}" \
+    --head "${FORK_USER}:${BRANCH}" \
+    --base "${BASE_BRANCH}" \
+    --title "$PR_TITLE" \
+    --body "$PR_BODY"
+
+  echo ""
+  echo "PR created: https://github.com/${UPSTREAM_REPO}/pulls"
+}
+
+# === Main ===
+run_step() {
+  should_run "$1" || return 0
+  case "$1" in
+    1) step_1_setup ;;
+    2) step_2_rebase_check ;;
+    3) step_3_ac_check ;;
+    4) step_4_test_coverage ;;
+    5) step_5_staff_review ;;
+    6) step_6_simplify_commit ;;
+    7) step_7_pr ;;
+  esac
+}
+
+for i in 1 2 3 4 5 6 7; do run_step "$i"; done
+
+echo ""
+echo "✓ internal-branch-review complete for ${BRANCH}"
+[[ -n "$JIRA_KEY" ]] && echo "  ${JIRA_LINK}"
