@@ -153,5 +153,6 @@
   },
   "agentPushNotifEnabled": true,
   "voiceEnabled": true,
-  "skipWorkflowUsageWarning": true
+  "skipWorkflowUsageWarning": true,
+  "tui": "fullscreen"
 }

@@ -66,6 +66,10 @@ available (in Rails, it would take precedense before `$PORT`).
 - `commit`: Commit with a well-structured message explaining the why; also generates PR titles/descriptions
 - `railspilot-progress-report`: Monthly client progress reports from merged PRs
 
+### Commands
+
+- `internal-branch-review`: Full review workflow for contributor branches pushed to a fork — setup, rebase-check, AC verification, test coverage, staff review, simplify+commit, and PR creation (7 steps, resumable with `--from N`)
+
 #### Productivity
 
 - `today`: Daily task summary from Calendar, Gmail, and Jira

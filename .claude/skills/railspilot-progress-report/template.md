@@ -5,17 +5,14 @@ Canonical sample output. Match this structure and tone when drafting the client 
 ```
 Hi [Client]! Here's [Month]'s progress:
 
-1. [Task Tag] <feature description> #<pr>
-   https://github.com/<org>/<repo>/issues/<issue>
-
-2. [Task Tag] <feature description> #<pr>
-   https://github.com/<org>/<repo>/issues/<issue>
-
-3. <feature description> (#<pr>, #<pr>)
+1. [Topic tag]: brief plain-language summary. #<pr>
+2. [Topic tag]: brief plain-language summary. #<pr>
+3. [Topic tag]: brief plain-language summary. (#<pr>, #<pr>)
+4. In QA: [Topic tag]: brief summary. #<pr>
+5. <feature description> (#<pr>, #<pr>)
    - <sub-item from related PR>
    - <sub-item from related PR>
-
-N. Dev improvements:
+6. Dev improvements:
    - <item> (#<pr> or <sha>)
    - <item> (#<pr>)
 
@@ -28,9 +25,12 @@ Thank you!
 
 ## Format notes
 
+- Each item is one short line: `[Topic tag]: brief summary.`
+- The topic tag names the feature area in 2-4 words. The summary is one clause, not a chain of semicolons.
+- Keep technical detail minimal. Name what was built, not how every piece works internally.
+- Prefix with "In QA:" or "In progress:" for unshipped work.
 - Numbered list, warm and specific. Professional but colleague-to-colleague.
-- Prefix features with task tags when present in PR titles or linked issues (`[Epic]`, `[Athena]`, etc.).
 - One issue URL per headline feature when resolvable from the PR body. Do not guess issue numbers.
-- Consolidated smaller items share one numbered slot with sub-bullets.
+- Consolidated smaller items share one numbered slot as a comma-separated list.
 - Dev improvements are the last numbered item, not mixed into feature slots.
 - Optional closing sentence with an honest feature count (no invoicing block, no 12-feature baseline framing).
