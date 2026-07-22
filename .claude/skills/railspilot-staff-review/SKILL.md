@@ -114,7 +114,7 @@ All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 - **Architecture**: Error handling, transaction boundaries, callbacks, state modeling
 - **Deploy Safety**: Rolling-deploy-safe migrations
 - **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
-- **Completeness**: Tests, edge cases, job idempotency, cache key completeness
+- **Completeness**: Tests, edge cases, Stimulus patterns, job idempotency
 - **Testing**: Proper test structure, system under test protection
 - **Scope & Discipline**: One concern per commit, ticket scope adherence
 

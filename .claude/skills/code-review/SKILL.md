@@ -57,6 +57,7 @@ Overall risk level and suggested next steps.
 ## Rules
 
 - Only discuss what you observe in the diff — don't speculate beyond the changes
-- Do not report a finding merely because it sounds plausible. You are accountable for every finding in the report.
+- Do not report a finding merely because it sounds plausible, every finding
+    should be justified by concrete impact
 - Use `mise exec --` for any project commands (rspec, rubocop, etc.)
 - Read changed files in full to understand surrounding context before flagging issues

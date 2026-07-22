@@ -5,7 +5,7 @@
 // MateuszDrewniak.ruby-test-runner
 // Shopify.ruby-lsp
 // rubocop.vscode-rubocop
-{ "workbench.colorTheme": "Catppuccin Latte", 
+{ "workbench.colorTheme": "Catppuccin Latte",
   "crashReporting.enabled": "off",
   "editor.codeLens": false,
   "editor.defaultFormatter": "Shopify.ruby-lsp",
@@ -40,5 +40,6 @@
   "cursor.composer.usageSummaryDisplay": "always",
   "rubocop.autocorrect": false,
   "rubyLsp.formatter": "none",
-  "terminal.integrated.enableMultiLinePasteWarning": "never"
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "editor.accessibilitySupport": "off"
 }
