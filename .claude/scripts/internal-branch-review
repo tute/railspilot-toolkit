@@ -2,7 +2,10 @@
 # internal-branch-review <branch> [--from N] [--only N] [--dry-run] [--runner claude|cursor-agent|codex]
 #
 # Automated review workflow for contributor branches pushed to a fork.
-# Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=PR
+# Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=push-to-fork
+#
+# Boundary: this script NEVER opens PRs or pushes to the upstream remote.
+# All remote writes go to the fork only. The user opens PRs manually.
 #
 # Config (env vars, all optional except IBR_JIRA_BASE):
 #   IBR_JIRA_BASE          Jira base URL, e.g. https://myorg.atlassian.net/browse  (required)
@@ -50,7 +53,7 @@ Steps:
   4  Test coverage (agent)
   5  Staff review with suggestion selection (agent)
   6  Simplify + commit (agent)
-  7  PR to upstream
+  7  Push to fork (never opens PR upstream)
 
 Environment:
   IBR_JIRA_BASE   Required. e.g. https://myorg.atlassian.net/browse
@@ -489,15 +492,15 @@ step_6_simplify_commit() {
   echo ""
   echo "(saved to ${LOG_FILE})"
 
-  if ! confirm "Simplify + commit done. Continue to PR step?"; then
+  if ! confirm "Simplify + commit done. Continue to push step?"; then
     echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 7"
     exit 0
   fi
 }
 
-# === Step 7: PR to upstream ===
-step_7_pr() {
-  log_step 7 "PR to upstream"
+# === Step 7: Push to fork ===
+step_7_push() {
+  log_step 7 "Push to fork"
 
   COMMIT_COUNT=$(git log "${UPSTREAM_BASE}..HEAD" --oneline | wc -l | tr -d ' ')
   echo "Commits ahead of ${UPSTREAM_BASE}: ${COMMIT_COUNT}"
@@ -536,57 +539,34 @@ PROMPT
     fi
   fi
 
-  if ! confirm "Push ${FORK_REMOTE}/${BRANCH} and open PR to ${UPSTREAM_REPO}?"; then
+  if ! confirm "Push to ${FORK_REMOTE}/${BRANCH}?"; then
     echo ""
     echo "Stopped before push. When ready:"
     echo "  git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
-    echo "  gh pr create --repo ${UPSTREAM_REPO} --head ${FORK_REMOTE}:${BRANCH} --base ${BASE_BRANCH}"
     return 0
   fi
 
   if $DRY_RUN; then
     echo "[DRY-RUN] git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
-    echo "[DRY-RUN] gh pr create --repo ${UPSTREAM_REPO} --head ${FORK_REMOTE}:${BRANCH}"
     return 0
   fi
 
   git push "${FORK_REMOTE}" "HEAD:${BRANCH}" --force-with-lease
 
-  DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
-  PR_BODY_PROMPT="${LOG_DIR}/7-pr-body-prompt.md"
-  cat > "$PR_BODY_PROMPT" <<PROMPT
-Write a GitHub PR description for this diff.
-Format:
-
-## Summary
-[2-3 bullet points]
-
-## Test plan
-[testing checklist]
-
-${JIRA_KEY:+${JIRA_LINK}}
-
-Output ONLY the PR description body. Nothing else.
-
-## Git diff
-${FENCE}diff
-${DIFF}
-${FENCE}
-PROMPT
-
-  PR_BODY=$(run_agent "$PR_BODY_PROMPT")
+  # Print summary for manual PR creation (if user chooses to do it themselves)
   FORK_USER=$(git remote get-url "$FORK_REMOTE" | sed -E 's|.*[:/]([^/]+)/.*|\1|')
   PR_TITLE="${JIRA_KEY:+[${JIRA_KEY}] }$(git log -1 --format='%s')"
 
-  gh pr create \
-    --repo "${UPSTREAM_REPO}" \
-    --head "${FORK_USER}:${BRANCH}" \
-    --base "${BASE_BRANCH}" \
-    --title "$PR_TITLE" \
-    --body "$PR_BODY"
-
   echo ""
-  echo "PR created: https://github.com/${UPSTREAM_REPO}/pulls"
+  echo "────────────────────────────────────────────────────"
+  echo "Pushed to ${FORK_REMOTE}/${BRANCH}."
+  echo ""
+  echo "To open a PR manually:"
+  echo "  gh pr create --repo ${UPSTREAM_REPO} \\"
+  echo "    --head ${FORK_USER}:${BRANCH} --base ${BASE_BRANCH} \\"
+  echo "    --title \"${PR_TITLE}\""
+  [[ -n "$JIRA_KEY" ]] && echo "  Jira: ${JIRA_LINK}"
+  echo "────────────────────────────────────────────────────"
 }
 
 # === Main ===
@@ -599,7 +579,7 @@ run_step() {
     4) step_4_test_coverage ;;
     5) step_5_staff_review ;;
     6) step_6_simplify_commit ;;
-    7) step_7_pr ;;
+    7) step_7_push ;;
   esac
 }
 

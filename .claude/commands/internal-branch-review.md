@@ -1,11 +1,21 @@
 ---
 name: internal-branch-review
-description: Full review workflow for contributor branches pushed to a fork. Runs git steps via shell and uses native agent tools for judgment steps.
+description: Local review workflow for contributor branches pushed to a fork. All work stays local or on the internal fork; never acts on upstream.
 ---
 
 Run the automated review workflow for a contributor branch.
 
 Usage: /internal-branch-review <branch>
+
+## Boundaries
+
+This workflow is strictly local + fork-only:
+- Never open PRs on the upstream repo (no `gh pr create`).
+- Never push to the upstream remote.
+- Never act as the user on the upstream GitHub repo.
+- The only remote writes are pushes to the fork remote.
+
+If the user wants to open a PR upstream, they do it manually after the workflow completes.
 
 ## Prerequisites
 
@@ -13,7 +23,7 @@ Infer from git context:
 - **Upstream remote**: `origin` (override with `IBR_UPSTREAM_REMOTE`)
 - **Fork remote**: first non-origin remote (override with `IBR_FORK_REMOTE`)
 - **Base branch**: from `origin/HEAD` (override with `IBR_BASE_BRANCH`)
-- **Upstream repo**: from `git remote get-url origin`
+- **Upstream repo**: from `git remote get-url origin` (read-only, for context)
 - **Jira key**: extracted from branch name (pattern: `[A-Z][A-Z0-9]*-[0-9]+`)
 
 Run `git remote -v` and `git remote show origin` to determine these before starting.
@@ -51,14 +61,15 @@ Run `/simplify` on the current diff.
 Then run `/commit` for each logical unit of change, one at a time.
 Include the Jira link in at least one commit body (if a Jira key was found).
 
-## Step 7 — PR to upstream
+## Step 7 — Push to fork
 Show commit count ahead of base. If more than one, offer to squash.
 If squashing: generate a commit message (why-focused, Jira link in body), confirm with user, then squash.
-Ask for confirmation before touching remotes. Then:
+Ask for confirmation before pushing. Then:
 ```bash
 git push <fork_remote> HEAD:<branch> --force-with-lease
-gh pr create --repo <upstream_repo> --head <fork_user>:<branch> --base <base_branch> \
-  --title "[<KEY>] <commit subject>" \
-  --body "<summary + test plan + jira link>"
 ```
-Show the PR URL.
+After pushing, print a summary the user can copy if they choose to open a PR manually:
+- Branch: `<fork_user>:<branch>`
+- Base: `<base_branch>`
+- Suggested title: `[<KEY>] <commit subject>`
+- Jira link: `<jira_link>`
