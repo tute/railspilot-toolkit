@@ -58,7 +58,7 @@
     ],
     "defaultMode": "acceptEdits"
   },
-  "model": "sonnet",
+  "model": "opus",
   "enableAllProjectMcpServers": false,
   "enabledMcpjsonServers": [],
   "disabledMcpjsonServers": [],
@@ -146,5 +146,12 @@
         "~/.claude/toolkit"
       ]
     }
-  }
+  },
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  },
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true,
+  "skipWorkflowUsageWarning": true
 }
