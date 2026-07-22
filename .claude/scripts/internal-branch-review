@@ -303,12 +303,13 @@ Number each item so it can be referenced later.
 PROMPT
   else
     cat > "$PROMPT_FILE" <<PROMPT
-Review whether the implementation satisfies every Acceptance Criteria item.
+You must verify the implementation against the Acceptance Criteria from Jira ticket ${JIRA_KEY}.
 
-${JIRA_KEY:+Jira ticket: ${JIRA_LINK}}
+Fetch the ticket from Jira (${JIRA_LINK}) using Atlassian MCP or acli.
 
-If you have Atlassian MCP access, fetch the ticket and read its Acceptance Criteria.
-If not, ask the user to paste the AC before continuing.
+If you cannot access the ticket, STOP IMMEDIATELY and report the error.
+Do NOT invent, derive, or infer acceptance criteria from the code, commits, or diff.
+The AC must come from the Jira ticket. No exceptions.
 
 ## Git diff (${UPSTREAM_BASE}...HEAD)
 ${FENCE}diff
