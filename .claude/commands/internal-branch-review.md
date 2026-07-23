@@ -14,7 +14,7 @@ with their status: ✅ for completed, ➡️ for the next step, and ⬜ for rema
 Example after finishing step 3:
 
 ```
-Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Simplify ⬜7 Push
+Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Simplify ⬜7 Push to fork
 ```
 
 Print this after every step, then immediately proceed to the next one.
@@ -54,7 +54,8 @@ Run `git remote -v` and `git remote show origin` to determine these before start
 Use Atlassian MCP to fetch the Jira ticket. Read its Acceptance Criteria.
 Run `git diff <upstream>/<base>...HEAD` and compare each AC item to the implementation.
 Report per item: ✅ implemented | ❌ missing | ⚠️ partial (with concrete detail).
-Number each item. Ask the user to confirm before proceeding.
+Number each item. If any item is ❌ or ⚠️, ask the user to confirm before
+proceeding. If all items are ✅, print the progress checklist and continue.
 
 ## Step 4 — Test coverage
 Map each changed file to its test file(s) (using the project's conventions).
@@ -70,7 +71,10 @@ Apply only the selected suggestions.
 After applying (or skipping), print the progress checklist and proceed immediately to Step 6.
 
 ## Step 6 — Simplify + commit (do not skip)
-Run `/simplify` on the current diff.
+Execute the full `/simplify` workflow: launch all three parallel review
+subagents (code quality, performance, reuse), collect their findings, and apply
+fixes. Do not substitute your own judgment for the subagent results, even if the
+diff looks clean.
 Then run `/commit` for each logical unit of change, one at a time.
 Include the Jira link in at least one commit body (if a Jira key was found).
 
