@@ -7,6 +7,18 @@ Run the automated review workflow for a contributor branch.
 
 Usage: /internal-branch-review <branch>
 
+## Progress tracking
+
+After completing each step, print a progress checklist showing all seven steps
+with their status: ✅ for completed, ➡️ for the next step, and ⬜ for remaining.
+Example after finishing step 3:
+
+```
+Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Simplify ⬜7 Push
+```
+
+Print this after every step, then immediately proceed to the next one.
+
 ## Boundaries
 
 This workflow is strictly local + fork-only:
@@ -55,8 +67,9 @@ Invoke the `staff-engineer-reviewer` agent on `git diff <upstream>/<base>...HEAD
 Output findings as a numbered list.
 Ask the user: "Enter suggestion numbers to apply (space-separated, 'all', or Enter to skip)."
 Apply only the selected suggestions.
+After applying (or skipping), print the progress checklist and proceed immediately to Step 6.
 
-## Step 6 — Simplify + commit
+## Step 6 — Simplify + commit (do not skip)
 Run `/simplify` on the current diff.
 Then run `/commit` for each logical unit of change, one at a time.
 Include the Jira link in at least one commit body (if a Jira key was found).
