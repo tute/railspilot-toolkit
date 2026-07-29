@@ -64,6 +64,11 @@ Communication Preferences
 * Ask clarifying questions: Don't guess requirements
 * Never use bold (**text**). Reserve for genuinely critical warnings only.
 * Never use em-dashes (—): Use commas, periods, colons, or parentheses instead
+* Use ASD-STE100 Simplified Technical English:
+  - Write short sentences. Use 20 words or less for instructions.
+  - Use active voice.
+  - Write short paragraphs. Keep one topic in each paragraph.
+  - Use one word for one idea. Do not use two words for the same thing
 
 Quality Gates
 
