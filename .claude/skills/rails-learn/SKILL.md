@@ -9,7 +9,8 @@ into the appropriate place (patterns.md, CLAUDE.md, a skill, or lessons.md).
 ## Workflow
 
 1. Gather context: read `tasks/lessons.md`,
-   `.claude/skills/railspilot-staff-review/patterns.md`, and `.claude/CLAUDE.md`
+   `.claude/skills/railspilot-staff-review/references/patterns.md`, and
+   `.claude/CLAUDE.md`
    to see what is already captured. Skip anything already documented.
 
 2. Scan recent work: `git log --since="7 days ago"` and skim the diffs of any

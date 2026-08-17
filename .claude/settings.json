@@ -40,7 +40,6 @@
       "Bash(mise exec:*)",
       "Bash(mise which:*)",
       "Bash(mv:*)",
-      "Bash(ruby -rjson -e:*)",
       "Bash(tail:*)",
       "Bash(test:*)",
       "Bash(touch:*)",
@@ -111,5 +110,9 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "autoMode": {
+    "environment": [
+    ]
+  }
 }

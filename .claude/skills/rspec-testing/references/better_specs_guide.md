@@ -144,35 +144,34 @@ it { is_expected.to be_present }
 
 **When not to use subject:**
 - Avoid using `subject` explicitly inside `it` blocks
-- If you need to name it, use `let` instead
+- If you need to name it, set it up inline in the example
 
-## Let vs Before
+## No let, No before
 
-Prefer `let` over `before` blocks for variable assignment. Variables defined with `let`:
-- Are lazy loaded (only evaluated when referenced)
-- Are cached during each test
-- Make dependencies explicit
-
-Use `let!` when you need immediate evaluation (before the test runs).
+Set up data inline in each example, in setup/execute/expect phases. Repetition
+beats indirection. Extract shared setup into a private method when it gets
+noisy.
 
 **Good:**
+```ruby
+it 'assigns the device to the user' do
+  user = create(:user)
+  resource = create(:device)
+
+  resource.assign_to(user)
+
+  expect(resource.user).to eq(user)
+end
+```
+
+**Avoid:**
 ```ruby
 let(:resource) { create :device }
 let(:user) { create :user }
 ```
 
-**When to use before:**
-- Setting up global test state
-- Configuring mocks/stubs
-- Database cleanup
-
-**Example:**
-```ruby
-before do
-  # Freeze time for consistent test results
-  freeze_time
-end
-```
+Global state (time freezing, database cleanup, suite-wide configuration) still
+belongs in `spec/support` config hooks, not in per-example `before` blocks.
 
 ## Mocking Strategy
 
@@ -194,12 +193,12 @@ Create only necessary test data. Use `create_list` sparingly.
 
 **Good:**
 ```ruby
-let(:project) { create(:project) }
+project = create(:project)
 ```
 
 **Avoid:**
 ```ruby
-let(:projects) { create_list(:project, 50) } # Usually unnecessary
+projects = create_list(:project, 50) # Usually unnecessary
 ```
 
 ## Factories Over Fixtures

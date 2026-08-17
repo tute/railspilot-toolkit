@@ -121,14 +121,18 @@ end
 ```
 
 ### Avoid Instance Variables
-Don't use instance variables in tests:
+Don't use instance variables in tests. Assign locals inside the example:
 
 ```ruby
 # Good
-let(:user) { create(:user) }
+it 'greets the user' do
+  user = create(:user)
+  ...
+end
 
 # Avoid
 before { @user = create(:user) }
+let(:user) { create(:user) }
 ```
 
 ### Avoid Other Constructs

@@ -41,8 +41,8 @@ inside each repo so per-repo identities are respected.
 
 4. Read learning sources:
    - `tasks/lessons.md` for recurring corrections (same area, 2+ times).
-   - `.claude/skills/railspilot-staff-review/patterns.md` for existing
-     coverage and ID numbering.
+   - `.claude/skills/railspilot-staff-review/references/patterns.md` for
+     existing coverage and ID numbering.
 
 5. Cross-reference digest with lessons. A bug-fix theme plus a correction in
    the same area is a strong pattern candidate. For commits that touched
