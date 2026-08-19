@@ -1,12 +1,5 @@
-// macos ~/Library/Application\ Support/Cursor/User/settings.json
-// linux ~/.config/Cursor/User/settings.json
-
-// Extensions:
-// MateuszDrewniak.ruby-test-runner
-// Shopify.ruby-lsp
-// rubocop.vscode-rubocop
-{ "workbench.colorTheme": "Catppuccin Latte",
-  "crashReporting.enabled": "off",
+{ "workbench.colorTheme": "Omarchy",
+  crashReporting.enabled": "off",
   "editor.codeLens": false,
   "editor.defaultFormatter": "Shopify.ruby-lsp",
   "editor.fontFamily": "'JetBrainsMono Nerd Font',Menlo, Monaco, 'Courier New', monospace",
