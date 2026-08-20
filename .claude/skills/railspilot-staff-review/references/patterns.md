@@ -228,6 +228,21 @@ end
 scope :published, -> { where.not(published_at: nil) }
 ```
 
+### ARCH-06: A Rescue Must Match the Subject, Not Just the Class
+
+Rescuing `ActiveRecord::RecordInvalid` catches a failure from any record the action touched, so rendering `error.record` can redisplay a form holding a different object's errors. Confirm the subject and re-raise when it is not yours: `raise unless error.record.is_a?(Intake)`.
+**Detection:** a `rescue ActiveRecord::RecordInvalid` whose body assigns `error.record` to an ivar the view renders, in an action that writes more than one record.
+
+### ARCH-07: Stamp a Version From the Object You Used
+
+Read the version off the instance that produced the data (`instrument.version`), never off a `CURRENT_VERSION` constant or a second `.current` call, or the stamp names a version that never touched the record.
+**Detection:** a write referencing both `Thing.current` and `Thing::CURRENT_VERSION`, or any `version:` attribute assigned from a constant rather than from the object in hand.
+
+### ARCH-08: Every Database Constraint Needs a Handled Application Path
+
+A unique index or check constraint with no counterpart in the application turns a double submit into a 500, and a model uniqueness validation loses the race it describes. Decide what the second attempt means and encode it.
+**Detection:** `add_index unique: true` or `add_check_constraint` on a table a controller writes, with no `rescue ActiveRecord::RecordNotUnique` on the path that writes it.
+
 ## Deploy Safety
 
 ### SAFE-01: Migrations Must Survive Rolling Deploys
@@ -392,3 +407,11 @@ Rails.cache.fetch(["dashboard-stats", Current.account_id, I18n.locale]) do
   Dashboard::Stats.call(account: Current.account)
 end
 ```
+
+### COMPLETE-05: Every Validation Error Must Have Somewhere to Appear
+
+**Applies to:** Forms whose model validates a collection, an association, or a group of controls
+
+An error on a `has_many`, a collection, or a checkbox group has no input to attach to, so the form redisplays looking unchanged and the user cannot tell what to fix. Render the group's errors next to the group, marking the controls `aria-invalid` and pointing the fieldset at the message with `aria-describedby` so it is announced as well as seen (WCAG 2.2 AA, 3.3.1).
+
+**Detection:** a validated attribute with no same-named field, `errors.add(:some_collection, ...)`, or a fieldset of checkboxes whose errors surface only through a top-level summary.

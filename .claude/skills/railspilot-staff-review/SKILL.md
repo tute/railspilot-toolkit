@@ -1,7 +1,7 @@
 ---
 name: railspilot-staff-review
 description: Analyzes code against staff-engineer patterns (security, architecture, simplicity, completeness, hygiene). Use when asked for a staff or senior code review, "staff review", "pattern review", or "review this like a staff engineer". This is the most thorough single-agent review — for multi-agent reviews, use full-code-review.
-argument-hint: "[<commit-sha> | last-N | <base>..<head> | (empty for branch vs main)]"
+argument-hint: "[<commit-sha> | last-N | <base>..<head> | (empty for branch vs main)] [a11y]"
 allowed-tools: Bash, Read, Edit, Write, Task, AskUserQuestion
 ---
 
@@ -17,6 +17,8 @@ Parse `$ARGUMENTS` to pick the diff:
 - `last-N` or `last N commits`: review `git log -p -<N>` (or `git diff HEAD~N..HEAD`)
 - A range like `<base>..<head>` or `<base>...<head>`: pass directly to `git diff`
 - Empty: review current branch against the base branch. Default base is `main`; fall back to `master` if `main` does not exist via `git rev-parse --verify`
+
+Strip the token `a11y` before parsing the rest.
 
 If parsing is ambiguous (e.g. a non-SHA string that is not a recognized form), confirm scope with AskUserQuestion before continuing. If the resolved diff is empty, report that and stop without dispatching the agent.
 
@@ -49,6 +51,7 @@ Then merge and organize the verified findings:
 - Organize by category and severity (Critical, High, Medium, Low)
 - Highlight critical issues requiring immediate attention
 - Note positive observations
+- If the project is bound to WCAG (its `CLAUDE.md` names WCAG, or the user passed `a11y`) and the diff touches `app/views/`, `app/components/`, or `app/helpers/`, spawn an agent to run the `accessibility` skill (`~/.claude/skills/accessibility/SKILL.md`) against the same diff, and fold its findings into the report.
 - If the diff touches `app/javascript/`, spawn an agent whose sole job is to apply the matching Hotwire Club skill to the same scope: `hwc-stimulus-fundamentals` for Stimulus controllers, `hwc-navigation-content` for Turbo Frame/Drive navigation, `hwc-realtime-streaming` for Turbo Streams. Pass the skill path and the diff so the agent can run it end-to-end without further input.
 
 **Step 5: Confirm and Implement Selected Findings**
@@ -117,6 +120,8 @@ All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 - **Completeness**: Tests, edge cases, Stimulus patterns, job idempotency
 - **Testing**: Proper test structure, system under test protection
 - **Scope & Discipline**: One concern per commit, ticket scope adherence
+
+There is no accessibility category. Only some clients are bound to WCAG, so the conformance work lives in the `accessibility` skill and runs per project (Step 4).
 
 ## Extending the Library
 
