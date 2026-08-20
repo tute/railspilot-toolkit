@@ -243,13 +243,6 @@ Read the version off the instance that produced the data (`instrument.version`),
 A unique index or check constraint with no counterpart in the application turns a double submit into a 500, and a model uniqueness validation loses the race it describes. Decide what the second attempt means and encode it.
 **Detection:** `add_index unique: true` or `add_check_constraint` on a table a controller writes, with no `rescue ActiveRecord::RecordNotUnique` on the path that writes it.
 
-## Accessibility
-
-### A11Y-01: Every Validation Error Must Have Somewhere to Appear
-
-An error on a `has_many`, a collection, or a checkbox group has no input to attach to, so the form redisplays with nothing shown and nothing announced. Render the group's errors with `aria-invalid` on the controls and `aria-describedby` on the fieldset (WCAG 2.2 AA, 3.3.1).
-**Detection:** a validated attribute with no same-named field, `errors.add(:some_collection, ...)`, or a fieldset of checkboxes whose errors surface only through a top-level summary.
-
 ## Deploy Safety
 
 ### SAFE-01: Migrations Must Survive Rolling Deploys
@@ -414,3 +407,11 @@ Rails.cache.fetch(["dashboard-stats", Current.account_id, I18n.locale]) do
   Dashboard::Stats.call(account: Current.account)
 end
 ```
+
+### COMPLETE-05: Every Validation Error Must Have Somewhere to Appear
+
+**Applies to:** Forms whose model validates a collection, an association, or a group of controls
+
+An error on a `has_many`, a collection, or a checkbox group has no input to attach to, so the form redisplays looking unchanged and the user cannot tell what to fix. Render the group's errors next to the group, marking the controls `aria-invalid` and pointing the fieldset at the message with `aria-describedby` so it is announced as well as seen (WCAG 2.2 AA, 3.3.1).
+
+**Detection:** a validated attribute with no same-named field, `errors.add(:some_collection, ...)`, or a fieldset of checkboxes whose errors surface only through a top-level summary.

@@ -233,6 +233,8 @@ Present the complete plan for confirmation:
 
 Dispatch a separate Task agent to invoke the `railspilot-staff-review` skill. Return findings only.
 
+Pass `a11y` to that skill when the project's `CLAUDE.md` names WCAG, or when the user asked for an accessibility pass on this issue. It gates a WCAG review of the view diff, so projects with no such obligation leave it off.
+
 ### Step 11: Address Staff Review Feedback
 
 Fix high priority findings; ask for confirmation on lower priority ones. Validate with tests. Do NOT proceed until addressed.
