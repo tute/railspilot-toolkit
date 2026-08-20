@@ -111,6 +111,7 @@
     "autoAllowBashIfSandboxed": true
   },
   "tui": "fullscreen",
+  "outputStyle": "Concise",
   "autoMode": {
     "environment": [
     ]
