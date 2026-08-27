@@ -228,6 +228,26 @@ end
 scope :published, -> { where.not(published_at: nil) }
 ```
 
+### ARCH-06: A Rescue Must Match the Subject, Not Just the Class
+
+Rescuing `ActiveRecord::RecordInvalid` catches a failure from any record the action touched, so rendering `error.record` can redisplay a form holding a different object's errors. Confirm the subject and re-raise when it is not yours: `raise unless error.record.is_a?(Intake)`.
+**Detection:** a `rescue ActiveRecord::RecordInvalid` whose body assigns `error.record` to an ivar the view renders, in an action that writes more than one record.
+
+### ARCH-07: Stamp a Version From the Object You Used
+
+Read the version off the instance that produced the data (`instrument.version`), never off a `CURRENT_VERSION` constant or a second `.current` call, or the stamp names a version that never touched the record.
+**Detection:** a write referencing both `Thing.current` and `Thing::CURRENT_VERSION`, or any `version:` attribute assigned from a constant rather than from the object in hand.
+
+### ARCH-08: Every Database Constraint Needs a Handled Application Path
+
+A unique index or check constraint with no counterpart in the application turns a double submit into a 500, and a model uniqueness validation loses the race it describes. Decide what the second attempt means and encode it.
+**Detection:** `add_index unique: true` or `add_check_constraint` on a table a controller writes, with no `rescue ActiveRecord::RecordNotUnique` on the path that writes it.
+
+### ARCH-09: Display Copy Belongs in a Presenter, Not the Model
+
+A model holds the closed set its column enforces; the sentence a person reads is view formatting, and a `SimpleDelegator` presenter moves it out without changing a single call site the way a helper would.
+**Detection:** `def *_label`, `humanize`, `to_sentence`, or an interpolated user-facing sentence in `app/models/`.
+
 ## Deploy Safety
 
 ### SAFE-01: Migrations Must Survive Rolling Deploys
@@ -307,6 +327,16 @@ If an outer wrapper already maps an error class to `Result.failure`/retry, an in
 Applies to all code, JS browser-quirk paranoia most of all. Every guard, try/catch, and feature check is a claim a future reader must verify; once it stops being true the defense is dead code that hides bugs. Audit each one: can it actually fail per spec, is it paranoia for a now-fixed browser bug, is the precondition already guaranteed by surrounding code, does the layer above already own it (SIMP-05)? Keep a guard only if it survives all four, then add one line naming the real scenario it catches.
 
 Detection: empty catch bodies, try/catch around operations the spec says cannot throw, feature checks for capabilities every supported browser already has, target-existence checks for elements your own partial renders, optional chaining where the receiver was assigned the line before, rescues that swallow errors which should bubble.
+
+### SIMP-07: One Behavior in Every Environment
+
+A flag that makes a service raise in production and warn elsewhere buys two code paths, an abstraction to choose between them, and tests for the one nobody runs; pick the behavior that is right everywhere and delete the other three things.
+**Detection:** a `config.x.*` key or `Rails.env.production?` branch with a single reader that changes what a service does, rather than where it points.
+
+### SIMP-08: Rearrange What You Can, Block Only What You Can't
+
+A guard that hands the user an error for a condition the code beside it already knows how to resolve is refusing work the system could simply do.
+**Detection:** a predicate whose failure message asks for a resubmission, sitting next to logic that already sorts, normalizes or permutes the same input.
 
 ---
 
@@ -392,3 +422,16 @@ Rails.cache.fetch(["dashboard-stats", Current.account_id, I18n.locale]) do
   Dashboard::Stats.call(account: Current.account)
 end
 ```
+
+### COMPLETE-05: Every Validation Error Must Have Somewhere to Appear
+
+**Applies to:** Forms whose model validates a collection, an association, or a group of controls
+
+An error on a `has_many`, a collection, or a checkbox group has no input to attach to, so the form redisplays looking unchanged and the user cannot tell what to fix. Render the group's errors next to the group, marking the controls `aria-invalid` and pointing the fieldset at the message with `aria-describedby` so it is announced as well as seen (WCAG 2.2 AA, 3.3.1).
+
+**Detection:** a validated attribute with no same-named field, `errors.add(:some_collection, ...)`, or a fieldset of checkboxes whose errors surface only through a top-level summary.
+
+### COMPLETE-06: Fix the Drift, Then Remove the Ability to Drift
+
+Correcting a value duplicated across files leaves its cause untouched: collapse them to one source, and where a file structurally cannot defer, add a test that fails when they disagree.
+**Detection:** a version, constant or config value written literally in two or more files, with no test asserting they match.
