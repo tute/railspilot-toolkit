@@ -115,6 +115,8 @@ end
 
 Use `includes`/`preload`/`eager_load` whenever iterating associated records. Detect with Bullet or by spotting `.each` over a collection that calls associations.
 
+The rule runs both ways. Eager loading an association the template never touches spends a query building objects nobody reads, and it survives long after the column that justified it left the screen. Preload exactly what the view renders. When a field disappears from a view, the `includes` that fed it goes with it.
+
 ## Architecture
 
 
@@ -228,6 +230,46 @@ end
 scope :published, -> { where.not(published_at: nil) }
 ```
 
+### ARCH-06: A Rescue Must Match the Subject, Not Just the Class
+
+Rescuing `ActiveRecord::RecordInvalid` catches a failure from any record the action touched, so rendering `error.record` can redisplay a form holding a different object's errors. Confirm the subject and re-raise when it is not yours: `raise unless error.record.is_a?(Intake)`.
+**Detection:** a `rescue ActiveRecord::RecordInvalid` whose body assigns `error.record` to an ivar the view renders, in an action that writes more than one record.
+
+### ARCH-07: Stamp a Version From the Object You Used
+
+Read the version off the instance that produced the data (`instrument.version`), never off a `CURRENT_VERSION` constant or a second `.current` call, or the stamp names a version that never touched the record.
+**Detection:** a write referencing both `Thing.current` and `Thing::CURRENT_VERSION`, or any `version:` attribute assigned from a constant rather than from the object in hand.
+
+### ARCH-08: Every Database Constraint Needs a Handled Application Path
+
+A unique index or check constraint with no counterpart in the application turns a double submit into a 500, and a model uniqueness validation loses the race it describes. Decide what the second attempt means and encode it.
+**Detection:** `add_index unique: true` or `add_check_constraint` on a table a controller writes, with no `rescue ActiveRecord::RecordNotUnique` on the path that writes it.
+
+## Accessibility
+
+### A11Y-01: Every Validation Error Must Have Somewhere to Appear
+
+An error on a `has_many`, a collection, or a checkbox group has no input to attach to, so the form redisplays with nothing shown and nothing announced. Render the group's errors with `aria-invalid` on the controls and `aria-describedby` on the fieldset (WCAG 2.2 AA, 3.3.1).
+**Detection:** a validated attribute with no same-named field, `errors.add(:some_collection, ...)`, or a fieldset of checkboxes whose errors surface only through a top-level summary.
+
+## User Interface
+
+### UI-01: Destructive Actions Confirm Before They Run
+
+**Applies to:** Buttons, links and forms that delete, discard or cannot be undone from the same screen
+
+A one-click Remove in an admin table is one misclick away from work somebody has to type back in. Anything that destroys a record, discards a draft, or leaves no way back on the screen the user is standing on carries a confirmation naming what is about to go: `form: { data: { turbo_confirm: "Remove this question?" } }`. Actions that are cheap to undo do not, and a confirmation on every button teaches people to click through all of them.
+
+**Detection:** a `button_to` or `link_to` with `method: :delete`, or a form posting to `destroy`, with no `turbo_confirm`. Weigh it higher when the action sits on a list row rather than a detail page, and when the destroyed record holds content that was typed rather than generated.
+
+### UI-02: Screens Describe What Ships, Not What Is Planned
+
+**Applies to:** Empty states, copy, navigation, table columns, read-only pages
+
+An empty state reading "No draft open. Duplicating the live version opens the next one" tells staff a flow exists when the ticket that builds it has not landed. The same goes for a Published list, a version page, or a menu entry standing in for a later slice: they promise the feature is ready and generate support questions the codebase cannot answer. Say what the screen does today. The later ticket adds the sentence when it adds the behaviour.
+
+**Detection:** copy in the future or conditional tense; an empty state explaining a path with no route behind it; headings, columns or nav entries for a feature whose ticket is still `todo`; a read-only page whose only reason to exist is to preview a coming slice.
+
 ## Deploy Safety
 
 ### SAFE-01: Migrations Must Survive Rolling Deploys
@@ -307,6 +349,16 @@ If an outer wrapper already maps an error class to `Result.failure`/retry, an in
 Applies to all code, JS browser-quirk paranoia most of all. Every guard, try/catch, and feature check is a claim a future reader must verify; once it stops being true the defense is dead code that hides bugs. Audit each one: can it actually fail per spec, is it paranoia for a now-fixed browser bug, is the precondition already guaranteed by surrounding code, does the layer above already own it (SIMP-05)? Keep a guard only if it survives all four, then add one line naming the real scenario it catches.
 
 Detection: empty catch bodies, try/catch around operations the spec says cannot throw, feature checks for capabilities every supported browser already has, target-existence checks for elements your own partial renders, optional chaining where the receiver was assigned the line before, rescues that swallow errors which should bubble.
+
+### SIMP-07: Extract After Two Applies to Partials, Locals and Private Methods
+
+**Applies to:** View partials, partial locals, private methods, memoization
+
+"Extract after two" reads as a rule about classes, but the same test governs everything smaller. A partial rendered from one view is a second file to open, not a reuse. A private method wrapping a single expression is indirection with a name on it. A local the caller only ever passes its default for is dead flexibility, and it shapes the partial around a second caller that never arrived. A bang variant nobody calls is dead code. Memoizing an object that is rebuilt on every request caches nothing worth the ivar.
+
+Inline all of them and wait for the second caller. When it arrives, extract against two real shapes instead of one imagined one.
+
+**Detection:** grep a partial's name and find one `render`; a private method with one call site and a one-expression body; a partial local declared in the `locals:` magic comment that every caller passes identically or omits; a `foo!` with no caller; `@x ||=` in a class the controller instantiates per action.
 
 ---
 
