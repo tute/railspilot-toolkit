@@ -36,7 +36,7 @@ The agent will:
 
 **Step 3: Check Previous Decisions**
 
-Before consolidating findings, check for previous reviews. The decision log lives at `tasks/code_review_decisions.md` (project root). If the file does not exist, treat the history as empty and continue. If it exists, read it and note any previously-decided concerns so the same finding is not surfaced twice.
+Before consolidating findings, look for concerns this project has already settled, so the same finding is not surfaced twice. Read the git log and the commit messages over the reviewed range, and any convention file the project keeps (`CLAUDE.md`, `PRODUCT.md`, an ADR directory). Do not write or read a review-decision log: findings are reported in the reply, never accumulated in a file.
 
 **Step 4: Consolidate Findings**
 
@@ -47,7 +47,7 @@ Independently verify every candidate finding before accepting it into the report
 - Drop findings that do not survive independent verification
 
 Then merge and organize the verified findings:
-- Remove duplicate concerns from the decision log
+- Remove concerns the project has already settled
 - Organize by category and severity (Critical, High, Medium, Low)
 - Highlight critical issues requiring immediate attention
 - Note positive observations
@@ -72,33 +72,19 @@ Review is read-only by default. Before any code changes happen, present the acti
 
 4. Findings the user does not select stay in the consolidated report as recommendations the developer can act on later.
 
-If the user declines all findings, skip directly to Step 6 with no commits.
+If the user declines all findings, finish with no commits.
 
-**Step 6: Update Decision Tracking**
+**Step 6: Report**
 
-Append (do not overwrite) to `tasks/code_review_decisions.md` at the project root. Create the file if it is missing.
-
-Each entry uses this schema:
-
-```markdown
-## YYYY-MM-DD HH:MM — <scope reviewed: SHA, range, or "branch vs main">
-
-- <pattern-id>: <one-line summary>
-  - decision: applied | recommended | dismissed
-  - commit: <sha if applied, otherwise empty>
-  - rationale: <why this decision>
-```
-
-Group entries newest-on-top. Include every actionable finding from Step 4 — applied, left as recommendation, and dismissed alike — so future reviews can suppress redundancy.
+Close in the reply, not in a file. State what was applied and where, what was left as a recommendation and why, and what was dismissed as a false positive. Never write the review to a document and never commit one: the findings are process exhaust, the commits and the code are the record.
 
 ## Error Handling
 
 - Empty diff: stop after Step 1 and tell the user there is nothing to review.
-- Agent returns no findings: skip Steps 5-6 and report "no actionable findings".
-- Tests fail during Step 5: stop applying fixes, leave the broken-test finding in the report, do not commit, do not proceed to Step 6 for the failing concern.
+- Agent returns no findings: skip Step 5 and report "no actionable findings".
+- Tests fail during Step 5: stop applying fixes, leave the broken-test finding in the report, and do not commit.
 - `${SKILL_ROOT}/references/patterns.md` missing: report the missing path and stop — the agent cannot operate without the library.
-- `tasks/code_review_decisions.md` missing in Step 3: treat as empty history. In Step 6, create the file with a top-level header before appending the first entry.
-- `/commit` skill unavailable: fall back to a direct `git commit` with a message that still references the pattern ID, and note the fallback in the decision log entry.
+- `/commit` skill unavailable: fall back to a direct `git commit` with a message that still references the pattern ID, and say so in the reply.
 
 ## Review Methodology
 
