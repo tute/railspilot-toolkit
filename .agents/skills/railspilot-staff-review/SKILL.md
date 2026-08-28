@@ -34,18 +34,12 @@ The agent will:
 
 **Step 3: Check Previous Decisions**
 
-Reviews leave no decision file behind. Read prior decisions out of git instead: `git log` over the reviewed paths shows what a previous pass already applied, and a finding the diff itself already answers is not a finding. Never create or append to a review log in the repository.
+Reviews leave no decision file behind. Read prior decisions out of git instead: `git log` over the reviewed paths shows what a previous pass already applied. Never create or append to a review log in the repository.
 
 **Step 4: Consolidate Findings**
 
-Independently verify every candidate finding before accepting it into the report:
-- Re-read the cited lines and enough surrounding code to understand the execution path
-- Confirm the finding is introduced by or materially exposed by the reviewed diff
-- Search for callers, tests, config, or documentation that could invalidate the claim
-- Drop findings that do not survive independent verification
-
-Then merge and organize the verified findings:
-- Remove concerns a previous commit on the branch already answered
+Merge and organize the agent's findings:
+- Remove duplicate concerns from the decision log
 - Organize by category and severity (Critical, High, Medium, Low)
 - Highlight critical issues requiring immediate attention
 - Note positive observations
@@ -65,23 +59,36 @@ Review is read-only by default. Before any code changes happen, present the acti
 3. For each concern the user approves:
    - Make the code change
    - Run relevant tests to verify correctness. If tests fail, stop after the first failure, report which finding broke them, and skip remaining selected fixes — do not commit a broken state.
-   - Commit by invoking the `/commit` skill (see ~/.claude/skills/commit/SKILL.md). The subject carries the ticket id the branch is named for, never a pattern id: `[SURV-01] Confirm before removing a question`. Pattern ids are review vocabulary and stay out of the history.
+   - Commit by invoking the `/commit` skill (see ~/.Codex/skills/commit/SKILL.md). Reference the pattern ID (e.g. `SEC-02`) in the commit title.
 
 4. Findings the user does not select stay in the consolidated report as recommendations the developer can act on later.
 
-If the user declines all findings, stop here with no commits.
+If the user declines all findings, skip directly to Step 6 with no commits.
 
-**Step 6: Report**
+**Step 6: Update Decision Tracking**
 
-Print the consolidated report in the session: what was applied with its commit, what stays as a recommendation, and what was dismissed with the reason. The report is the deliverable. Do not write it to a file, and do not add a review log, decisions doc, or notes file to the repository. Commits and their messages carry what applied; anything dismissed is a judgement about one diff at one moment and does not survive as a document.
+Print the consolidated report in the session. Do not write it to a file, and do not add a review log, decisions doc, or notes file to the repository.
+
+Each entry uses this schema:
+
+```markdown
+## YYYY-MM-DD HH:MM — <scope reviewed: SHA, range, or "branch vs main">
+
+- <pattern-id>: <one-line summary>
+  - decision: applied | recommended | dismissed
+  - commit: <sha if applied, otherwise empty>
+  - rationale: <why this decision>
+```
+
+Group entries newest-on-top. Include every actionable finding from Step 4 — applied, left as recommendation, and dismissed alike — so future reviews can suppress redundancy.
 
 ## Error Handling
 
 - Empty diff: stop after Step 1 and tell the user there is nothing to review.
-- Agent returns no findings: skip Step 5 and report "no actionable findings".
-- Tests fail during Step 5: stop applying fixes, leave the broken-test finding in the report, do not commit.
+- Agent returns no findings: skip Steps 5-6 and report "no actionable findings".
+- Tests fail during Step 5: stop applying fixes, leave the broken-test finding in the report, do not commit, do not proceed to Step 6 for the failing concern.
 - `${SKILL_ROOT}/references/patterns.md` missing: report the missing path and stop — the agent cannot operate without the library.
-- `/commit` skill unavailable: fall back to a direct `git commit` with a subject carrying the ticket id, and say in the report that the fallback was used.
+- `/commit` skill unavailable: fall back to a direct `git commit` with a message that still references the pattern ID, and note the fallback in the decision log entry.
 
 ## Review Methodology
 
@@ -96,13 +103,10 @@ The `staff-engineer-reviewer` agent handles all review methodology. See that age
 All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 
 - **General**: How RailsPilot Thinks philosophy
-- **Security**: Data encryption, credential handling, trust boundaries
-- **Architecture**: Error handling, transaction boundaries, callbacks, state modeling, rescue subject, version stamping, database constraints
-- **Accessibility**: Validation errors that reach the user, WCAG 2.2 AA obligations
-- **User Interface**: Confirming destructive actions, screens that describe what ships
-- **Deploy Safety**: Rolling-deploy-safe migrations
-- **Simplicity**: Keeping jobs thin, single-caller extractions, avoiding unnecessary complexity
-- **Completeness**: Tests, edge cases, job idempotency, cache key completeness
+- **Security**: Data encryption, credential handling
+- **Architecture**: Error handling, service objects
+- **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
+- **Completeness**: Tests, edge cases, Stimulus patterns
 - **Testing**: Proper test structure, system under test protection
 - **Scope & Discipline**: One concern per commit, ticket scope adherence
 
