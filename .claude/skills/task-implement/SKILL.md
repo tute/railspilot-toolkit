@@ -188,6 +188,18 @@ This pattern ensures idempotent operations (reuses existing branches) and always
 
 ### Step 6: Analyze and Plan Solution
 
+Prefer `/grill-with-docs` to build the plan. It interrogates the issue into a design tree, works it
+in rounds, dispatches subagents for anything the repo can answer rather than asking, and writes the
+ADRs and glossary entries that fall out. Its output replaces the planning below, and Step 8 then
+reviews that plan as usual.
+
+Fall back to the analysis below when the shape of the change is genuinely settled and a grilling
+round would only restate it.
+
+`/domain-modeling` writes two kinds of file. ADRs under `docs/adr/` are committed: a decision that
+was hard to reverse is exactly what a future reader needs. `CONTEXT.md` is not. Keep it untracked,
+adding it to `.gitignore` if it is not there already.
+
 Break down the issue into an actionable implementation plan:
 
 **Analysis Process:**
