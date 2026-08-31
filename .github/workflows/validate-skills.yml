@@ -6,6 +6,7 @@ on:
       - ".claude/skills/**"
       - ".github/workflows/validate-skills.yml"
       - ".github/scripts/quick_validate.py"
+      - ".tool-versions"
 
 jobs:
   validate-skills:
@@ -17,7 +18,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version-file: .tool-versions
 
       - name: Install dependencies
         run: pip install pyyaml

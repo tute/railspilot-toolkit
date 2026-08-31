@@ -11,8 +11,9 @@ symlinks these configs into development environments.
   app directory. It expects the repo to be cloned at
   `~/Code/railspilot/toolkit`. Cloud Agent environments don't need to run this
   installation step (but may run it to ensure it works)
-- **Tool versions** are managed by `mise` (see `.mise.toml`): Node.js (latest),
-  Python 3.12, and uv (latest). Use `mise exec --` to run project binaries.
+- **Tool versions**: `.tool-versions` pins Python 3.12, the only tool this repo
+  needs (for `.github/scripts/quick_validate.py`). `mise` and CI both read it.
+  Use `mise exec --` to run project binaries.
 - **External services**: `gws` CLI for Google Workspace (Calendar, Gmail),
   `acli` CLI for Jira. Both require API credentials and are optional
   for toolkit development.
@@ -25,4 +26,4 @@ symlinks these configs into development environments.
 | Test | N/A | No test suite |
 | Build | N/A | No build step |
 | Run | `bin/install [target-app-path]` | Creates symlinks; see README.md |
-| Verify tools | `mise ls` | Confirms node/python/uv versions |
+| Verify tools | `mise ls` | Confirms the Python version |
