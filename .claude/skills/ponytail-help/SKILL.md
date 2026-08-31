@@ -59,9 +59,9 @@ Resolution: env var > config file > `full`.
 
 ## Update
 
-Vendored into this toolkit as plain skills (not a plugin), so there is no
-marketplace auto-update. To refresh, re-copy the `ponytail*` skill folders from
-the upstream repo into `.claude/skills/` and commit.
+Enable auto-update once: open `/plugin`, go to Marketplaces, pick ponytail, Enable auto-update. Claude Code then pulls new versions at startup (run `/reload-plugins` when it prompts). Manual refresh: `/plugin marketplace update ponytail` then `/reload-plugins`.
+
+If `/plugin` is not recognized, your Claude Code is out of date. Update it (`npm install -g @anthropic-ai/claude-code@latest`, or `brew upgrade claude-code`) and restart. Other hosts use their own update flow.
 
 ## More
 

@@ -46,6 +46,7 @@ available (in Rails, it would take precedense before `$PORT`).
 - `rspec-testing`: RSpec best practices (Better Specs, thoughtbot)
 - `vulnerability-scan`: Whole-project security audit (CVEs, secrets, dangerous patterns)
 - `best-practices`: Modern web security, compatibility, and code quality
+- `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-help`: Pushback on over-engineering, plus diff review, repo audit, and a debt ledger
 
 #### Codebase Analysis
 
@@ -84,7 +85,45 @@ available (in Rails, it would take precedense before `$PORT`).
 - `update-CLAUDE`: Extract patterns from recent commits into CLAUDE.md/skills
 - `document-past-chats`: Analyze chat history for recurring patterns and insights
 - `claude_deslop`: Audit your Claude setup for redundancy, conflicts, and dead weight
-- `caveman`, `caveman-compress`, `caveman-help`: Token-compressed communication mode
+
+## Vendored skills
+
+Some skills come from other repos. They are copied into `.claude/skills/` and
+pinned in `skills-lock.json` with their source repo and tag. Manage them with
+the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```bash
+# add or re-add a pinned set
+npx skills add https://github.com/OWNER/REPO/tree/TAG -a claude-code --copy -y -s NAME
+
+# refresh at the pinned tag
+npx skills update -y
+
+# drop one
+npx skills remove NAME -a claude-code -y
+```
+
+Rules:
+
+- Never hand-edit a vendored skill. `skills update` overwrites it with no
+  warning. Repo-specific notes belong here, not in the skill file.
+- Always pass `--copy`. Symlinks do not survive `bin/install`.
+- To upgrade, re-run `add` with the new tag and review the diff. `skills
+  update` stays on the pinned tag.
+- `skills remove` leaves a stale entry in `skills-lock.json`. Delete it by hand.
+
+New machines need no extra step. The skill files are committed, and
+`bin/install` symlinks the whole directory into `~/.claude/`. Cloning the repo
+installs them. `skills-lock.json` records where each one came from, for
+updates, not for installs.
+
+Inside Claude Code, these commands need the sandbox off. `.claude/skills` is
+protected from sandboxed shell commands and no setting overrides it.
+
+Vendored today: `ponytail*` at v4.7.0 from
+[DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+`ponytail-help` describes a plugin marketplace auto-update. Ignore it, this
+toolkit vendors the skills instead.
 
 ## Docs
 
