@@ -106,14 +106,14 @@
       }
     }
   },
+  "outputStyle": "Concise",
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
   "tui": "fullscreen",
-  "outputStyle": "Concise",
   "autoMode": {
-    "environment": [
-    ]
-  }
+    "environment": []
+  },
+  "agentPushNotifEnabled": true
 }
