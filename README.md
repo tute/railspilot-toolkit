@@ -36,6 +36,9 @@ available (in Rails, it would take precedense before `$PORT`).
 - `task-implement`: Full issue-to-PR workflow from a Linear/Jira issue (TDD, code reviews, PR creation)
 - `tdd-skill`: Red-Green-Refactor TDD methodology
 - `fix-merge-conflicts`: Non-interactive merge conflict resolution
+- `to-tickets`: Split work into tracer-bullet tickets with blocking edges. Ours,
+  taking the splitting rules from [mattpocock/skills](https://github.com/mattpocock/skills)
+  v1.2.3 and dropping its tracker integration
 
 #### Code Quality
 
@@ -135,7 +138,8 @@ Vendored today:
   [mattpocock/skills](https://github.com/mattpocock/skills). Upstream ships
   more of these. We vendor only what `/grill-with-docs` and
   `/improve-codebase-architecture` need, and skip the issue-tracker ones
-  (`to-tickets`, `to-spec`, `triage`, `setup-matt-pocock-skills`).
+  (`to-spec`, `triage`, `setup-matt-pocock-skills`, and upstream's
+  `to-tickets`, which we replaced with our own one-file version).
 
 `domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
 This repo has no domain model to sharpen, so `CONTEXT.md` is gitignored here.
