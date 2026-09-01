@@ -186,36 +186,17 @@ git branch --show-current
 
 This pattern ensures idempotent operations (reuses existing branches) and always starts from latest main.
 
-### Step 6: Analyze and Plan Solution
+### Step 6: Plan the Solution
 
-Prefer `/grill-with-docs` to build the plan. It interrogates the issue into a design tree, works it
-in rounds, dispatches subagents for anything the repo can answer rather than asking, and writes the
-ADRs and glossary entries that fall out. Its output replaces the planning below, and Step 8 then
-reviews that plan as usual.
+Run `/grill-with-docs` on the issue. It works the problem as a design tree, resolves each branch,
+dispatches subagents for whatever the repo can answer instead of asking, and writes the ADRs and
+glossary entries that fall out. Its output is the plan. Step 8 reviews it.
 
-Fall back to the analysis below when the shape of the change is genuinely settled and a grilling
-round would only restate it.
+Grilling settles the decisions, not the sequencing. Finish the plan with a test strategy
+(unit to integration to system) and an ordered list of implementation steps.
 
-`/domain-modeling` writes two kinds of file. ADRs under `docs/adr/` are committed: a decision that
-was hard to reverse is exactly what a future reader needs. `CONTEXT.md` is not. Keep it untracked,
-adding it to `.gitignore` if it is not there already.
-
-Break down the issue into an actionable implementation plan:
-
-**Analysis Process:**
-1. Extract specific requirements from issue description
-2. Identify affected components and systems
-3. Determine testing strategy (unit → integration → system)
-4. Plan implementation approach following project patterns
-5. Identify potential risks and dependencies
-
-**Planning Output:**
-- **Goal**: Clear statement of implementation objective
-- **Requirements**: Specific functional and technical requirements
-- **Architecture**: How solution fits existing codebase (models, services, controllers)
-- **Test Strategy**: Comprehensive testing including system specs
-- **Implementation Steps**: Ordered list of development tasks
-- **Acceptance Criteria**: Definition of done
+Commit the ADRs under `docs/adr/`: a decision that was hard to reverse is what a future reader
+needs. Leave `CONTEXT.md` untracked, adding it to `.gitignore` if it is missing.
 
 ### Step 7: Save Plan
 
