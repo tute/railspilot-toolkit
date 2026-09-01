@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: "Takes a Linear or Jira issue from its own worktree to a merged PR: fetch, grill into a plan, TDD, staff review, simplify, validate, PR, then delete the worktree and branch and close the issue. Auto-detects the tracker from recent commits. Use when given an issue key (e.g. TRA-9, PROJ-456) and asked to implement it."
+description: "Takes a Linear or Jira issue from its own worktree to an open PR: fetch, grill into a plan, TDD, staff review, simplify, validate, then push and open one PR whose commits are review-sized. Auto-detects the tracker from recent commits. Use when given an issue key (e.g. TRA-9, PROJ-456) and asked to implement it."
 argument-hint: "<ISSUE-KEY>"
 disable-model-invocation: true
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Agent, AskUserQuestion, Skill, TodoWrite
@@ -58,28 +58,21 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    you pick and apply. Twelve edits returned is not authority to make twelve edits.
 9. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
    which part is not.
-10. Commit and open the PR with the `commit` skill. Jira prefixes the subject with the key
+10. Size the commits, not the branch. One issue is one branch and one PR however large it gets,
+    but no commit runs past roughly 250 lines. Commit that way as you go through step 6, in
+    dependency order, models and shared code before the UI that consumes them; splitting a fat
+    branch afterwards is much harder than never letting it get fat. Check before pushing with
+    `git log --oneline main..HEAD` and `git show --shortstat` per commit. A reviewer scrolls past
+    a 900-line diff and rubber stamps it; the same change read commit by commit gets reviewed.
+11. Push and open the PR with the `commit` skill. Jira prefixes the subject with the key
     (`PROJ-142 Add notification service`), Linear does not; the issue URL goes on the last line.
+    Keep the PR body to a few lines: what it does and why, not a retelling of the diff.
 
-## Landing
+## Stop here
 
-An issue is not finished when the branch is green. It is finished when the branch is gone. Landing
-is part of the same unit of work, not a second request the user has to make. A green branch left
-behind leaves the tracker lying about what is left, and a worktree the next lane collides with.
-
-1. Re-check the base. `main` moves while a lane runs, sometimes from another session shipping the
-   adjacent half of the same feature. Diff as `git diff $(git merge-base main HEAD)..HEAD`, never
-   `main..HEAD`, or unrelated files read as the branch's own changes and the review chases them.
-   Test the merge before proposing it:
-   `git merge-tree --write-tree main "$BRANCH" | grep -c CONFLICT`.
-2. Resolve conflicts by composing, not choosing. Two commits touching one method usually carry two
-   different concerns and both belong.
-3. Rebase on current `main` and re-run the suite. A green branch and a green merge are different
-   facts.
-4. Once the PR merges, remove the worktree and branch:
-   `git worktree remove .claude/worktrees/"$SLUG" && git branch -d "$BRANCH"`, then
-   `git worktree list` to confirm nothing is left.
-5. Close the issue. Name any acceptance criteria still unverified rather than closing over them.
+A pushed branch and an open PR is where this skill ends. It does not merge and it does not clean
+up. A human merges the PR. `/clean` is invoked by hand afterwards, once it is merged, to close the
+issue and remove the worktree and the branch.
 
 ## Report
 
