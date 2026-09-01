@@ -142,7 +142,8 @@ Vendored today:
   `to-tickets`, which we replaced with our own one-file version).
 
 `domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
-This repo has no domain model to sharpen, so `CONTEXT.md` is gitignored here.
+`CONTEXT.md` stays gitignored: `bin/install` links `git/ignore` into
+`~/.config/git/ignore`, which git applies to every repo on the machine.
 
 ### Forked skills
 
