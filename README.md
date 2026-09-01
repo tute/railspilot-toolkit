@@ -120,10 +120,21 @@ updates, not for installs.
 Inside Claude Code, these commands need the sandbox off. `.claude/skills` is
 protected from sandboxed shell commands and no setting overrides it.
 
-Vendored today: `ponytail*` at v4.7.0 from
-[DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
-`ponytail-help` describes a plugin marketplace auto-update. Ignore it, this
-toolkit vendors the skills instead.
+Vendored today:
+
+- `ponytail*` at v4.7.0 from
+  [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+  `ponytail-help` describes a plugin marketplace auto-update. Ignore it, this
+  toolkit vendors the skills instead.
+- `grilling`, `grill-with-docs`, `domain-modeling` and
+  `improve-codebase-architecture` at v1.2.3 from
+  [mattpocock/skills](https://github.com/mattpocock/skills). Upstream ships
+  more of these. We vendor only what `/grill-with-docs` and
+  `/improve-codebase-architecture` need, and skip the issue-tracker ones
+  (`to-tickets`, `to-spec`, `triage`, `setup-matt-pocock-skills`).
+
+`domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
+This repo has no domain model to sharpen, so `CONTEXT.md` is gitignored here.
 
 ## Docs
 
