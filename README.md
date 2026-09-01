@@ -111,6 +111,10 @@ Rules:
 - To upgrade, re-run `add` with the new tag and review the diff. `skills
   update` stays on the pinned tag.
 - `skills remove` leaves a stale entry in `skills-lock.json`. Delete it by hand.
+- To change a vendored skill's behaviour, fork it: keep the file, delete its
+  lockfile entry, and record the divergence under "Forked skills" below. A fork
+  is ours to maintain. `skills update` no longer touches it, and no longer
+  brings it upstream fixes either.
 
 New machines need no extra step. The skill files are committed, and
 `bin/install` symlinks the whole directory into `~/.claude/`. Cloning the repo
@@ -135,6 +139,27 @@ Vendored today:
 
 `domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
 This repo has no domain model to sharpen, so `CONTEXT.md` is gitignored here.
+
+### Forked skills
+
+`codebase-design` started as the v1.2.3 skill of the same name from
+[mattpocock/skills](https://github.com/mattpocock/skills). We modified the
+original and now maintain it here, so it has no `skills-lock.json` entry and
+`skills update` leaves it alone.
+
+What we changed and why:
+
+- It explains, it does not edit. The upstream skill is a design tool. Ours is
+  a read-only one: it describes how a system is put together, where the seams
+  fall, and what a change would buy, then stops at the recommendation.
+- It keeps units small. Upstream argues for depth without saying what depth
+  costs, which reads as a licence to grow classes. Ours states that depth is a
+  property of the public interface, not of the units behind it, and rules out
+  "collapse these classes into one" as a route to depth.
+
+`improve-codebase-architecture` is vendored and calls `codebase-design` by
+name, so the fork keeps the original name on purpose. Renaming it would break
+that reference.
 
 ## Docs
 
