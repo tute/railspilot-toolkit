@@ -33,7 +33,10 @@ available (in Rails, it would take precedense before `$PORT`).
 
 #### Development Workflow
 
-- `task-implement`: Full issue-to-PR workflow from a Linear/Jira issue (TDD, code reviews, PR creation)
+- `task-implement`: Issue-to-open-PR workflow from a Linear/Jira issue, in its own worktree
+  (grill into a plan, TDD, staff review, simplify, then one PR built from ~250-line commits)
+- `clean`: Cleanup after you merge — confirms the PR merged, closes the issue, deletes the
+  worktree and branch. Asks for approval first, and never merges anything itself
 - `tdd-skill`: Red-Green-Refactor TDD methodology
 - `fix-merge-conflicts`: Non-interactive merge conflict resolution
 
