@@ -12,6 +12,8 @@
   need to clean them up, or ask permission to do so.
 - Never draft product feedback with SendFeedback. If Claude Code itself
   misbehaves, say so in one line in chat and move on.
+- Never put a session id or URL in a commit message or PR body. No
+  Claude-Session or Co-Authored-By trailers, same as locally.
 
 Code
 
