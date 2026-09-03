@@ -10,6 +10,8 @@
   relative dates ("3 days ago"). Subagents cannot infer "today".
 - Leave temp and scratchpad files in place when in temporary directories. No
   need to clean them up, or ask permission to do so.
+- Never draft product feedback with SendFeedback. If Claude Code itself
+  misbehaves, say so in one line in chat and move on.
 
 Code
 
