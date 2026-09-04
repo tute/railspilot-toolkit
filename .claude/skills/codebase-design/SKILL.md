@@ -1,6 +1,6 @@
 ---
 name: codebase-design
-description: Explain how a system is put together, using a shared vocabulary for module depth. Read-only: it produces explanations and recommendations, never edits. Use when the user wants to understand an existing module's interface, see where a seam falls, judge testability, weigh a deepening opportunity, or when another skill needs the deep-module vocabulary.
+description: "Explain how a system is put together, using a shared vocabulary for module depth. Read-only: it produces explanations and recommendations, never edits. Use when the user wants to understand an existing module's interface, see where a seam falls, judge testability, weigh a deepening opportunity, or when another skill needs the deep-module vocabulary."
 ---
 
 # Codebase Design
