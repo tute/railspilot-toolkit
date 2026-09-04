@@ -14,6 +14,9 @@ ln -sfn "$TOOLKIT_ROOT/.cursor/settings.json" "$CURSOR_USER_DIR/settings.json"
 ln -sfn "$TOOLKIT_ROOT/.cursor/rules" rules
 ln -sfn "$TOOLKIT_ROOT/.cursor/worktrees.json" worktrees.json
 
+mkdir -p ~/.config/git
+ln -sfn "$TOOLKIT_ROOT/git/ignore" ~/.config/git/ignore
+
 cd ~/.claude
 ln -sfn "$TOOLKIT_ROOT/.claude/CLAUDE.md" CLAUDE.md
 ln -sfn "$TOOLKIT_ROOT/.claude/agents" agents

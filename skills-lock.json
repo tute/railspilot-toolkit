@@ -1,6 +1,34 @@
 {
   "version": 1,
   "skills": {
+    "domain-modeling": {
+      "source": "mattpocock/skills",
+      "ref": "v1.2.3",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/domain-modeling/SKILL.md",
+      "computedHash": "363cb0f53b0b431e7c00086ad1f823500b7e1b70b5616ee969c979f0934e9e6e"
+    },
+    "grill-with-docs": {
+      "source": "mattpocock/skills",
+      "ref": "v1.2.3",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/grill-with-docs/SKILL.md",
+      "computedHash": "9c460cbd94fd3c63cdef967dbdb6e66ca687103cdc380cd37834e4d10b738f78"
+    },
+    "grilling": {
+      "source": "mattpocock/skills",
+      "ref": "v1.2.3",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grilling/SKILL.md",
+      "computedHash": "4ebdd12fe61ff3abf20cff6683740e2b9b3739454be0a3f4a928a1c4d07d6b34"
+    },
+    "improve-codebase-architecture": {
+      "source": "mattpocock/skills",
+      "ref": "v1.2.3",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
+      "computedHash": "bce096b49db40761adb1d5348f064c303fc152e4e50fc3fd81b79df8b6cf137f"
+    },
     "ponytail": {
       "source": "DietrichGebert/ponytail",
       "ref": "v4.7.0",

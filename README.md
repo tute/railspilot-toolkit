@@ -39,6 +39,9 @@ available (in Rails, it would take precedense before `$PORT`).
   worktree and branch. Asks for approval first, and never merges anything itself
 - `tdd-skill`: Red-Green-Refactor TDD methodology
 - `fix-merge-conflicts`: Non-interactive merge conflict resolution
+- `to-tickets`: Split work into tracer-bullet tickets with blocking edges. Ours,
+  taking the splitting rules from [mattpocock/skills](https://github.com/mattpocock/skills)
+  v1.2.3 and dropping its tracker integration
 
 #### Code Quality
 
@@ -114,6 +117,10 @@ Rules:
 - To upgrade, re-run `add` with the new tag and review the diff. `skills
   update` stays on the pinned tag.
 - `skills remove` leaves a stale entry in `skills-lock.json`. Delete it by hand.
+- To change a vendored skill's behaviour, fork it: keep the file, delete its
+  lockfile entry, and record the divergence under "Forked skills" below. A fork
+  is ours to maintain. `skills update` no longer touches it, and no longer
+  brings it upstream fixes either.
 
 New machines need no extra step. The skill files are committed, and
 `bin/install` symlinks the whole directory into `~/.claude/`. Cloning the repo
@@ -123,10 +130,44 @@ updates, not for installs.
 Inside Claude Code, these commands need the sandbox off. `.claude/skills` is
 protected from sandboxed shell commands and no setting overrides it.
 
-Vendored today: `ponytail*` at v4.7.0 from
-[DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
-`ponytail-help` describes a plugin marketplace auto-update. Ignore it, this
-toolkit vendors the skills instead.
+Vendored today:
+
+- `ponytail*` at v4.7.0 from
+  [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail).
+  `ponytail-help` describes a plugin marketplace auto-update. Ignore it, this
+  toolkit vendors the skills instead.
+- `grilling`, `grill-with-docs`, `domain-modeling` and
+  `improve-codebase-architecture` at v1.2.3 from
+  [mattpocock/skills](https://github.com/mattpocock/skills). Upstream ships
+  more of these. We vendor only what `/grill-with-docs` and
+  `/improve-codebase-architecture` need, and skip the issue-tracker ones
+  (`to-spec`, `triage`, `setup-matt-pocock-skills`, and upstream's
+  `to-tickets`, which we replaced with our own one-file version).
+
+`domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
+`CONTEXT.md` stays gitignored: `bin/install` links `git/ignore` into
+`~/.config/git/ignore`, which git applies to every repo on the machine.
+
+### Forked skills
+
+`codebase-design` started as the v1.2.3 skill of the same name from
+[mattpocock/skills](https://github.com/mattpocock/skills). We modified the
+original and now maintain it here, so it has no `skills-lock.json` entry and
+`skills update` leaves it alone.
+
+What we changed and why:
+
+- It explains, it does not edit. The upstream skill is a design tool. Ours is
+  a read-only one: it describes how a system is put together, where the seams
+  fall, and what a change would buy, then stops at the recommendation.
+- It keeps units small. Upstream argues for depth without saying what depth
+  costs, which reads as a licence to grow classes. Ours states that depth is a
+  property of the public interface, not of the units behind it, and rules out
+  "collapse these classes into one" as a route to depth.
+
+`improve-codebase-architecture` is vendored and calls `codebase-design` by
+name, so the fork keeps the original name on purpose. Renaming it would break
+that reference.
 
 ## Docs
 
