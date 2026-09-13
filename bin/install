@@ -32,6 +32,11 @@ for skill in "$TOOLKIT_ROOT"/.claude/skills/*; do
   [ -d "skills/$name" ] || echo "warning: skills/$name does not resolve" >&2
 done
 
+mkdir -p hooks
+for hook in "$TOOLKIT_ROOT"/.claude/hooks/*; do
+  ln -sfn "$hook" "hooks/$(basename "$hook")"
+done
+
 if [ -n "${1:-}" ]; then
   cd "$1"
   ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json
