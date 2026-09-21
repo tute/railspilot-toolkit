@@ -125,6 +125,19 @@
       }
     }
   },
+  "outputStyle": "Concise",
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": [
+      "bin/ci",
+      "bin/rails *",
+      "bin/rspec *",
+      "mise exec -- rails *",
+      "mise exec -- rspec *",
+      "psql *"
+    ]
+  },
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
@@ -132,11 +145,6 @@
     "claude-opus-5": {
       "effortLevel": "high"
     }
-  },
-  "outputStyle": "Concise",
-  "sandbox": {
-    "enabled": true,
-    "autoAllowBashIfSandboxed": true
   },
   "tui": "fullscreen",
   "agentPushNotifEnabled": true,
