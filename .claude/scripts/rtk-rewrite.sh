@@ -90,8 +90,6 @@ else
     '{
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
-        "permissionDecision": "allow",
-        "permissionDecisionReason": "RTK auto-rewrite",
         "updatedInput": $updated
       }
     }'
