@@ -32,8 +32,10 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
 
 ## Searching
 
-Repo-wide searches go to a subagent: `Agent(subagent_type: "Explore", model: "haiku", ...)`. It
-returns the answer and the paths, not the files.
+A search whose answer is a location, across files you cannot name, goes to
+`Agent(subagent_type: "Explore", model: "haiku", ...)`. It returns the answer and the paths, not
+the files, and what it saves is this context. When you know the symbol or the file, grep it
+yourself.
 
 ## Steps
 
