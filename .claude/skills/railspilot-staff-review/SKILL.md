@@ -44,7 +44,8 @@ Independently verify every candidate finding before accepting it into the report
 - Re-read the cited lines and enough surrounding code to understand the execution path
 - Confirm the finding is introduced by or materially exposed by the reviewed diff
 - Search for callers, tests, config, or documentation that could invalidate the claim, with
-  `Agent(subagent_type: "Explore", model: "haiku", ...)` so it reads outside this context
+  `Agent(subagent_type: "Explore", model: "haiku", ...)` when the caller could be anywhere and
+  grep when you know where
 - Drop findings that do not survive independent verification
 
 Then merge and organize the verified findings:
