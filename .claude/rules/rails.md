@@ -1,5 +1,6 @@
 ---
 paths:
+  - "Gemfile"
   - "app/**"
   - "lib/**"
   - "db/**"
