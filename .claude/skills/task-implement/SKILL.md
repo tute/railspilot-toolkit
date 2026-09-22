@@ -30,6 +30,11 @@ subagent's stash wipes a sibling lane's work. Commit instead.
 Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
 `<initials>/<KEY>-<slugified-summary>`.
 
+## Searching
+
+Repo-wide searches go to a subagent: `Agent(subagent_type: "Explore", model: "haiku", ...)`. It
+returns the answer and the paths, not the files.
+
 ## Steps
 
 1. Detect the tracker:
