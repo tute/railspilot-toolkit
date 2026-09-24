@@ -115,7 +115,7 @@ All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 - **General**: How RailsPilot Thinks philosophy
 - **Security**: Data encryption, credential handling, trust boundaries
 - **Architecture**: Error handling, transaction boundaries, callbacks, state modeling
-- **Deploy Safety**: Rolling-deploy-safe migrations
+- **Deploy Safety**: Rolling-deploy-safe migrations, deduplication before unique indexes
 - **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
 - **Completeness**: Tests, edge cases, Stimulus patterns, job idempotency
 - **Testing**: Proper test structure, system under test protection
