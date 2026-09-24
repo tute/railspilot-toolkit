@@ -276,6 +276,11 @@ class StopUsingUsersNickname < ActiveRecord::Migration[7.2]
 end
 ```
 
+### SAFE-02: A Unique Index Must Not Delete the Duplicates It Finds
+
+Clearing duplicates so a unique index can build is a data change, and `down` cannot bring deleted rows back. Keeping the newest `updated_at` can keep an empty row and drop the one with the answer. Archive the extra rows, or merge them by a rule the product owner accepts, and count them in production first. If the ticket does not need the constraint, ship the constraint in its own change.
+**Detection:** `DELETE` or `delete_all` in a migration that also adds `unique: true`, often ranked with `ROW_NUMBER() ... ORDER BY updated_at DESC`, with a `down` that only removes the index.
+
 ## Simplicity
 
 ### SIMP-04: Keep Jobs Thin — Let Errors Surface
