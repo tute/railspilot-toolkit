@@ -157,6 +157,19 @@ Before listing any loose commit as a dev improvement:
 
 Count honestly. Optionally state the feature count in one closing sentence; do not inflate or undercount.
 
+### Jev for the judgment calls
+
+The size rules above always win. Jev settles only what they leave open. Send one call for all PRs. The state is each PR's title, first 500 characters of body, and `+additions/-deletions, N files`:
+
+```json
+{"pr_142": {"type": "choice", "instructions": "What kind of work is PR #142?",
+            "criteria": {"feature": "User-facing functionality or UX", "bugfix": "Corrects existing behavior",
+                         "dev_improvement": "CI, monitoring, tooling", "housekeeping": "Docs, bumps, chores"}},
+ "same_142_145": {"type": "noul", "instructions": "Are PR #142 and PR #145 iterations of the same feature?"}}
+```
+
+Add a `same_` noul only for pairs whose titles overlap. Accept a category or a merge at >= 0.8. Below that, decide yourself and mark the item for the user to check. If `~/.claude/scripts/jev` exits nonzero, decide everything yourself, as before.
+
 ## Step 4: Draft the email
 
 Follow `template.md`. Ask the user for client name and month if not provided.

@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+[ "${JEV_ENABLE:-}" = 1 ] && [ -n "${OPENROUTER_API_KEY:-}" ] && command -v jq > /dev/null || exit 3
+
+body="$(jq -c --arg model "${JEV_MODEL:-typesafe/jev-1.13}" \
+  '{model: $model, state, questions, provider: {data_collection: "deny"}}')" || exit 1
+
+response="$(printf '%s' "$body" | curl -sS --max-time 20 -w '\n%{http_code}' \
+  -H "Authorization: Bearer $OPENROUTER_API_KEY" \
+  -H 'Content-Type: application/json' \
+  --data-binary @- \
+  https://openrouter.ai/api/alpha/decisions)" || exit 1
+
+status="${response##*$'\n'}"
+payload="${response%$'\n'*}"
+
+if [ "$status" != 200 ]; then
+  echo "jev: HTTP $status $(printf '%s' "$payload" | jq -c '.error // .' 2> /dev/null)" >&2
+  exit 1
+fi
+
+printf '%s' "$payload" | jq -e '.answers' || exit 1

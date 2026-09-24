@@ -48,16 +48,28 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    `CONTEXT.md` untracked.
 5. Get the plan approved before writing code.
 6. Implement with `tdd-skill`: strict red-green-refactor, one cycle at a time. No skipped tests.
+   When the same spec fails twice with the same error, ask Jev before a third patch (see
+   "Jev" below): `{"stop": {"type": "noul", "instructions": "Should this approach stop and be
+   rethought?"}}`, with the error and one line per attempt as state. At >= 0.7, stop patching,
+   re-read the plan and say what changes. Same rule for `bin/ci` in step 9.
 7. Review with `railspilot-staff-review` in a separate agent. Pass `a11y` when the project's
    `CLAUDE.md` names WCAG, or the user asked for an accessibility pass. YOU choose which findings
    to apply and you apply them, in the same pass. Verify each against the code first, drop what does
    not survive, and say how many you dropped. Do not hand back a menu: deciding which proposals are
    real is the job. Stop and ask only when a finding is a product or architectural call the code
-   cannot settle.
+   cannot settle. To find those, ask Jev one noul per verified finding: "Is this a product or
+   architectural call the code cannot settle?" At >= 0.8, put it in one AskUserQuestion batch.
 8. Simplify with `simplify` on what survives. Quality only, never behavior. Same rule: it proposes,
-   you pick and apply. Twelve edits returned is not authority to make twelve edits.
+   you pick and apply. Twelve edits returned is not authority to make twelve edits. Before you
+   pick, ask Jev two nouls per proposed edit, with the edit's before and after text and the issue
+   summary as state: "Could this edit change observable behavior?" (>= 0.5: drop it, or cover it
+   with a test first) and "Is this edit outside the issue's scope?" (>= 0.8: drop it). Say how
+   many each question dropped.
 9. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
-   which part is not.
+   which part is not. Then check the acceptance criteria from step 2 against `git diff main...HEAD`.
+   Ask Jev one noul per criterion, with the diff cut to 400 lines as state: "Does this diff fail
+   to fully implement: <criterion>?" Read the code for each one >= 0.3. Fix what is missing, or
+   name it in the report. Never call a criterion met on Jev alone.
 10. Size the commits, not the branch. One issue is one branch and one PR however large it gets,
     but no commit runs past roughly 250 lines. Commit that way as you go through step 6, in
     dependency order, models and shared code before the UI that consumes them; splitting a fat
@@ -68,6 +80,13 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
     (`PROJ-142 Add notification service`), Linear does not; the issue URL goes on the last line.
     Keep the PR body to a few lines: what it does and why, not a retelling of the diff.
 
+## Jev
+
+Steps 6, 7, 8 and 9 ask Jev through `~/.claude/scripts/jev`: JSON
+`{"state": ..., "questions": {...}}` on stdin, answers on stdout. Batch every question of one step
+into one call. Keep secrets and credentials out of the state. Jev never approves an irreversible
+action. If `jev` exits nonzero (3 means it is off for this project), do the step as written, without it.
+
 ## Stop here
 
 A pushed branch and an open PR is where this skill ends. It does not merge and it does not clean
@@ -76,5 +95,6 @@ issue and remove the worktree and the branch.
 
 ## Report
 
-What shipped, what the reviews changed, and anything left out with the reason. Record corrections
+What shipped, what the reviews changed, each acceptance criterion as met or not, and anything
+left out with the reason. Record corrections
 in `tasks/lessons.md`.
