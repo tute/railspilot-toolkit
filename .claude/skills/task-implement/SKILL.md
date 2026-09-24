@@ -66,7 +66,10 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    with a test first) and "Is this edit outside the issue's scope?" (>= 0.8: drop it). Say how
    many each question dropped.
 9. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
-   which part is not.
+   which part is not. Then check the acceptance criteria from step 2 against `git diff main...HEAD`.
+   Ask Jev one noul per criterion, with the diff cut to 400 lines as state: "Does this diff fail
+   to fully implement: <criterion>?" Read the code for each one >= 0.3. Fix what is missing, or
+   name it in the report. Never call a criterion met on Jev alone.
 10. Size the commits, not the branch. One issue is one branch and one PR however large it gets,
     but no commit runs past roughly 250 lines. Commit that way as you go through step 6, in
     dependency order, models and shared code before the UI that consumes them; splitting a fat
@@ -92,5 +95,6 @@ issue and remove the worktree and the branch.
 
 ## Report
 
-What shipped, what the reviews changed, and anything left out with the reason. Record corrections
+What shipped, what the reviews changed, each acceptance criterion as met or not, and anything
+left out with the reason. Record corrections
 in `tasks/lessons.md`.
