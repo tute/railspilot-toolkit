@@ -1,6 +1,6 @@
 ---
 name: task-implement
-description: "Takes a Linear or Jira issue from its own worktree to an open PR: fetch, grill into a plan, TDD, staff review, simplify, validate, then push and open one PR whose commits are review-sized. Auto-detects the tracker from recent commits. Use when given an issue key (e.g. TRA-9, PROJ-456) and asked to implement it."
+description: "Takes a Linear or Jira issue from its own worktree to an open PR: fetch, grill into a plan, TDD, staff review, simplify, AC check, validate, then push and open one PR whose commits are review-sized. Auto-detects the tracker from recent commits. Use when given an issue key (e.g. TRA-9, PROJ-456) and asked to implement it."
 argument-hint: "<ISSUE-KEY>"
 disable-model-invocation: true
 allowed-tools: Bash, Read, Edit, Write, Glob, Grep, Agent, AskUserQuestion, Skill, TodoWrite
@@ -56,15 +56,17 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    cannot settle.
 8. Simplify with `simplify` on what survives. Quality only, never behavior. Same rule: it proposes,
    you pick and apply. Twelve edits returned is not authority to make twelve edits.
-9. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
-   which part is not.
-10. Size the commits, not the branch. One issue is one branch and one PR however large it gets,
+9. Check the AC with `jev-ac-check <ISSUE-KEY>`. Implement what is partial or missing, then run
+   it again. Ask when a gap is a product call.
+10. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
+    which part is not.
+11. Size the commits, not the branch. One issue is one branch and one PR however large it gets,
     but no commit runs past roughly 250 lines. Commit that way as you go through step 6, in
     dependency order, models and shared code before the UI that consumes them; splitting a fat
     branch afterwards is much harder than never letting it get fat. Check before pushing with
     `git log --oneline main..HEAD` and `git show --shortstat` per commit. A reviewer scrolls past
     a 900-line diff and rubber stamps it; the same change read commit by commit gets reviewed.
-11. Push and open the PR with the `commit` skill. Jira prefixes the subject with the key
+12. Push and open the PR with the `commit` skill. Jira prefixes the subject with the key
     (`PROJ-142 Add notification service`), Linear does not; the issue URL goes on the last line.
     Keep the PR body to a few lines: what it does and why, not a retelling of the diff.
 

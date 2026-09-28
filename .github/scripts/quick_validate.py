@@ -5,8 +5,8 @@ Quick validation for Claude Code skills (YAML frontmatter + naming rules).
 Derived from dgalarza/claude-code-workflows (MIT):
 https://github.com/dgalarza/claude-code-workflows/blob/main/.agents/skills/skill-creator/scripts/quick_validate.py
 
-Extended ALLOWED_PROPERTIES for this repo (argument-hint, effort,
-disable-model-invocation).
+Extended ALLOWED_PROPERTIES for this repo (agent, argument-hint, context,
+effort, disable-model-invocation).
 """
 
 import re
@@ -18,9 +18,11 @@ import yaml
 
 # Base set from upstream skill-creator; toolkit adds common frontmatter keys.
 ALLOWED_PROPERTIES = {
+    "agent",
     "allowed-tools",
     "argument-hint",
     "compatibility",
+    "context",
     "description",
     "disable-model-invocation",
     "effort",
