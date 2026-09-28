@@ -34,7 +34,9 @@ available (in Rails, it would take precedense before `$PORT`).
 #### Development Workflow
 
 - `task-implement`: Issue-to-open-PR workflow from a Linear/Jira issue, in its own worktree
-  (grill into a plan, TDD, staff review, simplify, then one PR built from ~250-line commits)
+  (grill into a plan, TDD, staff review, simplify, AC check, then one PR built from ~250-line commits)
+- `jev-ac-check`: Checks each acceptance criterion against the branch diff with Jev, and
+  sends only the items Jev is not sure are met to a manual check
 - `clean`: Cleanup after you merge — confirms the PR merged, closes the issue, deletes the
   worktree and branch. Asks for approval first, and never merges anything itself
 - `tdd-skill`: Red-Green-Refactor TDD methodology
