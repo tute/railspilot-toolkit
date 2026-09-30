@@ -32,6 +32,14 @@ for skill in "$TOOLKIT_ROOT"/.claude/skills/*; do
   [ -d "skills/$name" ] || echo "warning: skills/$name does not resolve" >&2
 done
 
+# Rules link one by one, like skills, so machine-local rules in ~/.claude/rules survive.
+mkdir -p rules
+for rule in "$TOOLKIT_ROOT"/.claude/rules/*.md; do
+  name="$(basename "$rule")"
+  ln -sfn "$rule" "rules/$name"
+  [ -f "rules/$name" ] || echo "warning: rules/$name does not resolve" >&2
+done
+
 if [ -n "${1:-}" ]; then
   cd "$1"
   ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json
