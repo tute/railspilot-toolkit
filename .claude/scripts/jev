@@ -6,7 +6,7 @@ set -uo pipefail
 body="$(jq -c --arg model "${JEV_MODEL:-typesafe/jev-1.13}" \
   '{model: $model, state, questions, provider: {data_collection: "deny"}}')" || exit 1
 
-response="$(printf '%s' "$body" | curl -sS --max-time 20 -w '\n%{http_code}' \
+response="$(printf '%s' "$body" | curl -sS --max-time "${JEV_TIMEOUT:-20}" -w '\n%{http_code}' \
   -H "Authorization: Bearer $OPENROUTER_API_KEY" \
   -H 'Content-Type: application/json' \
   --data-binary @- \

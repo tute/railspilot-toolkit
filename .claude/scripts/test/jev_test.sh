@@ -40,6 +40,11 @@ check "keeps questions" "$(jq -r .questions.sec.type "$WORK/body")" noul
 run env JEV_ENABLE=1 JEV_MODEL=typesafe/jev-next OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200 > /dev/null
 check "model override" "$(jq -r .model "$WORK/body")" typesafe/jev-next
 
+check "default timeout" "$(grep -A1 -x -- --max-time "$WORK/args" | tail -1)" 20
+
+run env JEV_ENABLE=1 JEV_TIMEOUT=120 OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200 > /dev/null
+check "timeout override" "$(grep -A1 -x -- --max-time "$WORK/args" | tail -1)" 120
+
 status=$(run env -u JEV_ENABLE OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200)
 check "off by default exits 3" "$status" 3
 check "off by default prints nothing" "$(cat "$WORK/out")" ""
