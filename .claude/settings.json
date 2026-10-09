@@ -1,7 +1,7 @@
 {
   "env": {
     "ENABLE_LSP_TOOL": "1",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
   },
   "attribution": {
     "commit": "",
@@ -144,9 +144,6 @@
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
-    },
-    "claude-opus-5": {
-      "effortLevel": "high"
     }
   },
   "tui": "fullscreen",
