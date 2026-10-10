@@ -48,23 +48,19 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    `CONTEXT.md` untracked.
 5. Get the plan approved before writing code.
 6. Implement with `tdd-skill`: strict red-green-refactor, one cycle at a time. No skipped tests.
-   When the same spec fails twice with the same error, ask Jev before a third patch (see
-   "Jev" below): `{"stop": {"type": "noul", "instructions": "Should this approach stop and be
-   rethought?"}}`, with the error and one line per attempt as state. At >= 0.7, stop patching,
-   re-read the plan and say what changes. Same rule for `bin/ci` in step 9.
+   When the same spec fails twice with the same error, ask Jev `stop` (see "Jev" below) before
+   a third patch, with the error and one line per attempt as state. Same rule for `bin/ci` in
+   step 10.
 7. Review with `railspilot-staff-review` in a separate agent. Pass `a11y` when the project's
    `CLAUDE.md` names WCAG, or the user asked for an accessibility pass. YOU choose which findings
    to apply and you apply them, in the same pass. Verify each against the code first, drop what does
    not survive, and say how many you dropped. Do not hand back a menu: deciding which proposals are
    real is the job. Stop and ask only when a finding is a product or architectural call the code
-   cannot settle. To find those, ask Jev one noul per verified finding: "Is this a product or
-   architectural call the code cannot settle?" At >= 0.8, put it in one AskUserQuestion batch.
+   cannot settle. To find those, ask Jev `call` once per verified finding.
 8. Simplify with `simplify` on what survives. Quality only, never behavior. Same rule: it proposes,
    you pick and apply. Twelve edits returned is not authority to make twelve edits. Before you
-   pick, ask Jev two nouls per proposed edit, with the edit's before and after text and the issue
-   summary as state: "Could this edit change observable behavior?" (>= 0.5: drop it, or cover it
-   with a test first) and "Is this edit outside the issue's scope?" (>= 0.8: drop it). Say how
-   many each question dropped.
+   pick, ask Jev `behavior` and `scope` per proposed edit, with the edit's before and after text
+   and the issue summary as state. Say how many each question dropped.
 9. Check the AC with `jev-ac-check <ISSUE-KEY>`. Implement what is partial or missing, then run
    it again. Ask when a gap is a product call.
 10. Validate: `bin/ci` if the repo has one, otherwise `mise exec -- rspec`. Green, or say plainly
@@ -85,6 +81,15 @@ Steps 6, 7, 8 and 9 ask Jev through `~/.claude/scripts/jev`: JSON
 `{"state": ..., "questions": {...}}` on stdin, answers on stdout. Batch every question of one step
 into one call. Keep secrets and credentials out of the state. Jev never approves an irreversible
 action. If `jev` exits nonzero (3 means it is off for this project), do the step as written, without it.
+
+Each question is a `noul`. Act when the answer reaches the threshold:
+
+| Step | Key | Question | Threshold | Action |
+|------|-----|----------|-----------|--------|
+| 6 | `stop` | Should this approach stop and be rethought? | 0.7 | Stop patching, re-read the plan, say what changes |
+| 7 | `call` | Is this a product or architectural call the code cannot settle? | 0.8 | Put it in one AskUserQuestion batch |
+| 8 | `behavior` | Could this edit change observable behavior? | 0.5 | Drop the edit, or cover it with a test first |
+| 8 | `scope` | Is this edit outside the issue's scope? | 0.8 | Drop the edit |
 
 ## Stop here
 
