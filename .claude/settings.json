@@ -91,6 +91,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/rtk-rewrite.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

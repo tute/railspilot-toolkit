@@ -15,30 +15,11 @@
 
 Code
 
-* Normalized schema. No redundant data. Derive values dynamically.
-* Postgres enum columns, not strings.
-* No new gems until proven necessary.
-* Assertive style: `find`, `find_by!`, `sole`. Let exceptions surface. No nil
-  guards unless the caller handles nil.
-* POROs over mixins. Ask before adding a mixin.
-* Namespaced service objects, short names, no `Service` suffix: `Namespace::ClassName#call`
-* Service objects own writes that span rows. Models keep validations,
-  associations, scopes and pure methods. A write with preconditions no
-  validation expresses is a service. Building one unsaved record stays on the model.
-* Domain naming: Measurements, not ProgressEntries.
 * No code comments unless I ask. No hardcoded specifics I did not request.
-* Progressive enhancement: works without JS. Use Stimulus for JS behavior.
-
-Tests
-
-* Follow the rspec-testing skill.
-* Don't test the framework. Presence validations, enums, `belongs_to`,
-  `has_many` and one-clause scopes are Rails' guarantees. Test the conditional
-  and custom validations, the assertions that reach a database constraint
-  (`RecordNotUnique`, `NotNullViolation`, `StatementInvalid` check the
-  migration, not Rails), and code with logic of its own.
-* No skipped or pending tests. Fix them or delete them.
 * Run `bin/ci` at the end when it exists.
+
+Rails, RSpec and Hotwire conventions live in `.claude/rules/`, and load only
+when the session touches the paths they cover.
 
 Writing
 
