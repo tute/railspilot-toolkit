@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 [[ -f ${1-} ]] || { echo "usage: check <ac-file> [base]   (one criterion per line)" >&2; exit 64; }
-: "${TYPESAFE_API_KEY:?TYPESAFE_API_KEY is not set}"
 base=${2:-origin/main} max=${MAX_DIFF_CHARS:-100000}
 diff=$(git diff "$base"...HEAD -- . ':!*.lock' ':!db/schema.rb' ':!db/structure.sql')
 [[ $diff ]] || { echo "no diff against $base" >&2; exit 1; }
 (( ${#diff} <= max )) || { echo "diff is ${#diff} chars, over the $max limit for one Jev call" >&2; exit 2; }
 items=$(jq -nR '[inputs | select(test("\\S"))]' "$1")
-res=$(printf %s "$diff" | jq -Rs --arg model "${JEV_MODEL:-jev-latest}" --argjson items "$items" '{
-  model: $model,
+status=0
+answers=$(printf %s "$diff" | jq -Rs --argjson items "$items" '{
   state: {diff: .},
   questions: ($items | to_entries | map({key: "ac_\(.key + 1)", value: {
     type: "choice",
@@ -19,7 +18,8 @@ res=$(printf %s "$diff" | jq -Rs --arg model "${JEV_MODEL:-jev-latest}" --argjso
       missing: "The diff does not implement what the criterion asks for"
     }
   }}) | from_entries)
-}' | curl -sS --fail-with-body "${JEV_URL:-https://api.typesafe.ai/v1/systemone}" \
-  -H "Authorization: Bearer $TYPESAFE_API_KEY" -H "Content-Type: application/json" -d @-) || { echo "$res" >&2; exit 1; }
+}' | JEV_ENABLE=1 JEV_TIMEOUT=${JEV_TIMEOUT:-120} "$HOME/.claude/scripts/jev") || status=$?
+(( status != 3 )) || { echo "jev did not run: set OPENROUTER_API_KEY and install jq" >&2; exit 3; }
+(( status == 0 )) || exit 1
 jq -r --argjson items "$items" '($items | to_entries[]) as {key: $k, value: $c}
-  | .answers["ac_\($k + 1)"] | "\($k + 1)\t\(.choice)\t\(.confidence * 100 | round / 100)\t\($c)"' <<<"$res"
+  | .["ac_\($k + 1)"] | "\($k + 1)\t\(.choice)\t\(.confidence * 100 | round / 100)\t\($c)"' <<<"$answers"
