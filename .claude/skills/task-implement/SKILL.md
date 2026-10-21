@@ -48,6 +48,8 @@ Branch name: Linear supplies one in the issue's `branchName`. For Jira derive
    `CONTEXT.md` untracked.
 5. Get the plan approved before writing code.
 6. Implement with `tdd-skill`: strict red-green-refactor, one cycle at a time. No skipped tests.
+   Then prune: for each test added, name the bug it catches and whether another layer already
+   catches it. Delete what fails either, like static page copy or a test file for a config change.
 7. Review with `railspilot-staff-review` in a separate agent. Pass `a11y` when the project's
    `CLAUDE.md` names WCAG, or the user asked for an accessibility pass. YOU choose which findings
    to apply and you apply them, in the same pass. Verify each against the code first, drop what does
