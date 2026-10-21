@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # internal-branch-review <branch> [--from N] [--only N] [--dry-run] [--runner claude|cursor-agent|codex]
 #
-# Automated review workflow for contributor branches pushed to a fork.
-# Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=push-to-fork
+# Automated review workflow for contributor branches (on the same remote or a fork).
+# Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=wrap-up
 #
-# Boundary: this script NEVER opens PRs or pushes to the upstream remote.
-# All remote writes go to the fork only. The user opens PRs manually.
+# Only remote operation: git fetch. Improvements are committed locally, one per commit.
 #
 # Config (env vars, all optional except IBR_JIRA_BASE):
 #   IBR_JIRA_BASE          Jira base URL, e.g. https://myorg.atlassian.net/browse  (required)
 #   IBR_UPSTREAM_REMOTE    Git remote for upstream repo (default: origin)
-#   IBR_FORK_REMOTE        Git remote for contributor fork (default: first non-origin remote)
+#   IBR_FORK_REMOTE        Git remote holding the contributor branch (default: first non-origin
+#                          remote, or the upstream remote when it is the only one)
 #   IBR_BASE_BRANCH        Base branch to review against (default: inferred from origin/HEAD)
 #   IBR_STAFF_REVIEWER_MD  Path to staff-reviewer agent file (default: ~/.claude/agents/staff-engineer-reviewer.md)
 #   IBR_PATTERNS_MD        Path to review patterns file (default: ~/.claude/skills/railspilot-staff-review/references/patterns.md)
 #   IBR_COMMIT_SKILL_MD    Path to commit skill file (default: ~/.claude/skills/commit/SKILL.md)
+#   IBR_JIRA_KEY           Jira key when the branch name has none
 #   AGENT_RUNNER           Agent runner: claude (default), cursor-agent, codex
 set -euo pipefail
 
@@ -51,9 +52,9 @@ Steps:
   2  Rebase-check against upstream base branch
   3  Acceptance Criteria verification (agent)
   4  Test coverage (agent)
-  5  Staff review with suggestion selection (agent)
+  5  Staff review (agent)
   6  Simplify + commit (agent)
-  7  Push to fork (never opens PR upstream)
+  7  Wrap-up (summary)
 
 Environment:
   IBR_JIRA_BASE   Required. e.g. https://myorg.atlassian.net/browse
@@ -81,11 +82,9 @@ done
 
 # Fork remote: first remote that isn't the upstream remote
 if [[ -z "$FORK_REMOTE" ]]; then
-  FORK_REMOTE=$(git remote | grep -v "^${UPSTREAM_REMOTE}$" | head -1)
-  if [[ -z "$FORK_REMOTE" ]]; then
-    echo "Error: could not detect a fork remote. Set IBR_FORK_REMOTE."
-    exit 1
-  fi
+  FORK_REMOTE=$(git remote | grep -v "^${UPSTREAM_REMOTE}$" | head -1 || true)
+  # A single remote is fine: the contributor branch lives on upstream itself.
+  [[ -z "$FORK_REMOTE" ]] && FORK_REMOTE="$UPSTREAM_REMOTE"
 fi
 
 # Base branch: prefer origin/HEAD, fall back to main then master
@@ -111,10 +110,9 @@ if [[ -z "$JIRA_BASE" ]]; then
 fi
 
 # Extract Jira key from branch name (handles P3-772, PROJ-123, etc.)
-JIRA_KEY=$(echo "$BRANCH" | grep -oiE '[A-Z][A-Z0-9]*-[0-9]+' | tr '[:lower:]' '[:upper:]' | head -1 || true)
-if [[ -z "$JIRA_KEY" ]]; then
-  read -rp "Could not extract Jira key from '$BRANCH'. Enter key (e.g. PROJ-123), or Enter to skip: " JIRA_KEY
-fi
+JIRA_KEY=${IBR_JIRA_KEY:-}
+[[ -z "$JIRA_KEY" ]] && JIRA_KEY=$(echo "$BRANCH" | grep -oiE '[A-Z][A-Z0-9]*-[0-9]+' | tr '[:lower:]' '[:upper:]' | head -1 || true)
+[[ -z "$JIRA_KEY" ]] && echo "No Jira key in '${BRANCH}'; set IBR_JIRA_KEY to check AC."
 
 JIRA_LINK="${JIRA_BASE}/${JIRA_KEY}"
 UPSTREAM_BASE="${UPSTREAM_REMOTE}/${BASE_BRANCH}"
@@ -124,7 +122,7 @@ mkdir -p "$LOG_DIR"
 echo ""
 echo "internal-branch-review: ${BRANCH}"
 echo "  upstream:  ${UPSTREAM_REPO} (${UPSTREAM_BASE})"
-echo "  fork:      ${FORK_REMOTE}/${BRANCH}"
+echo "  branch:    ${FORK_REMOTE}/${BRANCH}"
 [[ -n "$JIRA_KEY" ]] && echo "  jira:      ${JIRA_LINK}"
 echo "  runner:    ${AGENT_RUNNER}  dry-run: ${DRY_RUN}"
 echo ""
@@ -134,12 +132,6 @@ echo ""
 should_run() {
   local step=$1
   [[ $step -ge $FROM_STEP ]] && { [[ -z "$ONLY_STEP" ]] || [[ "$step" == "$ONLY_STEP" ]]; }
-}
-
-confirm() {
-  local msg="${1:-Continue?}"
-  read -rp "${msg} [Y/n] " ans
-  [[ "${ans:-Y}" =~ ^[Yy]$ ]]
 }
 
 log_step() {
@@ -193,8 +185,15 @@ Apply three review lenses in a single pass:
 **Reuse — look for:**
 - Existing helpers or patterns in the codebase that can replace new code in the diff
 
-After reviewing: make targeted fixes that reduce complexity or reuse existing patterns while preserving behavior. Skip issues that need a larger refactor — include those in the final summary. Run lightweight checks (linter, tests for touched files) after editing if practical. Summarize what you fixed and what you skipped but recommend.
+After reviewing: make targeted fixes that reduce complexity or reuse existing patterns while preserving behavior. Apply every fix of medium value or higher; skip low-value nitpicks and issues that need a larger refactor — include those in the final summary. Run lightweight checks (linter, tests for touched files) after editing if practical. Summarize what you fixed and what you skipped but recommend.
 SIMPLIFY_EOF
+
+commit_rule() {
+  echo "Commit each applied improvement as its own separate commit, never bundled,"
+  echo "following the commit skill at: ${COMMIT_SKILL_MD}"
+  [[ -n "$JIRA_KEY" ]] && echo "Include this link in at least one commit body: ${JIRA_LINK}"
+  return 0
+}
 
 # === Step 1: Setup ===
 step_1_setup() {
@@ -207,23 +206,28 @@ step_1_setup() {
 
   echo "Fetching remotes..."
   $DRY_RUN || git fetch "$UPSTREAM_REMOTE"
-  $DRY_RUN || git fetch "$FORK_REMOTE"
+  [[ "$FORK_REMOTE" != "$UPSTREAM_REMOTE" ]] && { $DRY_RUN || git fetch "$FORK_REMOTE"; }
 
   LOCAL="review/${BRANCH}"
 
-  if git show-ref --verify --quiet "refs/heads/${LOCAL}"; then
-    echo "Local branch ${LOCAL} already exists."
-    if confirm "Delete and re-checkout from ${FORK_REMOTE}/${BRANCH}?"; then
-      $DRY_RUN || git branch -D "${LOCAL}"
-      $DRY_RUN || git checkout -b "${LOCAL}" "${FORK_REMOTE}/${BRANCH}"
-    else
-      $DRY_RUN || git checkout "${LOCAL}"
-    fi
+  # Prefer the remote branch; fall back to a local branch or any commit-ish.
+  if git show-ref --verify --quiet "refs/remotes/${FORK_REMOTE}/${BRANCH}"; then
+    SOURCE="${FORK_REMOTE}/${BRANCH}"
+  elif git rev-parse --verify --quiet "${BRANCH}^{commit}" >/dev/null; then
+    SOURCE="${BRANCH}"
   else
-    $DRY_RUN || git checkout -b "${LOCAL}" "${FORK_REMOTE}/${BRANCH}"
+    echo "Error: '${BRANCH}' not found on ${FORK_REMOTE} nor locally."
+    exit 1
   fi
 
-  echo "Checked out ${LOCAL} (${FORK_REMOTE}/${BRANCH})"
+  if git show-ref --verify --quiet "refs/heads/${LOCAL}"; then
+    echo "Reusing existing local branch ${LOCAL}."
+    $DRY_RUN || git checkout "${LOCAL}"
+  else
+    $DRY_RUN || git checkout -b "${LOCAL}" "${SOURCE}"
+  fi
+
+  echo "Checked out ${LOCAL} (${SOURCE})"
   [[ -n "$JIRA_KEY" ]] && echo "Jira: ${JIRA_LINK}"
 }
 
@@ -245,31 +249,15 @@ step_2_rebase_check() {
     echo ""
     echo "⚠ Conflicts detected."
     echo ""
-    echo "Pushing ${UPSTREAM_BASE} to ${FORK_REMOTE}/${BASE_BRANCH} so the contributor can rebase..."
-    if $DRY_RUN; then
-      echo "[DRY-RUN] git push ${FORK_REMOTE} ${UPSTREAM_BASE}:${BASE_BRANCH}"
-    else
-      git push "${FORK_REMOTE}" "${UPSTREAM_BASE}:${BASE_BRANCH}"
-    fi
-    echo ""
     echo "────────────────────────────────────────────────────"
     echo "Message for contributor:"
-    echo "  New ${BASE_BRANCH} pushed to ${FORK_REMOTE}. Please rebase:"
-    echo "  git fetch ${FORK_REMOTE} && git rebase ${FORK_REMOTE}/${BASE_BRANCH}"
+    echo "  ${BASE_BRANCH} moved and conflicts with this branch. Please rebase onto ${UPSTREAM_BASE}."
     echo "────────────────────────────────────────────────────"
     echo ""
-    if ! confirm "Continue review anyway (without rebase)?"; then
-      echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 3"
-      exit 0
-    fi
+    echo "Stopping. After the rebase, resume with: internal-branch-review ${BRANCH} --from 3"
+    exit 1
   else
     echo "No conflicts — branch rebases cleanly."
-    echo "Pushing ${UPSTREAM_BASE} to ${FORK_REMOTE}/${BASE_BRANCH} as a precaution..."
-    if $DRY_RUN; then
-      echo "[DRY-RUN] git push ${FORK_REMOTE} ${UPSTREAM_BASE}:${BASE_BRANCH}"
-    else
-      git push "${FORK_REMOTE}" "${UPSTREAM_BASE}:${BASE_BRANCH}"
-    fi
   fi
 }
 
@@ -310,9 +298,8 @@ You must verify the implementation against the Acceptance Criteria from Jira tic
 
 Fetch the ticket from Jira (${JIRA_LINK}) using Atlassian MCP or acli.
 
-If you cannot access the ticket, STOP IMMEDIATELY and report the error.
+If you cannot access the ticket, report that clearly and end this step.
 Do NOT invent, derive, or infer acceptance criteria from the code, commits, or diff.
-The AC must come from the Jira ticket. No exceptions.
 
 ## Git diff (${UPSTREAM_BASE}...HEAD)
 ${FENCE}diff
@@ -332,11 +319,6 @@ PROMPT
   run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
   echo ""
   echo "(saved to ${LOG_FILE})"
-
-  if ! confirm "AC check complete. Continue?"; then
-    echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 4"
-    exit 0
-  fi
 }
 
 # === Step 4: Test coverage ===
@@ -362,8 +344,17 @@ ${FENCE}
 Steps:
 1. Identify the test file(s) for each changed source file (using the project's conventions).
 2. Run those tests using the project's test runner.
-3. Report coverage gaps: behaviors changed or added that have no test coverage.
-4. List each gap as a concrete test example.
+3. Report two lists, numbered:
+   a. **Important missing tests**: only behavior that could realistically break
+      and matters (business rules, money, auth, data integrity, error paths).
+      Give each as a concrete test example. If your own recommendation for a
+      gap would be low-value or "skip", leave it out entirely.
+   b. **Low-value tests to delete**: tests that add maintenance cost without
+      protecting behavior, e.g. TDD leftovers asserting static copy or page
+      text, or a new test file that only checks a configuration change.
+   Tag every item with its value: [high], [medium] or [low].
+4. End with exactly one line: \`IBR_TESTS: none\` if both lists are empty,
+   otherwise \`IBR_TESTS: action\`.
 PROMPT
 
   if $DRY_RUN; then
@@ -374,38 +365,29 @@ PROMPT
   run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
   echo ""
   echo "(saved to ${LOG_FILE})"
-  echo ""
-  echo "Options: (a) write missing tests  (s) skip  (q) abort"
-  read -rp "Choice [a/s/q, default s]: " choice
 
-  case "${choice:-s}" in
-    a|A)
-      WRITE_PROMPT="${LOG_DIR}/4-write-tests-prompt.md"
-      COVERAGE_GAPS=$(cat "$LOG_FILE")
-      cat > "$WRITE_PROMPT" <<PROMPT
-Write the missing tests identified in the coverage report below.
-Follow the project's test conventions.
+  if grep -q 'IBR_TESTS: none' "$LOG_FILE"; then
+    echo "No test changes needed."
+    return 0
+  fi
 
-## Coverage gaps
-${COVERAGE_GAPS}
+  WRITE_PROMPT="${LOG_DIR}/4-write-tests-prompt.md"
+  COVERAGE_REPORT=$(cat "$LOG_FILE")
+  cat > "$WRITE_PROMPT" <<PROMPT
+Apply every [medium] and [high] item in the coverage report below: write the
+missing tests and delete the low-value tests it lists. Skip [low] items.
+Follow the project's test conventions and run the affected tests.
+$(commit_rule)
+
+## Coverage report
+${COVERAGE_REPORT}
 
 ## Diff context
 ${FENCE}diff
 ${DIFF}
 ${FENCE}
-
-After writing, run the new tests to confirm they pass.
 PROMPT
-      run_agent "$WRITE_PROMPT" | tee "${LOG_DIR}/4-write-tests-output.md"
-      ;;
-    q|Q)
-      echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 5"
-      exit 0
-      ;;
-    *)
-      echo "Skipping."
-      ;;
-  esac
+  run_agent "$WRITE_PROMPT" | tee "${LOG_DIR}/4-write-tests-output.md"
 }
 
 # === Step 5: Staff review ===
@@ -428,7 +410,8 @@ step_5_staff_review() {
     fi
     cat <<PROMPT
 
-Review the following diff. Output findings as a numbered list (1, 2, 3...) so each suggestion can be referenced by number for selective application.
+Review the following diff. Output findings as a numbered list.
+Tag every finding with its value: [high], [medium] or [low].
 
 ## Git diff (${UPSTREAM_BASE}...HEAD)
 ${FENCE}diff
@@ -445,16 +428,13 @@ PROMPT
   run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
   echo ""
   echo "(saved to ${LOG_FILE})"
-  echo ""
-  read -rp "Enter suggestion numbers to apply (space-separated, 'all', or Enter to skip): " selections
-
-  [[ -z "$selections" ]] && { echo "Skipping."; return 0; }
 
   APPLY_PROMPT="${LOG_DIR}/5-apply-prompt.md"
   STAFF_OUTPUT=$(cat "$LOG_FILE")
   cat > "$APPLY_PROMPT" <<PROMPT
-Apply ONLY suggestions numbered: ${selections}
-from the staff review below. Leave all other code unchanged.
+Apply every [medium] and [high] finding from the staff review below; skip [low].
+Leave all other code unchanged.
+$(commit_rule)
 
 ## Staff review
 ${STAFF_OUTPUT}
@@ -478,9 +458,7 @@ step_6_simplify_commit() {
   {
     echo "$SIMPLIFY_INSTRUCTIONS"
     echo ""
-    echo "After simplifying, read the commit skill at: ${COMMIT_SKILL_MD}"
-    echo "Commit each logical unit of change as a separate commit following that skill's format."
-    [[ -n "$JIRA_KEY" ]] && echo "Include this link in at least one commit body: ${JIRA_LINK}"
+    commit_rule
   } > "$PROMPT_FILE"
 
   if $DRY_RUN; then
@@ -491,81 +469,24 @@ step_6_simplify_commit() {
   run_agent "$PROMPT_FILE" | tee "$LOG_FILE"
   echo ""
   echo "(saved to ${LOG_FILE})"
-
-  if ! confirm "Simplify + commit done. Continue to push step?"; then
-    echo "Aborting. Resume with: internal-branch-review ${BRANCH} --from 7"
-    exit 0
-  fi
 }
 
-# === Step 7: Push to fork ===
-step_7_push() {
-  log_step 7 "Push to fork"
+# === Step 7: Wrap-up ===
+step_7_wrap_up() {
+  log_step 7 "Wrap-up"
 
   COMMIT_COUNT=$(git log "${UPSTREAM_BASE}..HEAD" --oneline | wc -l | tr -d ' ')
   echo "Commits ahead of ${UPSTREAM_BASE}: ${COMMIT_COUNT}"
   git log "${UPSTREAM_BASE}..HEAD" --oneline
   echo ""
 
-  if [[ "$COMMIT_COUNT" -gt 1 ]] && confirm "Squash to a single commit?"; then
-    DIFF=$(git diff "${UPSTREAM_BASE}...HEAD")
-    MSG_PROMPT="${LOG_DIR}/7-squash-msg-prompt.md"
-    cat > "$MSG_PROMPT" <<PROMPT
-Read the commit skill at: ${COMMIT_SKILL_MD}
-Write a single commit message for the following diff.
-${JIRA_KEY:+Include ${JIRA_LINK} in the body.}
-Output ONLY the commit message (title + body). Nothing else.
-
-## Git diff (${UPSTREAM_BASE}...HEAD)
-${FENCE}diff
-${DIFF}
-${FENCE}
-PROMPT
-
-    COMMIT_MSG=$(run_agent "$MSG_PROMPT")
-    echo ""
-    echo "Proposed commit message:"
-    echo "────────────────────────────────────────────────────"
-    echo "$COMMIT_MSG"
-    echo "────────────────────────────────────────────────────"
-
-    if confirm "Use this message and squash?"; then
-      if $DRY_RUN; then
-        echo "[DRY-RUN] git reset --soft ${UPSTREAM_BASE} && git commit"
-      else
-        git reset --soft "${UPSTREAM_BASE}"
-        git commit -m "$COMMIT_MSG"
-      fi
-    fi
-  fi
-
-  if ! confirm "Push to ${FORK_REMOTE}/${BRANCH}?"; then
-    echo ""
-    echo "Stopped before push. When ready:"
-    echo "  git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
-    return 0
-  fi
-
-  if $DRY_RUN; then
-    echo "[DRY-RUN] git push ${FORK_REMOTE} HEAD:${BRANCH} --force-with-lease"
-    return 0
-  fi
-
-  git push "${FORK_REMOTE}" "HEAD:${BRANCH}" --force-with-lease
-
-  # Print summary for manual PR creation (if user chooses to do it themselves)
-  FORK_USER=$(git remote get-url "$FORK_REMOTE" | sed -E 's|.*[:/]([^/]+)/.*|\1|')
   PR_TITLE="${JIRA_KEY:+[${JIRA_KEY}] }$(git log -1 --format='%s')"
 
-  echo ""
   echo "────────────────────────────────────────────────────"
-  echo "Pushed to ${FORK_REMOTE}/${BRANCH}."
-  echo ""
-  echo "To open a PR manually:"
-  echo "  gh pr create --repo ${UPSTREAM_REPO} \\"
-  echo "    --head ${FORK_USER}:${BRANCH} --base ${BASE_BRANCH} \\"
-  echo "    --title \"${PR_TITLE}\""
-  [[ -n "$JIRA_KEY" ]] && echo "  Jira: ${JIRA_LINK}"
+  echo "  Branch:          $(git rev-parse --abbrev-ref HEAD)"
+  echo "  Base:            ${BASE_BRANCH}"
+  echo "  Suggested title: ${PR_TITLE}"
+  [[ -n "$JIRA_KEY" ]] && echo "  Jira:            ${JIRA_LINK}"
   echo "────────────────────────────────────────────────────"
 }
 
@@ -579,7 +500,7 @@ run_step() {
     4) step_4_test_coverage ;;
     5) step_5_staff_review ;;
     6) step_6_simplify_commit ;;
-    7) step_7_push ;;
+    7) step_7_wrap_up ;;
   esac
 }
 

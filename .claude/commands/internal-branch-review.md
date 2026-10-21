@@ -1,92 +1,55 @@
 ---
 name: internal-branch-review
-description: Local review workflow for contributor branches pushed to a fork. All work stays local or on the internal fork; never acts on upstream.
+description: Local review workflow for a contributor branch or commit. Fetches, reviews, and commits improvements locally; never pushes.
 ---
 
-Run the automated review workflow for a contributor branch.
+Review a contributor branch and commit improvements locally.
 
 Usage: /internal-branch-review <branch>
 
-## Progress tracking
+## Rules
 
-After completing each step, print a progress checklist showing all seven steps
-with their status: ✅ for completed, ➡️ for the next step, and ⬜ for remaining.
-Example after finishing step 3:
+- The only remote operation is `git fetch`. No pushes, no PRs; the user does those.
+- Never stop to ask, except on rebase conflicts. Apply every improvement of medium
+  value or higher, each in its own commit; the user reviews the commits afterwards.
+- End each step's output with what it found and did: missing or partial AC,
+  tests added or deleted, fixes applied, and low-value items skipped.
+
+## Progress
+
+After each step print the checklist (✅ done, ➡️ next, ⬜ remaining), then continue:
 
 ```
-Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Simplify ⬜7 Push to fork
+Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Simplify ⬜7 Wrap-up
 ```
 
-Print this after every step, then immediately proceed to the next one.
+## Context
 
-## Boundaries
+Infer from git, with env overrides:
+- Upstream remote: `origin` (`IBR_UPSTREAM_REMOTE`).
+- Branch remote (`IBR_FORK_REMOTE`): handle both setups. With a contributor fork,
+  it's the first non-origin remote and both are fetched. With a single remote, the
+  branch is on `origin`. If it isn't on any remote, use the local branch or commit.
+- Base branch: from `origin/HEAD` (`IBR_BASE_BRANCH`).
+- Jira key: from the branch name (`[A-Z][A-Z0-9]*-[0-9]+`).
 
-This workflow is strictly local + fork-only:
-- Never open PRs on the upstream repo (no `gh pr create`).
-- Never push to the upstream remote.
-- Never act as the user on the upstream GitHub repo.
-- The only remote writes are pushes to the fork remote.
+## Steps
 
-If the user wants to open a PR upstream, they do it manually after the workflow completes.
+1. **Setup**: `.claude/scripts/internal-branch-review <branch> --only 1`
+2. **Rebase-check**: `.claude/scripts/internal-branch-review <branch> --only 2`.
+   If it conflicts, stop and tell the user so the contributor can rebase.
+3. **Acceptance criteria**: fetch the Jira ticket (Atlassian MCP) and compare each
+   AC item to `git diff <upstream>/<base>...HEAD`: ✅ implemented, ❌ missing,
+   ⚠️ partial, numbered. Report gaps and keep going.
+4. **Tests**: run the tests for the changed files. Add missing tests that protect
+   behavior that matters, and delete low-value ones (e.g. asserting static page
+   copy, or a new test file just for a config change). Skip gaps you'd rate low.
+5. **Staff review**: run the `staff-engineer-reviewer` agent on the diff and apply
+   its medium and high findings.
+6. **Simplify (do not skip)**: run the full `/simplify` workflow with its three
+   subagents (quality, performance, reuse) and apply their medium and high fixes,
+   even if the diff looks clean.
+7. **Wrap-up**: list the commits ahead of base and print branch, base, suggested
+   title `[<KEY>] <subject>` and Jira link.
 
-## Prerequisites
-
-Infer from git context:
-- **Upstream remote**: `origin` (override with `IBR_UPSTREAM_REMOTE`)
-- **Fork remote**: first non-origin remote (override with `IBR_FORK_REMOTE`)
-- **Base branch**: from `origin/HEAD` (override with `IBR_BASE_BRANCH`)
-- **Upstream repo**: from `git remote get-url origin` (read-only, for context)
-- **Jira key**: extracted from branch name (pattern: `[A-Z][A-Z0-9]*-[0-9]+`)
-
-Run `git remote -v` and `git remote show origin` to determine these before starting.
-
-## Step 1 — Setup
-```bash
-.claude/scripts/internal-branch-review <branch> --only 1
-```
-
-## Step 2 — Rebase-check
-```bash
-.claude/scripts/internal-branch-review <branch> --only 2
-```
-
-## Step 3 — Acceptance Criteria
-Use Atlassian MCP to fetch the Jira ticket. Read its Acceptance Criteria.
-Run `git diff <upstream>/<base>...HEAD` and compare each AC item to the implementation.
-Report per item: ✅ implemented | ❌ missing | ⚠️ partial (with concrete detail).
-Number each item. If any item is ❌ or ⚠️, ask the user to confirm before
-proceeding. If all items are ✅, print the progress checklist and continue.
-
-## Step 4 — Test coverage
-Map each changed file to its test file(s) (using the project's conventions).
-Run the project's test suite for those files.
-Report coverage gaps (behaviors changed or added without tests).
-Ask the user: write missing tests now, skip, or abort.
-
-## Step 5 — Staff review
-Invoke the `staff-engineer-reviewer` agent on `git diff <upstream>/<base>...HEAD`.
-Output findings as a numbered list.
-Ask the user: "Enter suggestion numbers to apply (space-separated, 'all', or Enter to skip)."
-Apply only the selected suggestions.
-After applying (or skipping), print the progress checklist and proceed immediately to Step 6.
-
-## Step 6 — Simplify + commit (do not skip)
-Execute the full `/simplify` workflow: launch all three parallel review
-subagents (code quality, performance, reuse), collect their findings, and apply
-fixes. Do not substitute your own judgment for the subagent results, even if the
-diff looks clean.
-Then run `/commit` for each logical unit of change, one at a time.
-Include the Jira link in at least one commit body (if a Jira key was found).
-
-## Step 7 — Push to fork
-Show commit count ahead of base. If more than one, offer to squash.
-If squashing: generate a commit message (why-focused, Jira link in body), confirm with user, then squash.
-Ask for confirmation before pushing. Then:
-```bash
-git push <fork_remote> HEAD:<branch> --force-with-lease
-```
-After pushing, print a summary the user can copy if they choose to open a PR manually:
-- Branch: `<fork_user>:<branch>`
-- Base: `<base_branch>`
-- Suggested title: `[<KEY>] <commit subject>`
-- Jira link: `<jira_link>`
+Commit with `/commit`. Include the Jira link in at least one commit body.

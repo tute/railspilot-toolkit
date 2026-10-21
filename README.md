@@ -78,7 +78,7 @@ available (in Rails, it would take precedense before `$PORT`).
 
 ### Commands
 
-- `internal-branch-review`: Full review workflow for contributor branches pushed to a fork — setup, rebase-check, AC verification, test coverage, staff review, simplify+commit, and PR creation (7 steps, resumable with `--from N`)
+- `internal-branch-review`: Full review workflow for contributor branches pushed to a fork — setup, rebase-check, AC verification, test coverage, staff review, simplify+commit, and a local wrap-up that never pushes (7 steps, resumable with `--from N`)
 
 #### Productivity
 
