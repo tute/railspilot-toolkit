@@ -44,6 +44,9 @@ available (in Rails, it would take precedense before `$PORT`).
 - `to-tickets`: Split work into tracer-bullet tickets with blocking edges. Ours,
   taking the splitting rules from [mattpocock/skills](https://github.com/mattpocock/skills)
   v1.2.3 and dropping its tracker integration
+- `planned-implementation`: Carry out an approved plan with parallel agents on disjoint files, then reconcile
+- `report-plan`: Turn a plan into the short decision list a staff engineer reads before review
+- `write-adr`: Architecture decision record with a recommendation and argued alternatives, for one async approver
 
 #### Code Quality
 
