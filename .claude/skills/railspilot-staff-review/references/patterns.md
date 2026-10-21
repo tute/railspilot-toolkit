@@ -369,17 +369,17 @@ If the ticket says "add push notification delivery," don't also build a cleanup 
 
 **Applies to:** All commits that change behavior
 
-Every commit that adds or modifies behavior must include tests. A controller action without a request spec, a model validation without a model spec, a JS handler without a JS test — these are unfinished work. "I'll add tests later" means "I won't add tests."
+Behavior means a branch we wrote. Every commit that adds or modifies one must include a test that fails without it. A controller action without a request spec or a JS handler without a JS test is unfinished work. Declarations (`belongs_to`, `enum`, presence) need no test. "I'll add tests later" means "I won't add tests."
 
-**Detection:** Check if the diff adds/modifies Ruby code in `app/` without corresponding changes in `spec/`. Check if new JS in `app/javascript/` has no matching test in `spec/javascript/`.
+**Detection:** A new conditional, `rescue` or query in `app/` with no test that fails without it. New JS in `app/javascript/` with no matching test in `spec/javascript/`.
 
 ### COMPLETE-02: Test Edge Cases, Not Just Happy Paths
 
 **Applies to:** All test files
 
-Happy-path tests prove the feature works. Edge-case tests prove it doesn't break. Test nil inputs, empty collections, missing associations, boundary values, and permission failures. The push subscription specs test valid Chrome endpoints AND invalid HTTP URLs AND unknown domains AND malformed strings — not just "it creates a subscription."
+Happy-path tests prove the feature works. Edge-case tests prove it doesn't break. Test boundary values and permission failures a caller can reach. The push subscription specs test valid Chrome endpoints AND invalid HTTP URLs AND unknown domains AND malformed strings, not just "it creates a subscription." Do not ask for a test of a state no caller can produce (SIMP-06).
 
-**Detection:** Count the contexts in a spec. If there's only one context (or no contexts, just `it` blocks), edge cases are likely missing. Look for models with validations that have no corresponding rejection tests.
+**Detection:** A conditional or custom validation with a test for one side only. A boundary in the code (`>=`, a limit, a date cutoff) with no test at the boundary. An action with no test for the unauthorized caller.
 
 ### COMPLETE-03: Jobs Must Tolerate At-Least-Once Delivery
 
@@ -440,3 +440,22 @@ An error on a `has_many`, a collection, or a checkbox group has no input to atta
 
 Correcting a value duplicated across files leaves its cause untouched: collapse them to one source, and where a file structurally cannot defer, add a test that fails when they disagree.
 **Detection:** a version, constant or config value written literally in two or more files, with no test asserting they match.
+
+## Testing
+
+### TEST-01: Test That Cannot Fail
+
+**Applies to:** All test files in the diff
+
+A test that stays green when the code it covers breaks costs run time and review time and catches nothing. Ask for fewer tests as readily as for more.
+
+**Detection:**
+- copy or CSS assertions
+- tests of declarations or column defaults
+- a test whose name claims an order but which checks presence only
+- assertions on a fake's own return value
+- `refute_empty` or `assert_kind_of` as the only assertion
+- the same branch tested at two layers
+- a test that passes when the method under test is deleted
+
+**Fix:** delete the test or rewrite it. Never add a test to fix this finding.

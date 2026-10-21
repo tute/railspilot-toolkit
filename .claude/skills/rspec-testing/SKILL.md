@@ -5,7 +5,7 @@ description: Provides RSpec best practices — test structure, factories, system
 
 # RSpec Testing for Rails
 
-Write comprehensive, maintainable RSpec tests following industry best practices. This skill combines guidance from Better Specs and thoughtbot's testing guides to produce high-quality test coverage for Rails applications.
+Write maintainable RSpec tests that catch production bugs, each at one layer. This skill combines guidance from Better Specs and thoughtbot's testing guides.
 
 ## Core Testing Principles
 
@@ -69,12 +69,12 @@ context 'without authentication' do
 ```ruby
 # ✅ Good
 it 'creates a new article' do
-it 'validates presence of title' do
+it 'rejects a duplicate slug' do
 it 'redirects to dashboard' do
 
 # ❌ Bad
 it 'should create a new article' do
-it 'should validate presence of title' do
+it 'should reject a duplicate slug' do
 ```
 
 ### Expectations
@@ -109,7 +109,7 @@ fill_in 'Email', with: user.email
 fill_in 'Password', with: 'password'
 click_button 'Sign In'
 
-expect(page).to have_content('Dashboard')
+expect(page).to have_current_path(dashboard_path)
 ```
 
 ### Controller Test Authentication
@@ -126,16 +126,19 @@ allow_any_instance_of(Controller).to receive(:logged_in?).and_return(true)
 
 ### Avoid CSS Class Testing
 
-Don't test implementation details like CSS utility classes. Test semantic selectors and content:
+Don't test implementation details like CSS utility classes or copy. Test semantic selectors, form wiring and record state:
 
 ```ruby
-# ✅ Good - semantic selectors
+# ✅ Good - semantic selectors, form wiring, record state
 expect(page).to have_selector(:test_id, 'user-modal')
 expect(page).to have_css("[aria-hidden='false']")
-expect(page).to have_content('Success message')
 expect(page).to have_button('Submit')
+expect(page).to have_field('article[title]')
+expect(page).to have_css("form[action='#{articles_path}']")
+expect(article.reload).to be_published
 
-# ❌ Bad - coupling to CSS implementation
+# ❌ Bad - coupling to copy and CSS implementation
+expect(page).to have_content('Success message')
 expect(page).to have_css('.opacity-100')
 expect(page).to have_css('.bg-red-500')
 expect(page).to have_css('.rounded-lg')
@@ -181,58 +184,52 @@ Use `build` and `build_stubbed` when database persistence isn't needed:
 
 ```ruby
 # ✅ Good - fast, no database hit
-it 'validates title format' do
-  article = build(:article, title: '')
+it 'requires published_at once published' do
+  article = build(:article, status: :published, published_at: nil)
   expect(article).not_to be_valid
 end
 
 # Less optimal - unnecessary database hit
-it 'validates title format' do
-  article = create(:article, title: '')
+it 'requires published_at once published' do
+  article = create(:article, status: :draft, published_at: nil)
+  article.status = :published
   expect(article).not_to be_valid
 end
 ```
 
 ## Common Testing Patterns
 
-### Testing Validations
+### Testing Our Constraints
+Test the rules we wrote: conditional and custom validations, and database
+constraints. Skip one-line declarations like presence or `belongs_to`.
+
 ```ruby
 describe 'validations' do
-  it 'validates presence of title' do
-    article = build(:article, title: nil)
-    expect(article).not_to be_valid
-    expect(article.errors[:title]).to include("can't be blank")
-  end
-
-  it 'validates length of title' do
-    article = build(:article, title: 'a' * 256)
+  it 'requires published_at once published' do
+    article = build(:article, status: :published, published_at: nil)
     expect(article).not_to be_valid
   end
 
-  it 'allows valid titles' do
-    article = build(:article, title: 'Valid Title')
+  it 'allows a draft without published_at' do
+    article = build(:article, status: :draft, published_at: nil)
     expect(article).to be_valid
   end
 end
-```
 
-### Testing Enums
-```ruby
-describe 'enums' do
-  it 'defines status enum' do
-    expect(described_class.statuses).to eq({
-      'draft' => 'draft',
-      'published' => 'published',
-      'archived' => 'archived'
-    })
-  end
+describe 'database constraints' do
+  it 'rejects a duplicate slug' do
+    existing = create(:article)
+    article = create(:article)
 
-  it 'has correct default' do
-    article = described_class.new
-    expect(article.status).to eq('draft')
+    expect do
+      article.update_column(:slug, existing.slug)
+    end.to raise_error(ActiveRecord::RecordNotUnique)
   end
 end
 ```
+
+`update_column` and raw SQL skip the validation, so the test proves the
+migration holds.
 
 ### Testing Authorization
 ```ruby
@@ -248,20 +245,11 @@ context 'when user is not admin' do
 end
 ```
 
-### Using Shoulda Matchers
-```ruby
-describe 'associations' do
-  it { is_expected.to belong_to(:user) }
-  it { is_expected.to have_many(:comments) }
-end
-
-describe 'validations' do
-  it { is_expected.to validate_presence_of(:title) }
-  it { is_expected.to validate_length_of(:title).is_at_most(255) }
-end
-```
-
 ## What to Avoid
+
+### ❌ Don't Write Tests That Cannot Catch a Bug
+Follow the "Do not write" list in `tdd-skill`: no tests of declarations, of
+states no caller can produce, or of a branch another layer already tests.
 
 ### ❌ Don't Stub the System Under Test
 Never mock or stub methods on the class being tested:

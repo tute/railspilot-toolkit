@@ -55,11 +55,15 @@ yourself.
    `CONTEXT.md` untracked.
 5. Get the plan approved before writing code.
 6. Implement with `tdd-skill`: strict red-green-refactor, one cycle at a time. No skipped tests.
-   Then prune: for each test added, name the bug it catches and whether another layer already
-   catches it. Delete what fails either, like static page copy or a test file for a config change.
    When the same spec fails twice with the same error, ask Jev `stop` (see "Jev" below) before
    a third patch, with the error and one line per attempt as state. Same rule for `bin/ci` in
    step 10.
+
+   6b. Prune tests. List what the branch adds: `git diff main --stat -- test spec`, then the
+   names of the new tests. For each one, name the bug it catches and say whether another layer
+   already catches it. Delete what fails either question, like static page copy or a test file
+   for a config change. When a test's value is unclear, break the code it covers and see if it
+   fails.
 7. Review with `railspilot-staff-review` in a separate agent. Pass `a11y` when the project's
    `CLAUDE.md` names WCAG, or the user asked for an accessibility pass. YOU choose which findings
    to apply and you apply them, in the same pass. Verify each against the code first, drop what does
@@ -82,7 +86,8 @@ yourself.
     a 900-line diff and rubber stamps it; the same change read commit by commit gets reviewed.
 12. Push and open the PR with the `commit` skill. Jira prefixes the subject with the key
     (`PROJ-142 Add notification service`), Linear does not; the issue URL goes on the last line.
-    Keep the PR body to a few lines: what it does and why, not a retelling of the diff.
+    Keep the PR body to a few lines: what it does and why, not a retelling of the diff. State
+    the change in test count.
 
 ## Jev
 

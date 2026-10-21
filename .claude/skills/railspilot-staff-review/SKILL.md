@@ -150,7 +150,7 @@ All patterns are stored in `${SKILL_ROOT}/references/patterns.md` and cover:
 - **Deploy Safety**: Rolling-deploy-safe migrations, deduplication before unique indexes
 - **Simplicity**: Keeping jobs thin, avoiding unnecessary complexity
 - **Completeness**: Tests, edge cases, Stimulus patterns, job idempotency
-- **Testing**: Proper test structure, system under test protection
+- **Testing**: Tests that cannot fail, duplicates across layers
 - **Scope & Discipline**: One concern per commit, ticket scope adherence
 
 There is no accessibility category. Only some clients are bound to WCAG, so the conformance work lives in the `accessibility` skill and runs per project (Step 4).

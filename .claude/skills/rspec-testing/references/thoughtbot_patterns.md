@@ -224,7 +224,6 @@ find('a[href="/settings"]').click
 ```ruby
 expect(page).to have_css('button[disabled]')
 expect(page).to have_css('[aria-hidden="false"]')
-expect(page).to have_content('Success message')
 ```
 
 **Avoid:**
