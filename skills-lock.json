@@ -63,6 +63,13 @@
       "sourceType": "github",
       "skillPath": "skills/ponytail-review/SKILL.md",
       "computedHash": "3468ad5c20081dfe3ec8edf5b4689c112a68e62bc96eae0c1c93439775554466"
+    },
+    "stacked-prs": {
+      "source": "dgalarza/agent-skills",
+      "ref": "2026.10.19",
+      "sourceType": "github",
+      "skillPath": "skills/stacked-prs/SKILL.md",
+      "computedHash": "00aa709cf10de5a3f9498ac2b3ace3f1ecc4cb5e09e418e2124736819adbaac6"
     }
   }
 }
