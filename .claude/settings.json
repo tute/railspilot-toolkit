@@ -106,6 +106,13 @@
     "evals-skills@hamelsmu-evals-skills": true,
     "cc-plugin-you-should-know@builtin": true
   },
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
       "source": {
