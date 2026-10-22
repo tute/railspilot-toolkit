@@ -26,11 +26,13 @@ ln -sfn "$TOOLKIT_ROOT/.claude/settings.json" settings.json
 ln -sfn "$TOOLKIT_ROOT/.claude/statusline.sh" statusline.sh
 
 mkdir -p skills
-for skill in "$TOOLKIT_ROOT"/.claude/skills/*; do
-  name="$(basename "$skill")"
-  ln -sfn "$skill" "skills/$name"
-  [ -d "skills/$name" ] || echo "warning: skills/$name does not resolve" >&2
-done
+if [ "$(cd skills && pwd -P)" != "$(cd "$TOOLKIT_ROOT/.claude/skills" && pwd -P)" ]; then
+  for skill in "$TOOLKIT_ROOT"/.claude/skills/*; do
+    name="$(basename "$skill")"
+    ln -sfn "$skill" "skills/$name"
+    [ -d "skills/$name" ] || echo "warning: skills/$name does not resolve" >&2
+  done
+fi
 
 for skill in "$HOME"/.agents/skills/*; do
   name="$(basename "$skill")"
