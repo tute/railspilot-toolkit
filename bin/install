@@ -32,6 +32,11 @@ for skill in "$TOOLKIT_ROOT"/.claude/skills/*; do
   [ -d "skills/$name" ] || echo "warning: skills/$name does not resolve" >&2
 done
 
+for skill in "$HOME"/.agents/skills/*; do
+  name="$(basename "$skill")"
+  [ -d "$skill" ] && [ ! -e "skills/$name" ] && ln -s "$skill" "skills/$name"
+done
+
 if [ -n "${1:-}" ]; then
   cd "$1"
   ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json

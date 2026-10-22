@@ -1,2 +1,4 @@
 .DS_Store
 .claude/settings.local.json
+.claude/skills/omarchy
+.claude/skills/diagnose-crash
