@@ -21,6 +21,7 @@ cd ~/.claude
 ln -sfn "$TOOLKIT_ROOT/.claude/CLAUDE.md" CLAUDE.md
 ln -sfn "$TOOLKIT_ROOT/.claude/agents" agents
 ln -sfn "$TOOLKIT_ROOT/.claude/commands" commands
+ln -sfn "$TOOLKIT_ROOT/.claude/rules" rules
 ln -sfn "$TOOLKIT_ROOT/.claude/scripts" scripts
 ln -sfn "$TOOLKIT_ROOT/.claude/settings.json" settings.json
 ln -sfn "$TOOLKIT_ROOT/.claude/statusline.sh" statusline.sh
