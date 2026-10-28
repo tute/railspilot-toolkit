@@ -4,6 +4,7 @@ paths:
   - "**/*.erb"
   - "**/*.rake"
   - "Gemfile"
+  - "bin/**"
   - "app/javascript/**"
   - "db/**"
   - "spec/**"
