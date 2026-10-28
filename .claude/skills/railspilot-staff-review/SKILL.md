@@ -24,9 +24,20 @@ If parsing is ambiguous (e.g. a non-SHA string that is not a recognized form), c
 
 **Step 2: Launch Staff Engineer Reviewer Agent**
 
+Pre-screen with Jev first. Send one noul per pattern ID in `patterns.md` (the `### XXX-NN:` headings). The state is `git diff --stat` plus the diff, cut to 400 lines:
+
+```bash
+jq -n --arg state "$STATE" '{state: $state, questions: {
+  "SEC-02": {type: "noul", instructions: "Could this diff violate: Encrypt Sensitive Data at Rest?"}
+}}' | ~/.claude/scripts/jev
+```
+
+Pass the IDs that reach the `pre-screen` threshold (see "Jev" below) to the reviewer as "check these first". The whole library stays in scope. Never tell the reviewer to skip a pattern. If `jev` exits nonzero, skip the pre-screen.
+
 Use the Agent tool to launch `staff-engineer-reviewer` with:
 - Git diff of the changes to review
 - Patterns file path: `${SKILL_ROOT}/references/patterns.md`
+- The Jev "check these first" list, when there is one
 
 The agent will:
 - Load the entire patterns.md file containing all known patterns
@@ -37,6 +48,15 @@ The agent will:
 **Step 3: Check Previous Decisions**
 
 Before consolidating findings, check for previous reviews. The decision log lives at `tasks/code_review_decisions.md` (project root). If the file does not exist, treat the history as empty and continue. If it exists, read it and note any previously-decided concerns so the same finding is not surfaced twice.
+
+To match findings to past decisions, ask Jev one choice per finding. The state is the finding (pattern ID, file, one-line summary). The criteria are the log entries plus `none`:
+
+```json
+{"f1": {"type": "choice", "instructions": "Which past decision is the same concern as this finding?",
+        "criteria": {"e1": "SEC-02 app/models/user.rb: token stored in plain text, dismissed", "none": "No past decision covers it"}}}
+```
+
+Drop a finding as already decided only when one entry reaches the `past-decision` threshold. Keep the rest. Say how many Jev dropped. If `jev` exits nonzero, match by reading, as before.
 
 **Step 4: Consolidate Findings**
 
@@ -90,6 +110,15 @@ Each entry uses this schema:
 ```
 
 Group entries newest-on-top. Include every actionable finding from Step 4 — applied, left as recommendation, and dismissed alike — so future reviews can suppress redundancy.
+
+## Jev
+
+Act when the answer reaches the threshold:
+
+| Step | Key | Question | Threshold | Action |
+|------|-----|----------|-----------|--------|
+| 2 | `pre-screen` | Could this diff violate the pattern? | 0.3 | Put the pattern in the "check these first" list |
+| 3 | `past-decision` | Which past decision is the same concern as this finding? | 0.9 | Drop the finding as already decided |
 
 ## Error Handling
 
