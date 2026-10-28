@@ -1,0 +1,23 @@
+name: Script Tests
+
+on:
+  pull_request:
+    paths:
+      - ".claude/scripts/**"
+      - ".claude/skills/jev-ac-check/check"
+      - ".github/workflows/scripts-tests.yml"
+
+jobs:
+  scripts-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run script tests
+        run: |
+          FAILED=0
+          for test in .claude/scripts/test/*_test.sh; do
+            echo "Running $test..."
+            bash "$test" || FAILED=1
+          done
+          exit "$FAILED"
