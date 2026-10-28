@@ -40,6 +40,9 @@ check "keeps questions" "$(jq -r .questions.sec.type "$WORK/body")" noul
 run env JEV_ENABLE=1 JEV_MODEL=typesafe/jev-next OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200 > /dev/null
 check "model override" "$(jq -r .model "$WORK/body")" typesafe/jev-next
 
+run env JEV_ENABLE=1 JEV_URL=https://openrouter.ai/api/v1/decisions OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200 > /dev/null
+check "url override" "$(grep -c '^https://openrouter.ai/api/v1/decisions$' "$WORK/args")" 1
+
 check "default timeout" "$(grep -A1 -x -- --max-time "$WORK/args" | tail -1)" 20
 
 run env JEV_ENABLE=1 JEV_TIMEOUT=120 OPENROUTER_API_KEY=k FAKE_RESPONSE="$ANSWERED" FAKE_STATUS=200 > /dev/null

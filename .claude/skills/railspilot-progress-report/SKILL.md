@@ -168,7 +168,14 @@ The size rules above always win. Jev settles only what they leave open. Send one
  "same_142_145": {"type": "noul", "instructions": "Are PR #142 and PR #145 iterations of the same feature?"}}
 ```
 
-Add a `same_` noul only for pairs whose titles overlap. Accept a category or a merge at >= 0.8. Below that, decide yourself and mark the item for the user to check. If `~/.claude/scripts/jev` exits nonzero, decide everything yourself, as before.
+Add a `same_` noul only for pairs whose titles overlap. Act when the answer reaches the threshold:
+
+| Key | Question | Threshold | Action |
+|-----|----------|-----------|--------|
+| `pr_` | What kind of work is the PR? | 0.8 | Use the category. Below it, decide yourself and mark the item for the user to check |
+| `same_` | Are the two PRs iterations of the same feature? | 0.8 | Merge them into one item. Below it, decide yourself and mark the item for the user to check |
+
+ If `~/.claude/scripts/jev` exits nonzero, decide everything yourself, as before.
 
 ## Step 4: Draft the email
 

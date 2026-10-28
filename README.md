@@ -95,6 +95,19 @@ available (in Rails, it would take precedense before `$PORT`).
 - `document-past-chats`: Analyze chat history for recurring patterns and insights
 - `claude_deslop`: Audit your Claude setup for redundancy, conflicts, and dead weight
 
+## Jev
+
+`task-implement`, `jev-ac-check`, `railspilot-staff-review` and `railspilot-progress-report` ask
+Jev bounded questions through `.claude/scripts/jev`, which needs `jq` and
+`OPENROUTER_API_KEY`. Set `JEV_ENABLE=1` to turn it on (`jev-ac-check` always does). Without it, the
+skills do the step by hand.
+
+| Variable | Default | Use |
+|----------|---------|-----|
+| `JEV_URL` | `https://openrouter.ai/api/alpha/decisions` | Endpoint. The default is OpenRouter's alpha API, so set this when it moves |
+| `JEV_MODEL` | `typesafe/jev-1.13` | Model |
+| `JEV_TIMEOUT` | `20` seconds | Request timeout |
+
 ## Vendored skills
 
 Some skills come from other repos. They are copied into `.claude/skills/` and

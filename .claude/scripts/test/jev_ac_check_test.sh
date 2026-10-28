@@ -49,7 +49,7 @@ check "timeout override" "$(cut -d' ' -f2 "$WORK/env")" 30
 
 status=$(run FAKE_ANSWERS= FAKE_EXIT=3)
 check "jev unavailable exits 3" "$status" 3
-check "jev unavailable explains" "$(grep -c OPENROUTER_API_KEY "$WORK/err")" 1
+check "jev unavailable explains" "$(cat "$WORK/err")" "jev did not run: set OPENROUTER_API_KEY"
 
 status=$(run FAKE_ANSWERS= FAKE_EXIT=1)
 check "jev failure exits 1" "$status" 1

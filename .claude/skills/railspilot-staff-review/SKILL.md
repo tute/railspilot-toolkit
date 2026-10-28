@@ -32,7 +32,7 @@ jq -n --arg state "$STATE" '{state: $state, questions: {
 }}' | ~/.claude/scripts/jev
 ```
 
-Pass the IDs with `noul` >= 0.3 to the reviewer as "check these first". The whole library stays in scope. Never tell the reviewer to skip a pattern. If `jev` exits nonzero, skip the pre-screen.
+Pass the IDs that reach the `pre-screen` threshold (see "Jev" below) to the reviewer as "check these first". The whole library stays in scope. Never tell the reviewer to skip a pattern. If `jev` exits nonzero, skip the pre-screen.
 
 Use the Agent tool to launch `staff-engineer-reviewer` with:
 - Git diff of the changes to review
@@ -56,7 +56,7 @@ To match findings to past decisions, ask Jev one choice per finding. The state i
         "criteria": {"e1": "SEC-02 app/models/user.rb: token stored in plain text, dismissed", "none": "No past decision covers it"}}}
 ```
 
-Drop a finding as already decided only when one entry scores >= 0.9. Keep the rest. Say how many Jev dropped. If `jev` exits nonzero, match by reading, as before.
+Drop a finding as already decided only when one entry reaches the `past-decision` threshold. Keep the rest. Say how many Jev dropped. If `jev` exits nonzero, match by reading, as before.
 
 **Step 4: Consolidate Findings**
 
@@ -110,6 +110,15 @@ Each entry uses this schema:
 ```
 
 Group entries newest-on-top. Include every actionable finding from Step 4 — applied, left as recommendation, and dismissed alike — so future reviews can suppress redundancy.
+
+## Jev
+
+Act when the answer reaches the threshold:
+
+| Step | Key | Question | Threshold | Action |
+|------|-----|----------|-----------|--------|
+| 2 | `pre-screen` | Could this diff violate the pattern? | 0.3 | Put the pattern in the "check these first" list |
+| 3 | `past-decision` | Which past decision is the same concern as this finding? | 0.9 | Drop the finding as already decided |
 
 ## Error Handling
 

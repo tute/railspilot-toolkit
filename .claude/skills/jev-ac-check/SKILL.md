@@ -23,5 +23,5 @@ Judge the branch against the issue, not against what the author meant. Change no
 On exit 2 (diff too large), exit 3 (Jev did not run) or any other failure, say so and check
 every item by hand.
 
-Calls `~/.claude/scripts/jev`, so it needs `OPENROUTER_API_KEY`. `JEV_MODEL` and `JEV_TIMEOUT`
-(default 120 seconds) override the model and the timeout.
+Calls `~/.claude/scripts/jev`, so it needs `OPENROUTER_API_KEY`. `JEV_URL`, `JEV_MODEL` and
+`JEV_TIMEOUT` (default 120 seconds) override the endpoint, the model and the timeout.

@@ -19,7 +19,7 @@ answers=$(printf %s "$diff" | jq -Rs --argjson items "$items" '{
     }
   }}) | from_entries)
 }' | JEV_ENABLE=1 JEV_TIMEOUT=${JEV_TIMEOUT:-120} "$HOME/.claude/scripts/jev") || status=$?
-(( status != 3 )) || { echo "jev did not run: set OPENROUTER_API_KEY and install jq" >&2; exit 3; }
+(( status != 3 )) || { echo "jev did not run: set OPENROUTER_API_KEY" >&2; exit 3; }
 (( status == 0 )) || exit 1
 jq -r --argjson items "$items" '($items | to_entries[]) as {key: $k, value: $c}
   | .["ac_\($k + 1)"] | "\($k + 1)\t\(.choice)\t\(.confidence * 100 | round / 100)\t\($c)"' <<<"$answers"

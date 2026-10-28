@@ -10,7 +10,7 @@ response="$(printf '%s' "$body" | curl -sS --max-time "${JEV_TIMEOUT:-20}" -w '\
   -H "Authorization: Bearer $OPENROUTER_API_KEY" \
   -H 'Content-Type: application/json' \
   --data-binary @- \
-  https://openrouter.ai/api/alpha/decisions)" || exit 1
+  "${JEV_URL:-https://openrouter.ai/api/alpha/decisions}")" || exit 1
 
 status="${response##*$'\n'}"
 payload="${response%$'\n'*}"
