@@ -44,6 +44,9 @@ available (in Rails, it would take precedense before `$PORT`).
 - `to-tickets`: Split work into tracer-bullet tickets with blocking edges. Ours,
   taking the splitting rules from [mattpocock/skills](https://github.com/mattpocock/skills)
   v1.2.3 and dropping its tracker integration
+- `planned-implementation`: Carry out an approved plan with parallel agents on disjoint files, then reconcile
+- `report-plan`: Turn a plan into the short decision list a staff engineer reads before review
+- `write-adr`: Architecture decision record with a recommendation and argued alternatives, for one async approver
 
 #### Code Quality
 
@@ -75,6 +78,7 @@ available (in Rails, it would take precedense before `$PORT`).
 - `commit`: Commit with a well-structured message explaining the why; also generates PR titles/descriptions
 - `railspilot-progress-report`: Monthly client progress reports from merged PRs
 - `visual-review`: Run the app and publish a step-by-step screenshot story of a change for the client
+- `stacked-prs`: Split a large change into dependent PRs with `gh stack`
 
 ### Commands
 
@@ -146,6 +150,8 @@ Vendored today:
   `/improve-codebase-architecture` need, and skip the issue-tracker ones
   (`to-spec`, `triage`, `setup-matt-pocock-skills`, and upstream's
   `to-tickets`, which we replaced with our own one-file version).
+- `stacked-prs` at 2026.10.19 from
+  [dgalarza/agent-skills](https://github.com/dgalarza/agent-skills).
 
 `domain-modeling` writes a `CONTEXT.md` glossary into whatever repo it runs in.
 `CONTEXT.md` stays gitignored: `bin/install` links `git/ignore` into
