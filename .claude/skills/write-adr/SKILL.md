@@ -67,7 +67,7 @@ those is padding.
 
 ## Cut these (they read as AI slop)
 
-- Restating the problem again in the conclusion.
+- Restating problem and solutions more than once
 - Comparison tables and "how this shifts under different constraints" matrices
   nobody asked for.
 - Talk about the document itself: "this document tests...", "captured honestly",
