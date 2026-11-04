@@ -253,11 +253,6 @@ A unique index or check constraint with no counterpart in the application turns 
 A model holds the closed set its column enforces; the sentence a person reads is view formatting, and a `SimpleDelegator` presenter moves it out without changing a single call site the way a helper would.
 **Detection:** `def *_label`, `humanize`, `to_sentence`, or an interpolated user-facing sentence in `app/models/`.
 
-### ARCH-10: A Precondition Guards Every Path to the Write
-
-When two branches resolve the same record, a check inside the one that delegates (`accept` calls `apply!`, which refuses non-pending states) leaves the sibling (`reject` doing `update!(state: :rejected)`) open, and the second resolution overwrites the first. Put the precondition above the branch. The same holds for gating: gate the resource, then walk every link and control that reaches it.
-**Detection:** sibling actions or service branches that write the same state column, where only one calls the method holding the guard. Also a feature gate added to routes with no grep for the links that render the path.
-
 ## Deploy Safety
 
 ### SAFE-01: Migrations Must Survive Rolling Deploys
