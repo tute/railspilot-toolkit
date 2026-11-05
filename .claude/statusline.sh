@@ -192,6 +192,49 @@ elif [ -f "$rate_cache" ]; then
     rate_limits=$(jq -c --argjson now "$(date +%s)" 'with_entries(select(.value.resets_at > $now))' "$rate_cache" 2>/dev/null)
 fi
 
+get_oauth_token() {
+    local token
+    token=$(jq -r '.claudeAiOauth.accessToken // empty' "$HOME/.claude/.credentials.json" 2>/dev/null)
+    if [ -z "$token" ] && command -v security >/dev/null 2>&1; then
+        token=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
+    fi
+    echo "$token"
+}
+
+usage_cache="$HOME/.claude/statusline-usage-cache.json"
+usage_backoff="$HOME/.claude/statusline-usage-backoff"
+usage_max_age=300
+if ! echo "$rate_limits" | jq -e '.five_hour' >/dev/null 2>&1; then
+    now=$(date +%s)
+    cache_mtime=$(stat -c %Y "$usage_cache" 2>/dev/null || stat -f %m "$usage_cache" 2>/dev/null || echo 0)
+    backoff_until=$(cat "$usage_backoff" 2>/dev/null || echo 0)
+    token=""
+    if [ $(( now - cache_mtime )) -ge "$usage_max_age" ] && [ "$now" -ge "$backoff_until" ]; then
+        token=$(get_oauth_token)
+    fi
+    if [ -n "$token" ]; then
+        headers=$(mktemp)
+        body=$(curl -s --max-time 5 -D "$headers" \
+            -H "Authorization: Bearer $token" \
+            -H "anthropic-beta: oauth-2025-04-20" \
+            "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
+        if echo "$body" | jq -e '.five_hour' >/dev/null 2>&1; then
+            echo "$body" > "$usage_cache"
+            rm -f "$usage_backoff"
+        else
+            retry_after=$(awk 'tolower($1) == "retry-after:" { print $2 + 0 }' "$headers")
+            echo $(( now + ${retry_after:-$usage_max_age} )) > "$usage_backoff"
+        fi
+        rm -f "$headers"
+    fi
+    five_hour=$(jq -c --argjson now "$now" '.five_hour | select(.utilization != null)
+        | {used_percentage: .utilization, resets_at: (.resets_at | sub("\\.[0-9]+"; "") | sub("(Z|[+-]00:00)$"; "") + "Z" | fromdateiso8601)}
+        | select(.resets_at > $now)' "$usage_cache" 2>/dev/null)
+    if [ -n "$five_hour" ]; then
+        rate_limits=$(echo "${rate_limits:-"{}"}" | jq -c --argjson five_hour "$five_hour" '. + {five_hour: $five_hour}')
+    fi
+fi
+
 rate_line() {
     local label=$1 window=$2 prefix=$3 style=$4
     local pct reset_epoch reset_str countdown bar pct_color
