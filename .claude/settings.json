@@ -193,5 +193,7 @@
   "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": []
-  }
+  },
+  "promptSuggestionEnabled": false,
+  "spinnerTipsEnabled": false
 }
