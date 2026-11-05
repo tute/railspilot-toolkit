@@ -1,4 +1,4 @@
-{ "workbench.colorTheme": "Omarchy",
+{ "workbench.colorTheme": "Catppuccin Latte",
   crashReporting.enabled": "off",
   "editor.codeLens": false,
   "editor.defaultFormatter": "Shopify.ruby-lsp",

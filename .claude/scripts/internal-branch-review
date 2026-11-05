@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # internal-branch-review <branch> [--from N] [--only N] [--dry-run] [--runner claude|cursor-agent|codex]
 #
-# Automated review workflow for contributor branches (on the same remote or a fork).
+# Automated review workflow for contributor branches on the upstream remote.
 # Steps: 1=setup 2=rebase-check 3=AC 4=tests 5=staff-review 6=simplify+commit 7=wrap-up
 #
 # Only remote operation: git fetch. Improvements are committed locally, one per commit.
@@ -9,8 +9,6 @@
 # Config (env vars, all optional except IBR_JIRA_BASE):
 #   IBR_JIRA_BASE          Jira base URL, e.g. https://myorg.atlassian.net/browse  (required)
 #   IBR_UPSTREAM_REMOTE    Git remote for upstream repo (default: origin)
-#   IBR_FORK_REMOTE        Git remote holding the contributor branch (default: first non-origin
-#                          remote, or the upstream remote when it is the only one)
 #   IBR_BASE_BRANCH        Base branch to review against (default: inferred from origin/HEAD)
 #   IBR_STAFF_REVIEWER_MD  Path to staff-reviewer agent file (default: ~/.claude/agents/staff-engineer-reviewer.md)
 #   IBR_PATTERNS_MD        Path to review patterns file (default: ~/.claude/skills/railspilot-staff-review/references/patterns.md)
@@ -21,7 +19,6 @@ set -euo pipefail
 
 # === Config ===
 UPSTREAM_REMOTE="${IBR_UPSTREAM_REMOTE:-origin}"
-FORK_REMOTE="${IBR_FORK_REMOTE:-}"
 BASE_BRANCH="${IBR_BASE_BRANCH:-}"
 JIRA_BASE="${IBR_JIRA_BASE:-}"
 STAFF_REVIEWER_MD="${IBR_STAFF_REVIEWER_MD:-${HOME}/.claude/agents/staff-engineer-reviewer.md}"
@@ -80,13 +77,6 @@ done
 
 # === Infer git context ===
 
-# Fork remote: first remote that isn't the upstream remote
-if [[ -z "$FORK_REMOTE" ]]; then
-  FORK_REMOTE=$(git remote | grep -v "^${UPSTREAM_REMOTE}$" | head -1 || true)
-  # A single remote is fine: the contributor branch lives on upstream itself.
-  [[ -z "$FORK_REMOTE" ]] && FORK_REMOTE="$UPSTREAM_REMOTE"
-fi
-
 # Base branch: prefer origin/HEAD, fall back to main then master
 if [[ -z "$BASE_BRANCH" ]]; then
   BASE_BRANCH=$(git remote show "$UPSTREAM_REMOTE" 2>/dev/null \
@@ -122,7 +112,7 @@ mkdir -p "$LOG_DIR"
 echo ""
 echo "internal-branch-review: ${BRANCH}"
 echo "  upstream:  ${UPSTREAM_REPO} (${UPSTREAM_BASE})"
-echo "  branch:    ${FORK_REMOTE}/${BRANCH}"
+echo "  branch:    ${UPSTREAM_REMOTE}/${BRANCH}"
 [[ -n "$JIRA_KEY" ]] && echo "  jira:      ${JIRA_LINK}"
 echo "  runner:    ${AGENT_RUNNER}  dry-run: ${DRY_RUN}"
 echo ""
@@ -204,19 +194,18 @@ step_1_setup() {
     exit 1
   fi
 
-  echo "Fetching remotes..."
+  echo "Fetching ${UPSTREAM_REMOTE}..."
   $DRY_RUN || git fetch "$UPSTREAM_REMOTE"
-  [[ "$FORK_REMOTE" != "$UPSTREAM_REMOTE" ]] && { $DRY_RUN || git fetch "$FORK_REMOTE"; }
 
   LOCAL="review/${BRANCH}"
 
   # Prefer the remote branch; fall back to a local branch or any commit-ish.
-  if git show-ref --verify --quiet "refs/remotes/${FORK_REMOTE}/${BRANCH}"; then
-    SOURCE="${FORK_REMOTE}/${BRANCH}"
+  if git show-ref --verify --quiet "refs/remotes/${UPSTREAM_REMOTE}/${BRANCH}"; then
+    SOURCE="${UPSTREAM_REMOTE}/${BRANCH}"
   elif git rev-parse --verify --quiet "${BRANCH}^{commit}" >/dev/null; then
     SOURCE="${BRANCH}"
   else
-    echo "Error: '${BRANCH}' not found on ${FORK_REMOTE} nor locally."
+    echo "Error: '${BRANCH}' not found on ${UPSTREAM_REMOTE} nor locally."
     exit 1
   fi
 

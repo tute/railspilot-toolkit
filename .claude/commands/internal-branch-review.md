@@ -26,10 +26,8 @@ Progress: ✅1 Setup ✅2 Rebase ✅3 AC ➡️4 Tests ⬜5 Staff review ⬜6 Si
 ## Context
 
 Infer from git, with env overrides:
-- Upstream remote: `origin` (`IBR_UPSTREAM_REMOTE`).
-- Branch remote (`IBR_FORK_REMOTE`): handle both setups. With a contributor fork,
-  it's the first non-origin remote and both are fetched. With a single remote, the
-  branch is on `origin`. If it isn't on any remote, use the local branch or commit.
+- Remote: `origin` (`IBR_UPSTREAM_REMOTE`). The branch lives there. If it isn't
+  on the remote, use the local branch or commit.
 - Base branch: from `origin/HEAD` (`IBR_BASE_BRANCH`).
 - Jira key: from the branch name (`[A-Z][A-Z0-9]*-[0-9]+`).
 
