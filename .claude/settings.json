@@ -106,6 +106,11 @@
             "type": "command",
             "command": "bash \"$(dirname \"$(readlink -f \"$HOME/.claude/settings.json\")\")/scripts/toolkit-sync\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/worktree-setup\"",
+            "timeout": 10
           }
         ]
       }
