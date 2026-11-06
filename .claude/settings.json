@@ -3,11 +3,6 @@
     "ENABLE_LSP_TOOL": "1",
     "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
   },
-  "attribution": {
-    "commit": "",
-    "pr": "",
-    "sessionUrl": false
-  },
   "permissions": {
     "allow": [
       "Bash(bin/rails:*)",
