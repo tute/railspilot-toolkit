@@ -75,6 +75,7 @@ available (in Rails, it would take precedense before `$PORT`).
 - `commit`: Commit with a well-structured message explaining the why; also generates PR titles/descriptions
 - `railspilot-progress-report`: Monthly client progress reports from merged PRs
 - `visual-review`: Run the app and publish a step-by-step screenshot story of a change for the client
+- `figma-fidelity-review`: Compare a redesign branch with its Figma frames at each breakpoint, light and dark; probes behaviour, audits the diff, writes the designer questions
 
 ### Commands
 

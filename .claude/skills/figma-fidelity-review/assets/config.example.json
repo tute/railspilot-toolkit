@@ -1,0 +1,27 @@
+{
+  "host": "http://app.localhost:3000",
+  "port": 9334,
+  "widths": [393, 768, 1536],
+  "schemes": ["light", "dark"],
+  "login": {
+    "path": "/users/sign_in",
+    "emailField": "user[email]",
+    "passwordField": "user[password]",
+    "email": "educator@example.com",
+    "password": "<password>",
+    "assert": "document.querySelector('nav.tab-bar-strip') && !document.body.innerText.includes('PracticeSmart Quiz Performance')"
+  },
+  "localStorage": { "aquifer-ui-sidebar-collapsed": "true" },
+  "scheme": { "localStorageKey": "railsui.colorScheme" },
+  "settle": { "ready": "#report_shared_table", "busy": "turbo-frame[busy], .animate-pulse, [class*=skeleton]" },
+  "ignoreErrors": ["localhost:3035/ws", "\\[webpack-dev-server\\]"],
+  "remove": ["[data-controller~=\"pwa-install-prompt\"] dialog", ".pwa-install-banner"],
+  "pages": {
+    "student-edu": "/reports/student_report/123",
+    "case": "/reports/case_report/456"
+  },
+  "figma": {
+    "file": "756gmrpkNaDHtFkJ5wXNCG",
+    "frames": { "student-edu-1536": "4102-14198", "student-edu-768": "5710-49690", "student-edu-393": "4792-23904" }
+  }
+}
