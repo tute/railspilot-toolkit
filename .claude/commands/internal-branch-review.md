@@ -13,7 +13,8 @@ Usage: /internal-branch-review <branch>
 - Never stop to ask, except on rebase conflicts. Apply every improvement of medium
   value or higher, each in its own commit; the user reviews the commits afterwards.
 - End each step's output with what it found and did: missing or partial AC,
-  tests added or deleted, fixes applied, and low-value items skipped.
+  tests added or deleted, fixes applied, findings dropped in verification, and
+  low-value items skipped.
 
 ## Progress
 
@@ -45,9 +46,22 @@ Infer from git, with env overrides:
 5. **Staff review**: run the `staff-engineer-reviewer` agent on the diff and apply
    its medium and high findings.
 6. **Simplify (do not skip)**: run the full `/simplify` workflow with its three
-   subagents (quality, performance, reuse) and apply their medium and high fixes,
-   even if the diff looks clean.
+   subagents (quality, performance, reuse), even if the diff looks clean. Verify
+   their medium and high fixes and apply the survivors.
 7. **Wrap-up**: list the commits ahead of base and print branch, base, suggested
    title `[<KEY>] <subject>` and Jira link.
+
+## Verify findings
+
+Before you apply a finding from step 5 or 6, try to kill it:
+- Open the cited lines and trace the path from the diff to the failure.
+- Look for an upstream guard: a validation, a DB constraint, an authorization
+  check, a caller contract, or no caller that reaches the path. If a guard
+  exists, drop the finding. Do not downgrade it.
+- A surviving finding states what breaks, for whom, and how often.
+
+Then cut the survivors as a set. Keep a finding only if a thoughtful author
+would change the code because of it. A long list against a small diff means
+the bar drifted: re-apply it. Report each dropped item in one line.
 
 Commit with `/commit`. Include the Jira link in at least one commit body.

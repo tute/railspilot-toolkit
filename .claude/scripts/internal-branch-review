@@ -178,6 +178,19 @@ Apply three review lenses in a single pass:
 After reviewing: make targeted fixes that reduce complexity or reuse existing patterns while preserving behavior. Apply every fix of medium value or higher; skip low-value nitpicks and issues that need a larger refactor — include those in the final summary. Run lightweight checks (linter, tests for touched files) after editing if practical. Summarize what you fixed and what you skipped but recommend.
 SIMPLIFY_EOF
 
+verify_rule() {
+  cat <<'RULE'
+Before you apply a finding, try to kill it. Open the cited lines and trace the
+path from the diff to the failure. Look for an upstream guard: a validation, a
+DB constraint, an authorization check, a caller contract, or no caller that
+reaches the path. If a guard exists, drop the finding; do not downgrade it.
+Apply only findings that state what breaks, for whom, and how often. Then cut
+the survivors as a set: keep a finding only if a thoughtful author would change
+the code because of it. A long list against a small diff means the bar drifted;
+re-apply it. List each dropped finding in one line in your summary.
+RULE
+}
+
 commit_rule() {
   echo "Commit each applied improvement as its own separate commit, never bundled,"
   echo "following the commit skill at: ${COMMIT_SKILL_MD}"
@@ -423,6 +436,7 @@ PROMPT
   cat > "$APPLY_PROMPT" <<PROMPT
 Apply every [medium] and [high] finding from the staff review below; skip [low].
 Leave all other code unchanged.
+$(verify_rule)
 $(commit_rule)
 
 ## Staff review
@@ -447,6 +461,7 @@ step_6_simplify_commit() {
   {
     echo "$SIMPLIFY_INSTRUCTIONS"
     echo ""
+    verify_rule
     commit_rule
   } > "$PROMPT_FILE"
 
