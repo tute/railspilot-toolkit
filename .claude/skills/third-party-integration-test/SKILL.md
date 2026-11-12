@@ -1,6 +1,6 @@
 ---
 name: third-party-integration-test
-description: Integration-tests the current branch against a third-party integration's real APIs in development using rails runner. Use when asked to "test against <vendor>", "integration test this branch", "smoke test with real APIs", "test in development", or "run against the sandbox".
+description: Integration-tests the current branch against a third-party integration's real APIs in development using rails runner. Use when asked to "test against the vendor", "integration test this branch", "smoke test with real APIs", "test in development", or "run against the sandbox".
 ---
 
 Integration-test the current branch against a third-party integration's real
