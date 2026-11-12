@@ -111,6 +111,11 @@
             "type": "command",
             "command": "bash \"$HOME/.claude/scripts/worktree-setup\"",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/ruby-mise-hint\"",
+            "timeout": 10
           }
         ]
       }
@@ -135,10 +140,10 @@
   "enabledPlugins": {
     "claudit@quickstop": true,
     "ruby-lsp@claude-plugins-official": true,
-    "skill-creator@claude-plugins-official": true,
-    "codebase-readiness@dgalarza-workflows": true,
-    "code-simplifier@claude-plugins-official": true,
-    "evals-skills@hamelsmu-evals-skills": true,
+    "skill-creator@claude-plugins-official": false,
+    "codebase-readiness@dgalarza-workflows": false,
+    "code-simplifier@claude-plugins-official": false,
+    "evals-skills@hamelsmu-evals-skills": false,
     "cc-plugin-you-should-know@builtin": true
   },
   "pluginConfigs": {
@@ -175,6 +180,12 @@
     "network": {
       "allowLocalBinding": true
     },
+    "filesystem": {
+      "allowWrite": [
+        "~/.cache/mise",
+        "~/.local/state/mise"
+      ]
+    },
     "excludedCommands": [
       "bin/ci",
       "bin/rails *",
@@ -195,5 +206,6 @@
     "environment": []
   },
   "promptSuggestionEnabled": false,
-  "spinnerTipsEnabled": false
+  "spinnerTipsEnabled": false,
+  "skipWorkflowUsageWarning": true
 }

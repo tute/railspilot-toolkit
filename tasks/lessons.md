@@ -21,3 +21,11 @@ that cross-references both data sources. Separate skills that "should be run
 together" create friction. A single skill with clear sections is better.
 
 Applies to: skill design, toolkit architecture
+
+### 2026-11-12: Keep toolkit scripts and prompt edits minimal
+
+Toolkit shell scripts stay a few lines, one check and one action each. Test
+them while building, but do not commit script tests. For agent prompts, add
+one condition and let the agent infer the rest. Do not rewrite every mention.
+
+Applies to: toolkit scripts, agent prompts

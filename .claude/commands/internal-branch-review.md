@@ -44,10 +44,10 @@ Infer from git, with env overrides:
    behavior that matters, and delete low-value ones (e.g. asserting static page
    copy, or a new test file just for a config change). Skip gaps you'd rate low.
 5. **Staff review**: run the `staff-engineer-reviewer` agent on the diff and apply
-   its medium and high findings.
+   its findings rated medium and above.
 6. **Simplify (do not skip)**: run the full `/simplify` workflow with its three
    subagents (quality, performance, reuse), even if the diff looks clean. Verify
-   their medium and high fixes and apply the survivors.
+   their findings rated medium and above and apply the survivors.
 7. **Wrap-up**: list the commits ahead of base and print branch, base, suggested
    title `[<KEY>] <subject>` and Jira link.
 

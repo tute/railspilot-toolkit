@@ -3,4 +3,4 @@
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" || exit 0
 [ -f .git ] && [ -x bin/setup-worktree ] && [ ! -e config/master.key ] || exit 0
 echo "Running bin/setup-worktree in the background (log: tmp/setup-worktree.log). Wait for it before running specs."
-mkdir -p tmp && nohup bin/setup-worktree >tmp/setup-worktree.log 2>&1 &
+mkdir -p tmp && $(command -v setsid) nohup mise exec -- bin/setup-worktree </dev/null >tmp/setup-worktree.log 2>&1 &

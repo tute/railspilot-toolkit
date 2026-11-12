@@ -17,6 +17,14 @@ Note that conductor workspaces will require `bin/dev` and `bin/setup` scripts to
 setup workspaces respectively. `bin/dev` needs to pick `$CONDUCTOR_PORT` for the web server when
 available (in Rails, it would take precedense before `$PORT`).
 
+### Sandbox
+
+`.claude/settings.json` turns on the Bash sandbox. `sandbox.filesystem.allowWrite`
+lets sandboxed commands write `~/.cache/mise` and `~/.local/state/mise`, so
+`mise exec --` can resolve tool versions. It does not allow `~/.local/share/mise`,
+where tools and gems install. Run `mise install` and `bundle install` outside
+the sandbox.
+
 ## What's Included
 
 ### Agents
