@@ -1,6 +1,7 @@
 ---
 name: humanizer
-version: 2.5.1
+metadata:
+  version: "2.5.1"
 description: |
   Remove AI-writing tells from text: em-dash overuse, rule of three, inflated
   symbolism, vague attributions, AI vocabulary, passive voice, filler phrases.
