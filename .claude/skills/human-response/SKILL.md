@@ -33,7 +33,7 @@ A report that says "this could be better" is good work, even when you will not c
 
 - Thank for the artifact, once ("Thanks for the detailed video", "Thanks for the full retest"). No grades: drop "good work" and "good catch". "Thanks for catching that" is for an in-scope item you fixed.
 - American spelling ("colors", "behavior"). "Anyway", not "Anyways". Write "this task" for the ticket the comment is on, not its key.
-- Say "is on pod-3" only once it is merged and deployed. Before that: "will shortly be on pod-3", with the new behavior in future tense. After a push: "just pushed the fix to pod-3, please retest in ~3 minutes!"
+- Say "is on <server_name>" only once it is merged and deployed. Before that: "will shortly be on <server_name>", with the new behavior in future tense. After a push: "just pushed the fix to <server_name>, please retest in ~3 minutes!"
 - Cut the second sentence of any compliment and any cost or context the reader does not need to act.
 
 - No bold. No em-dashes (use commas, periods, colons, parentheses).
@@ -85,5 +85,5 @@ A real bug that predates the task:
 
 > Hi @<name>! Thanks for the full retest.
 > <The symptom> is a bug: <why it is wrong, in one line>. It comes from before this task though (it happens the same way on master), so I think it's a new AC and shouldn't block the work done here.
-> The fix is ready on a separate branch and will shortly be on pod-3: <what will happen then>. Could you open a new task for it, so we can track and test it there?
+> The fix is ready on a separate branch and will shortly be on <server_name>: <what will happen then>. Could you open a new task for it, so we can track and test it there?
 > Thank you!

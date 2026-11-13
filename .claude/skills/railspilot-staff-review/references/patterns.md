@@ -111,7 +111,7 @@ end
 
 ### SEC-05: Role Checks Live in the Policy
 
-`current_user.admin?` in a view or a `before_action` is an authorization rule that escaped the policy. Keep the rule in the policy and expose a predicate for the view (`policy(record).staff_tools?`), even when the rule is one line. Matching what master already had is not a defence.
+If the application has a central place where it defines authorization rules (like policy objects), then `current_user.admin?` in a view or a `before_action` is an authorization rule that escaped the policy. Keep the rule in the policy and expose a predicate for the view (`policy(record).staff_tools?`), even when the rule is one line. Matching what master already had is not a defence.
 **Detection:** `is_admin?`, `admin?` or `role ==` in `app/views/`, helpers, or controller conditionals, especially when it replaces a `policy(...)` call.
 
 ### PERF-01: No N+1 Queries
@@ -451,10 +451,10 @@ An error on a `has_many`, a collection, or a checkbox group has no input to atta
 Correcting a value duplicated across files leaves its cause untouched: collapse them to one source, and where a file structurally cannot defer, add a test that fails when they disagree.
 **Detection:** a version, constant or config value written literally in two or more files, with no test asserting they match.
 
-### COMPLETE-07: A Guard Is Tested Only When Breaking It Turns the Suite Red
+### COMPLETE-07: A Code Branch Is Tested Only When Breaking It Turns the Suite Red
 
-A green test written after its guard proves nothing until the guard is removed and a named example fails. Revert each guard or condition once, run the suite, and name the example that goes red. A test a reviewer calls redundant gets the same check before it is deleted: if nothing else fails when its line is mutated, it was holding the other half of an `&&`.
-**Detection:** a new conditional, `return if`, or validation whose spec only asserts the happy path, a timer test that advances less than the interval it guards, or a spec deleted as "redundant" with no mutation evidence.
+A green test written after its code branch or guard proves nothing until the branch is removed and a named example fails. This is mutation testing (see [mutant](https://github.com/mbj/mutant)). Revert each code branch or guard once, run the suite, and name the example that goes red. A test a reviewer calls redundant gets the same check before it is deleted: if nothing else fails when its line is mutated, it was holding the other half of an `&&`.
+**Detection:** a new conditional, `return if`, case branch, or validation whose spec only asserts the happy path, a timer test that advances less than the interval it guards, or a spec deleted as "redundant" with no mutation evidence.
 
 ### COMPLETE-08: Expected Values Must Not Come From the Code Under Test
 
@@ -475,7 +475,8 @@ A test that stays green when the code it covers breaks costs run time and review
 - a test whose name claims an order but which checks presence only
 - assertions on a fake's own return value
 - `refute_empty` or `assert_kind_of` as the only assertion
-- the same branch tested at two layers
+- the same rule tested at unit level, in the object that composes it, and in an integration spec: keep it where it lives and let the outer spec prove only the wiring
+- a stub on the system under test (`allow(subject).to receive`), see [don't stub the system under test](https://thoughtbot.com/blog/don-t-stub-the-system-under-test)
 - a test that passes when the method under test is deleted
 
 **Fix:** delete the test or rewrite it. Never add a test to fix this finding.

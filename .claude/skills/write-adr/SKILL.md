@@ -87,6 +87,7 @@ those is padding.
   style, not this.
 - Don't pad to look thorough. Thoroughness is having considered the alternatives,
   not having printed them.
+- If describing already-written code, don't repeat implementation specifics
 
 ## Output
 

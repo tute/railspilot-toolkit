@@ -32,6 +32,7 @@ Include, whenever the plan contains them:
 - Work the plan defers, and which ticket owns it. Say so plainly when none does.
 - Lines from the ticket the plan drops as unsatisfiable, and why.
 - The branch's base, when it is not the default branch.
+- Three strengths and three weaknesses of the plan
 
 Leave out test lists, file inventories, verification steps, and anything whose
 answer is the framework's default.
