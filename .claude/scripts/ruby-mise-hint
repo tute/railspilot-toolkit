@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# If PATH ruby is not the mise-pinned Ruby, tell Claude to use mise exec --.
-cd "${CLAUDE_PROJECT_DIR:-$PWD}" || exit 0
-[ -f Gemfile ] || exit 0
-pinned=$(mise current ruby 2>/dev/null)
-[ -n "$pinned" ] || exit 0
-ruby -v 2>/dev/null | grep -qF "ruby $pinned " && exit 0
-echo "This repo pins Ruby $pinned, but PATH ruby is not it. Run ruby, bundle, bin/* and rails via \`mise exec -- ...\`."

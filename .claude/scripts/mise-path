@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+[ -n "${CLAUDE_ENV_FILE-}" ] || exit 0
+cd "${CLAUDE_PROJECT_DIR:-$PWD}" || exit 0
+command -v mise >/dev/null || exit 0
+dirs=$(MISE_OFFLINE=1 mise bin-paths 2>/dev/null | paste -sd: -)
+[ -n "$dirs" ] || exit 0
+echo "export PATH=\"$dirs:\$PATH\"" >> "$CLAUDE_ENV_FILE"

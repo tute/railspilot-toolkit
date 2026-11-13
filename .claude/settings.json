@@ -114,7 +114,7 @@
           },
           {
             "type": "command",
-            "command": "bash \"$HOME/.claude/scripts/ruby-mise-hint\"",
+            "command": "bash \"$HOME/.claude/scripts/mise-path\"",
             "timeout": 10
           }
         ]

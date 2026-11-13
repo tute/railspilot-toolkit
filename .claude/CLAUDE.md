@@ -1,4 +1,5 @@
-- Use `mise exec --` prefix for project binaries (rspec, rubocop, rails, etc.)
+- A SessionStart hook puts mise tools first on PATH. Run project binaries
+  directly (rspec, rubocop, rails, etc.), not via `mise exec --`.
 - Plan mode for an architectural decision, or a change across 3+ files.
 - Use the tdd-skill for every code change in a project with tests.
 - For bugs: find the root cause, then write a failing test that reproduces it. Fix after.
