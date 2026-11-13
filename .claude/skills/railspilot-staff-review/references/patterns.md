@@ -109,6 +109,11 @@ end
 <%= user.bio %>
 ```
 
+### SEC-05: Role Checks Live in the Policy
+
+If the application has a central place where it defines authorization rules (like policy objects), then `current_user.admin?` in a view or a `before_action` is an authorization rule that escaped the policy. Keep the rule in the policy and expose a predicate for the view (`policy(record).staff_tools?`), even when the rule is one line. Matching what master already had is not a defence.
+**Detection:** `is_admin?`, `admin?` or `role ==` in `app/views/`, helpers, or controller conditionals, especially when it replaces a `policy(...)` call.
+
 ### PERF-01: No N+1 Queries
 
 **Applies to:** Controllers, views, jobs iterating associations
@@ -281,6 +286,11 @@ end
 Clearing duplicates so a unique index can build is a data change, and `down` cannot bring deleted rows back. Keeping the newest `updated_at` can keep an empty row and drop the one with the answer. Archive the extra rows, or merge them by a rule the product owner accepts, and count them in production first. If the ticket does not need the constraint, ship the constraint in its own change.
 **Detection:** `DELETE` or `delete_all` in a migration that also adds `unique: true`, often ranked with `ROW_NUMBER() ... ORDER BY updated_at DESC`, with a `down` that only removes the index.
 
+### SAFE-03: A New Validation Re-Validates Every Existing Row
+
+Adding or tightening a validation does not touch existing data, but the next `save!` on any old row does, including seeds that run on boot. Count the production rows and secrets that fail the new rule, and backfill or scope the rule before it ships.
+**Detection:** a new or stricter `validates` on a model that `db/seeds.rb` or a boot step writes, with no backfill or count in the PR.
+
 ## Simplicity
 
 ### SIMP-04: Keep Jobs Thin — Let Errors Surface
@@ -441,6 +451,16 @@ An error on a `has_many`, a collection, or a checkbox group has no input to atta
 Correcting a value duplicated across files leaves its cause untouched: collapse them to one source, and where a file structurally cannot defer, add a test that fails when they disagree.
 **Detection:** a version, constant or config value written literally in two or more files, with no test asserting they match.
 
+### COMPLETE-07: A Code Branch Is Tested Only When Breaking It Turns the Suite Red
+
+A green test written after its code branch or guard proves nothing until the branch is removed and a named example fails. This is mutation testing (see [mutant](https://github.com/mbj/mutant)). Revert each code branch or guard once, run the suite, and name the example that goes red. A test a reviewer calls redundant gets the same check before it is deleted: if nothing else fails when its line is mutated, it was holding the other half of an `&&`.
+**Detection:** a new conditional, `return if`, case branch, or validation whose spec only asserts the happy path, a timer test that advances less than the interval it guards, or a spec deleted as "redundant" with no mutation evidence.
+
+### COMPLETE-08: Expected Values Must Not Come From the Code Under Test
+
+A spec that computes its expectation by calling the method it pins, or by sharing that method's predicate, proves only that the code agrees with itself. Write the expected value out as a literal, and check that the fixture exercises the arithmetic the test is named after.
+**Detection:** `expect(result).to eq(Thing.price_for(...))` in the spec of `Thing.price_for`, or a fixture whose flags skip the branch the example's description names.
+
 ## Testing
 
 ### TEST-01: Test That Cannot Fail
@@ -455,7 +475,8 @@ A test that stays green when the code it covers breaks costs run time and review
 - a test whose name claims an order but which checks presence only
 - assertions on a fake's own return value
 - `refute_empty` or `assert_kind_of` as the only assertion
-- the same branch tested at two layers
+- the same rule tested at unit level, in the object that composes it, and in an integration spec: keep it where it lives and let the outer spec prove only the wiring
+- a stub on the system under test (`allow(subject).to receive`), see [don't stub the system under test](https://thoughtbot.com/blog/don-t-stub-the-system-under-test)
 - a test that passes when the method under test is deleted
 
 **Fix:** delete the test or rewrite it. Never add a test to fix this finding.
