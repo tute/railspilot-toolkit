@@ -6,6 +6,7 @@ on:
       - ".claude/scripts/**"
       - ".claude/skills/jev-ac-check/check"
       - ".github/workflows/scripts-tests.yml"
+      - "bin/test"
 
 jobs:
   scripts-tests:
@@ -14,10 +15,4 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Run script tests
-        run: |
-          FAILED=0
-          for test in .claude/scripts/test/*_test.sh; do
-            echo "Running $test..."
-            bash "$test" || FAILED=1
-          done
-          exit "$FAILED"
+        run: bin/test scripts

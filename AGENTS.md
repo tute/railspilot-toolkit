@@ -4,8 +4,8 @@ This repo is a **configuration/dotfiles toolkit** (not a runnable app). It
 contains AI agent definitions, skills, Cursor rules, and an install script that
 symlinks these configs into development environments.
 
-- There is no application code, no tests, no build step. (no Gemfile,
-  package.json, Rakefile, or test suite)
+- There is no application code and no build step. (no Gemfile,
+  package.json, or Rakefile)
 - **`bin/install [path]`** symlinks `.cursor/` and `.claude/` configs into
   `~/.cursor/` and `~/.claude/`, and optionally links `conductor.json` into an
   app directory. It expects the repo to be cloned at
@@ -34,7 +34,7 @@ Human onboarding and tool notes: `docs/onboarding-new-project.md`, `docs/externa
 | Action | Command | Notes |
 |--------|---------|-------|
 | Lint | N/A | No lintable source code in this repo |
-| Test | N/A | No test suite |
+| Test | `mise exec -- bin/test [all\|scripts\|skills]` | Script tests and skill validation; skills need `pip install pyyaml` |
 | Build | N/A | No build step |
 | Run | `bin/install [target-app-path]` | Creates symlinks; see README.md |
 | Verify tools | `mise ls` | Confirms the Python version |

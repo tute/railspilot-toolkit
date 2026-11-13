@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -u
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+FAILED=0
+
+run_scripts() {
+  for test in "$ROOT"/.claude/scripts/test/*_test.sh; do
+    echo "Running ${test#"$ROOT"/}..."
+    bash "$test" || FAILED=1
+  done
+}
+
+run_skills() {
+  for dir in "$ROOT"/.claude/skills/*/; do
+    [ -f "$dir/SKILL.md" ] || continue
+    echo "Validating ${dir#"$ROOT"/}..."
+    python3 "$ROOT/.github/scripts/quick_validate.py" "$dir" || FAILED=1
+  done
+}
+
+case "${1:-all}" in
+  scripts) run_scripts ;;
+  skills) run_skills ;;
+  all) run_scripts; run_skills ;;
+  *) echo "Usage: bin/test [all|scripts|skills]" >&2; exit 2 ;;
+esac
+
+exit "$FAILED"
