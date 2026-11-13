@@ -11,7 +11,7 @@ symlinks these configs into development environments.
   app directory. It expects the repo to be cloned at
   `~/Code/railspilot/toolkit`. Cloud Agent environments don't need to run this
   installation step (but may run it to ensure it works)
-- **Tool versions**: `.tool-versions` pins Python 3.12, the only tool this repo
+- **Tool versions**: `.tool-versions` pins Python 3.15, the only tool this repo
   needs (for `.github/scripts/quick_validate.py`). `mise` and CI both read it.
   Use `mise exec --` to run project binaries.
 - **External services**: `gws` CLI for Google Workspace (Calendar, Gmail),
