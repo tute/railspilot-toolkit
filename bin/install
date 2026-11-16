@@ -43,4 +43,20 @@ done
 if [ -n "${1:-}" ]; then
   cd "$1"
   ln -sfn "$TOOLKIT_ROOT/conductor.json" conductor.json
+  if git rev-parse --git-common-dir >/dev/null 2>&1; then
+    hooks="$(git rev-parse --path-format=absolute --git-common-dir)/hooks"
+    target="$TOOLKIT_ROOT/.claude/scripts/pre-commit-checks"
+    hooks_path=$(git config --get core.hooksPath || true)
+    current=$(readlink "$hooks/pre-commit" 2>/dev/null || true)
+    if [ -n "$hooks_path" ]; then
+      echo "warning: core.hooksPath set in $(pwd), pre-commit not linked" >&2
+    elif { [ -e "$hooks/pre-commit" ] || [ -L "$hooks/pre-commit" ]; } && [ "$current" != "$target" ]; then
+      echo "warning: $hooks/pre-commit exists, not overwritten" >&2
+    else
+      mkdir -p "$hooks"
+      ln -sfn "$target" "$hooks/pre-commit"
+    fi
+  else
+    echo "warning: $(pwd) is not a git repo, pre-commit not linked" >&2
+  fi
 fi

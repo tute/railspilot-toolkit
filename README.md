@@ -25,6 +25,24 @@ lets sandboxed commands write `~/.cache/mise` and `~/.local/state/mise`, so
 where tools and gems install. Run `mise install` and `bundle install` outside
 the sandbox.
 
+## Jev checks
+
+`bin/install path/to/app` links `.claude/scripts/pre-commit-checks` into that app's shared git hooks directory, so worktrees use it too. The hook sends staged added lines to Jev. It asks whether a feature, system, or component spec asserts text a user can read, and whether a new comment retells the code. Magic comments stay: `frozen_string_literal`, encoding, `rubocop:`, `typed:`, and shebangs. The hook does not run RuboCop.
+
+A failing verdict exits 1. The hook prints `jev: specs pass (0.870)` or `jev: comments fail (0.910)` and the repair sentence. A score of 0.5 or higher passes the spec check. A comment score of 0.5 or higher fails. A missing `TYPESAFE_API_KEY`, a network error, no response within 20 seconds, a non-200 response, or a diff over `MAX_DIFF_CHARS` (default 100000) also exits 1. `JEV_URL` and `JEV_MODEL` override the endpoint and model (`https://api.typesafe.ai/v1/systemone`, `jev-latest`).
+
+The installer leaves an existing `pre-commit` hook in place, including a symlink that points somewhere else. It refreshes the link when that link already points at this script. When `core.hooksPath` is set, it prints a warning and skips the link. Lefthook, overcommit, and a git template hook keep their own file. Call the script from there:
+
+```yaml
+pre-commit:
+  commands:
+    jev:
+      run: bash "$HOME/.claude/scripts/pre-commit-checks"
+```
+
+From a shell hook, the same call is `"$HOME/.claude/scripts/pre-commit-checks"`. A git template that sources `~/.git_template.local/hooks/pre-commit` can put that line there. The hook sources `jev-lib.bash` from the directory the link resolves to, so link or call it in place. A copied script fails.
+
+
 ## What's Included
 
 ### Agents

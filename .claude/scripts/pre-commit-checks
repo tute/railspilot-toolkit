@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# Git hook, and: pre-commit-checks [FILE...]
+# Staged added lines go to Jev. Pass files to judge those paths instead.
+set -euo pipefail
+export LC_ALL=C
+
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/jev-lib.bash"
+
+SPEC_FAIL="Feature or component specs do not assert the page as the user sees it. Assert a section, heading, button, link, field, table, or copy the user can read. A test id, a CSS selector, or a visit and path check is not enough."
+COMMENT_FAIL="A comment retells the code. Remove it and make the code clear. A magic directive such as frozen_string_literal may stay. A comment that states a non-obvious constraint may stay."
+
+SPEC_Q="Judge only spec_diff. Do the feature, system, or component spec changes assert the page as a user sees it? A user-visible assertion names a section, heading, button, link, field, table, or copy the user can read. One such assertion is enough. have_section with the section name the user sees is enough. Answer false when the specs use a test id or a CSS selector instead of that text, or when they only visit, click, or check the path."
+SPEC_TRUE="The spec asserts text the user can read."
+SPEC_FALSE="The spec uses a test id or CSS, or it only visits, clicks, or checks the path."
+COMMENT_Q="Judge only code_diff. Does it contain a comment that retells what the code does? Answer true when a comment describes the implementation. Answer false when no comment does that. A magic directive is not that comment. A comment that states a non-obvious constraint is not that comment."
+COMMENT_TRUE="A comment explains what the code does, where clearer code would do that job."
+COMMENT_FALSE="No comment retells the code. A directive or a constraint may remain."
+
+filter_added() {
+  awk -v mode="$1" '
+    /^diff --git / { path = ""; printed = 0; next }
+    /^\+\+\+ b\// { path = substr($0, 7); next }
+    /^\+/ && !/^\+\+\+/ {
+      content = substr($0, 2)
+      sub(/^[[:space:]]+/, "", content)
+      comment = (content ~ /^(#|\/\/)/)
+      magic = (content ~ /^#(!|[[:space:]]*(frozen_string_literal|rubocop:|typed:|(-\*-[[:space:]]*)?(en)?coding:))/)
+      if (mode == "spec" || (comment && !magic)) {
+        if (!printed) {
+          printf "diff --git a/%s b/%s\n+++ b/%s\n", path, path, path
+          printed = 1
+        }
+        print
+      }
+    }
+  '
+}
+
+at_least_cut() {
+  awk -v s="$1" -v c="$CUT" 'BEGIN{ exit !(s+0 >= c+0) }'
+}
+
+raw_diff() {
+  local path staged
+  if [[ $explicit -eq 0 ]]; then
+    git diff --cached -U0 --diff-filter=ACMR -- "$@"
+    return
+  fi
+  for path in "$@"; do
+    staged=$(git diff --cached -U0 --diff-filter=ACMR -- "$path")
+    if [[ -n $staged ]]; then
+      printf '%s\n' "$staged"
+    elif [[ -f $path ]]; then
+      printf 'diff --git a/%s b/%s\n+++ b/%s\n' "$path" "$path" "$path"
+      awk '{ print "+" $0 }' "$path"
+    else
+      printf 'jev: %s not found\n' "$path" >&2
+      return 1
+    fi
+  done
+}
+
+explicit=0
+files=()
+if [[ $# -gt 0 ]]; then
+  explicit=1
+  files=("$@")
+else
+  top=$(git rev-parse --show-toplevel 2>/dev/null) || die "jev: not a git repo"
+  cd "$top"
+  while IFS= read -r line; do
+    files+=("$line")
+  done < <(git diff --cached --name-only --diff-filter=ACMR)
+fi
+
+spec_files=()
+comment_files=()
+if [[ ${#files[@]} -gt 0 ]]; then
+  for f in "${files[@]}"; do
+    case "/$f" in
+      */spec/features/*|*/spec/system/*|*/spec/components/*) spec_files+=("$f") ;;
+    esac
+    case "$f" in
+      *.rb|*.rake|*.js|*.jsx|*.ts|*.tsx) comment_files+=("$f") ;;
+    esac
+  done
+fi
+
+spec_diff=""
+code_diff=""
+if [[ ${#spec_files[@]} -gt 0 ]]; then
+  spec_diff=$(raw_diff "${spec_files[@]}" | filter_added spec)
+fi
+if [[ ${#comment_files[@]} -gt 0 ]]; then
+  code_diff=$(raw_diff "${comment_files[@]}" | filter_added comment)
+fi
+
+failed=0
+if (( ${#spec_diff} > CAP )); then
+  printf 'jev: spec diff is %s chars, over the %s limit. skipped.\n' "${#spec_diff}" "$CAP" >&2
+  spec_diff=""
+  failed=1
+fi
+if (( ${#code_diff} > CAP )); then
+  printf 'jev: comment diff is %s chars, over the %s limit. skipped.\n' "${#code_diff}" "$CAP" >&2
+  code_diff=""
+  failed=1
+fi
+
+if [[ -z $spec_diff && -z $code_diff ]]; then
+  [[ $failed -eq 0 ]] || exit 1
+  printf 'jev: skipped. No feature, system, or component spec, and no comment to judge.\n'
+  exit 0
+fi
+
+[[ -n ${TYPESAFE_API_KEY:-} ]] || die "jev: TYPESAFE_API_KEY is not set."
+command -v jq >/dev/null && command -v curl >/dev/null || die "jev: jq and curl are required."
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+jq -n \
+  --arg model "$MODEL" \
+  --arg spec_diff "$spec_diff" \
+  --arg code_diff "$code_diff" \
+  --arg spec_q "$SPEC_Q" \
+  --arg spec_true "$SPEC_TRUE" \
+  --arg spec_false "$SPEC_FALSE" \
+  --arg comment_q "$COMMENT_Q" \
+  --arg comment_true "$COMMENT_TRUE" \
+  --arg comment_false "$COMMENT_FALSE" \
+  '{model: $model, state: {}, questions: {}}
+   | if $spec_diff != "" then
+       .state.spec_diff = $spec_diff
+       | .questions.asserts_visible_ui = {
+           type: "noul",
+           instructions: $spec_q,
+           criteria: {"true": $spec_true, "false": $spec_false}
+         }
+     else . end
+   | if $code_diff != "" then
+       .state.code_diff = $code_diff
+       | .questions.narrating_comments = {
+           type: "noul",
+           instructions: $comment_q,
+           criteria: {"true": $comment_true, "false": $comment_false}
+         }
+     else . end' | jev_post "$tmp"
+
+if [[ -n $spec_diff ]]; then
+  spec_score=$(jq -r '.answers.asserts_visible_ui.noul // empty' <"$tmp" 2>/dev/null) || die "jev: check did not run. Bad response."
+  is_score "$spec_score" || die "jev: check did not run. No spec score."
+fi
+if [[ -n $code_diff ]]; then
+  code_score=$(jq -r '.answers.narrating_comments.noul // empty' <"$tmp" 2>/dev/null) || die "jev: check did not run. Bad response."
+  is_score "$code_score" || die "jev: check did not run. No comment score."
+fi
+
+if [[ -n $spec_diff ]]; then
+  if at_least_cut "$spec_score"; then
+    printf 'jev: specs pass (%.3f)\n' "$spec_score"
+  else
+    printf 'jev: specs fail (%.3f)\n%s\n' "$spec_score" "$SPEC_FAIL"
+    failed=1
+  fi
+fi
+if [[ -n $code_diff ]]; then
+  if at_least_cut "$code_score"; then
+    printf 'jev: comments fail (%.3f)\n%s\n' "$code_score" "$COMMENT_FAIL"
+    failed=1
+  else
+    printf 'jev: comments pass (%.3f)\n' "$code_score"
+  fi
+fi
+
+exit "$failed"
