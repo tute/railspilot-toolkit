@@ -40,8 +40,9 @@ pre-commit:
       run: bash "$HOME/.claude/scripts/pre-commit-checks"
 ```
 
-From a shell hook, the same call is `"$HOME/.claude/scripts/pre-commit-checks"`. A git template that sources `~/.git_template.local/hooks/pre-commit` can put that line there. The hook sources `jev-lib.bash` from the directory the link resolves to, so link or call it in place. A copied script fails.
+From a shell hook, the same call is `"$HOME/.claude/scripts/pre-commit-checks"`. A git template that sources `~/.git_template.local/hooks/pre-commit` can put that line there. Both scripts source `jev-lib.bash` from the directory the link resolves to, so link or call them in place. A copied script fails.
 
+`~/.claude/scripts/pr-risk <number-or-url>` prints `safe true` or `safe false` and the probability of that verdict. It does not merge. A pull request that touches `db/migrate/`, `db/schema.rb`, `db/structure.sql`, or a path token of auth, oauth, session, sessions, payment, payments, billing, billings, or one starting with authenticat or authoriz is `safe false` with no model call. Lockfiles (`*.lock`, `package-lock.json`, `pnpm-lock.yaml`) stay in the file list but leave the diff, so a dependency bump does not hit the cap. A diff over the same character cap is `safe false` too. The pull request body is sent as the author's claim. The diff is what Jev judges.
 
 ## What's Included
 

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+# pr-risk PR
+# Prints "safe true|false <confidence>". Does not merge.
+set -euo pipefail
+export LC_ALL=C
+
+[[ $# -eq 1 ]] || { printf 'usage: pr-risk PR\n' >&2; exit 64; }
+
+source "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/jev-lib.bash"
+
+PR_Q="Is this pull request safe to automerge with no reviewer? Answer true for low-risk work: a spec-only change, a flaky test fix, a dependency bump, a CI tweak, a small UI change, low-risk tech debt, a development-only helper, or a change that stays in an internal admin or tooling pack. Answer false for a new feature or a behavior change in production code. Specs do not make a behavior change safe. A migration, auth change, billing change, or a change to a critical user flow is false. The pull request body is the author's claim. Judge the diff."
+PR_TRUE="Low risk. Spec-only, a flaky fix, a dependency bump, CI, a small UI change, tech debt, or internal tooling."
+PR_FALSE="A new feature or a production behavior change. Specs do not raise this. Also a migration, auth, or billing change."
+
+for tool in gh jq curl; do
+  command -v "$tool" >/dev/null || die "jev: $tool is required."
+done
+
+paths=$(gh pr diff "$1" --name-only)
+hit=$(awk '
+  function token(t) {
+    return t ~ /^(o?auth|sessions?|payments?|billings?)$/ || t ~ /^(authenticat|authoriz)/
+  }
+  {
+    if ($0 ~ /(^|\/)db\/(migrate\/|schema\.rb$|structure\.sql$)/) { print; exit }
+    n = split(tolower($0), parts, /[^a-z0-9]+/)
+    for (i = 1; i <= n; i++) if (token(parts[i])) { print; exit }
+  }
+' <<<"$paths")
+if [[ -n $hit ]]; then
+  printf 'jev: unsafe path %s\n' "$hit" >&2
+  printf 'safe false 1.000\n'
+  exit 0
+fi
+
+diff=$(gh pr diff "$1" | awk '
+  /^diff --git / {
+    name = $0
+    sub(/.*\//, "", name)
+    skip = (name ~ /\.lock$/ || name == "package-lock.json" || name == "pnpm-lock.yaml")
+  }
+  !skip
+')
+if (( ${#diff} > CAP )); then
+  printf 'jev: diff is %s chars, over the %s limit.\n' "${#diff}" "$CAP" >&2
+  printf 'safe false 1.000\n'
+  exit 0
+fi
+
+[[ -n ${TYPESAFE_API_KEY:-} ]] || die "jev: TYPESAFE_API_KEY is not set."
+
+meta=$(gh pr view "$1" --json title,body,additions,deletions)
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+jq -n \
+  --arg model "$MODEL" \
+  --argjson meta "$meta" \
+  --arg paths "$paths" \
+  --arg diff "$diff" \
+  --arg q "$PR_Q" \
+  --arg yes "$PR_TRUE" \
+  --arg no "$PR_FALSE" \
+  '{
+    model: $model,
+    state: {
+      title: ($meta.title // ""),
+      body: (($meta.body // "")[0:2000]),
+      additions: ($meta.additions // 0),
+      deletions: ($meta.deletions // 0),
+      files: ($paths | split("\n") | map(select(. != ""))),
+      diff: $diff
+    },
+    questions: {
+      safe_to_automerge: {
+        type: "noul",
+        instructions: $q,
+        criteria: {"true": $yes, "false": $no}
+      }
+    }
+  }' | jev_post "$tmp"
+
+noul=$(jq -r '.answers.safe_to_automerge.noul // empty' <"$tmp" 2>/dev/null) || die "jev: check did not run. Bad response."
+is_score "$noul" || die "jev: check did not run. No score."
+
+awk -v s="$noul" -v c="$CUT" 'BEGIN{
+  if (s+0 >= c+0) printf "safe true %.3f\n", s+0
+  else printf "safe false %.3f\n", 1-(s+0)
+}'
