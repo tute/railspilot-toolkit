@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+find test -name '*.test.ts' -exec pnpm exec node --import tsx --test {} +

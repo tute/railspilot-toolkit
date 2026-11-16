@@ -197,6 +197,16 @@ What we changed and why:
 name, so the fork keeps the original name on purpose. Renaming it would break
 that reference.
 
+## CI templates
+
+`templates/ci/rails` and `templates/ci/mastra` ship `bin/quality`,
+`bin/audit`, and `bin/test` (plus `bin/build` on Mastra). GitHub Actions
+runs each as a parallel job. On Mastra, `bin/ci` runs them locally. A
+Rails app's `config/ci.rb` should call `bin/quality`, `bin/audit`, and
+`bin/test`, so local `bin/ci` and CI run the same checks.
+`bin/install-ci <rails|mastra> [target]` copies a template in, overwriting
+existing files.
+
 ## Docs
 
 - [External tools](docs/external-tools.md)
