@@ -200,8 +200,9 @@ that reference.
 ## CI templates
 
 `templates/ci/rails` and `templates/ci/mastra` ship `bin/quality`,
-`bin/audit`, and `bin/test` (plus `bin/build` on Mastra). GitHub Actions
-runs each as a parallel job. On Mastra, `bin/ci` runs them locally. A
+`bin/audit`, and `bin/test` (plus `bin/build` on Mastra). On Rails, GitHub
+Actions runs each as a parallel job. On Mastra, Actions runs `bin/ci` in a
+single job, the same command you run locally. A
 Rails app's `config/ci.rb` should call `bin/quality`, `bin/audit`, and
 `bin/test`, so local `bin/ci` and CI run the same checks.
 `bin/install-ci <rails|mastra> [target]` copies a template in, overwriting
