@@ -28,6 +28,8 @@ Human onboarding and tool notes: `docs/onboarding-new-project.md`, `docs/externa
 - `.cursor/`: Cursor rules, editor settings, worktrees config
 - `bin/install`: links the above into `~/.cursor/`, `~/.claude/`,
   and optional `conductor.json` into a target app path
+- `templates/ci/`: Rails and Mastra CI templates. `bin/install-ci` copies
+  one into an app
 
 ### Lint / test / build / run
 

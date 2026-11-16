@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  bin/rubocop -f github
+else
+  bin/rubocop
+fi
+if [ -x bin/herb-lint ]; then bin/herb-lint; fi
+bin/rubycritic

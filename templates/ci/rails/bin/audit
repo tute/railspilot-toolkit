@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+bin/bundler-audit
+bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+if [ -x bin/importmap ]; then bin/importmap audit; fi

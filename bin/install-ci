@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+kind="${1:-}"
+target="${2:-.}"
+
+case "$kind" in
+  rails|mastra) ;;
+  *) echo "Usage: bin/install-ci <rails|mastra> [target-dir]" >&2; exit 2 ;;
+esac
+
+src="$ROOT/templates/ci/$kind"
+[ -d "$target" ] || { echo "target is not a directory: $target" >&2; exit 1; }
+target="$(cd "$target" && pwd)"
+
+cp -pR "$src/." "$target/"
