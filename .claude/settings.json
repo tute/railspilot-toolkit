@@ -146,13 +146,6 @@
     "evals-skills@hamelsmu-evals-skills": false,
     "cc-plugin-you-should-know@builtin": true
   },
-  "pluginConfigs": {
-    "cc-plugin-agents-md@builtin": {
-      "options": {
-        "instructionFiles": "claude-md-and-agents-md"
-      }
-    }
-  },
   "extraKnownMarketplaces": {
     "anthropic-agent-skills": {
       "source": {
@@ -195,17 +188,24 @@
       "psql *"
     ]
   },
+  "spinnerTipsEnabled": false,
   "modelSettings": {
     "claude-fable-5-1": {
       "effortLevel": "medium"
     }
   },
+  "promptSuggestionEnabled": false,
+  "pluginConfigs": {
+    "cc-plugin-agents-md@builtin": {
+      "options": {
+        "instructionFiles": "claude-md-and-agents-md"
+      }
+    }
+  },
   "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
   "agentPushNotifEnabled": true,
   "autoMode": {
     "environment": []
-  },
-  "promptSuggestionEnabled": false,
-  "spinnerTipsEnabled": false,
-  "skipWorkflowUsageWarning": true
+  }
 }
