@@ -7,8 +7,25 @@ updates:
     cooldown:
       default-days: 1
     groups:
+      mastra:
+        patterns:
+          - "@mastra/*"
+          - mastra
+          - chat
+          - "@chat-adapter/*"
       npm:
         patterns: ["*"]
+        exclude-patterns:
+          - "@mastra/*"
+          - mastra
+          - chat
+          - "@chat-adapter/*"
+    ignore:
+      # typescript-eslint still uses the TS 6 programmatic API. TS 7.0 has
+      # no compatible API; keep `typescript` on 6.x until that lands
+      # (https://github.com/typescript-eslint/typescript-eslint/issues/10940).
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
