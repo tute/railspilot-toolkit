@@ -14,6 +14,8 @@
 - Never draft product feedback with SendFeedback. If Claude Code itself
   misbehaves, say so in one line in chat and move on.
 - No code comments unless I ask. No hardcoded specifics I did not request.
+- Commit right after the work is done and verified (tests, build, live check).
+  Do not end by asking whether to commit
 
 Rails code and test rules live in `~/.claude/rules/rails.md` and load only
 when touching Ruby, ERB, JS, db or spec files.
