@@ -9,8 +9,8 @@
 - Use the `gws` CLI for Google Workspace. Never the built-in MCP integrations.
 - Subagent prompts need today's date (YYYY-MM-DD plus weekday) and pre-computed
   relative dates ("3 days ago"). Subagents cannot infer "today".
-- Leave temp and scratchpad files in place when in temporary directories. No
-  need to clean them up, or ask permission to do so.
+- Put scratch files in a `mktemp -d` dir and leave them there. Do not rm temp
+  files. Give rm literal paths, never variables.
 - Never draft product feedback with SendFeedback. If Claude Code itself
   misbehaves, say so in one line in chat and move on.
 - No code comments unless I ask. No hardcoded specifics I did not request.
