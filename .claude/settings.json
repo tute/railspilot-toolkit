@@ -72,9 +72,7 @@
       "WebSearch"
     ],
     "deny": [],
-    "ask": [
-      "Bash(rm:*)"
-    ],
+    "ask": [],
     "defaultMode": "auto"
   },
   "model": "opus",
@@ -127,6 +125,11 @@
           {
             "type": "command",
             "command": "bash \"$HOME/.claude/scripts/rtk-rewrite.sh\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/scripts/bash-guard.sh\"",
             "timeout": 10
           }
         ]
