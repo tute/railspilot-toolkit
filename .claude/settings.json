@@ -179,6 +179,8 @@
     "filesystem": {
       "allowWrite": [
         "~/.cache/mise",
+        "~/.cache/pnpm",
+        "~/.local/share/pnpm/store",
         "~/.local/state/mise"
       ]
     },
